@@ -1,0 +1,1 @@
+export const APEX_HUB_TOKEN = 'apex-hub-token'
