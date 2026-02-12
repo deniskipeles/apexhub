@@ -1,63 +1,64 @@
+// =========================== /teamspace/studios/this_studio/apex/apexhub-next/app/api-reference/page.tsx ===========================
 'use client';
 
-import React, { useState } from 'react';
-import { Copy, Check, Database, Shield, Server, Box, Terminal, Code } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { 
+    Server, Database, Shield, Search, 
+    HardDrive, Cpu, Terminal, Zap, 
+    Copy, Check, ChevronRight, Hash, Box
+} from 'lucide-react';
 
-type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
+// --- TYPES ---
 
-interface ApiParam {
-    name: string;
-    type: string;
-    required: boolean;
-    desc: string;
-}
+type Language = 'sdk' | 'curl';
 
-interface ApiEndpoint {
-    id: string;
-    method: Method;
-    path: string;
-    title: string;
-    description: string;
-    params?: ApiParam[];
-    response: string;
-}
-
-interface ApiSection {
+interface DocItem {
     id: string;
     title: string;
-    icon: React.ElementType;
-    endpoints: ApiEndpoint[];
+    method?: string; // GET, POST, etc.
+    endpoint?: string; // /api/v1/...
+    description: React.ReactNode;
+    sdk: string;
+    curl: string;
 }
 
-const DATA: ApiSection[] = [
+interface DocSection {
+    id: string;
+    title: string;
+    icon: any;
+    items: DocItem[];
+}
+
+// --- DATA: THE FULL APEXKIT SURFACE AREA ---
+
+const DOCS: DocSection[] = [
     {
-        id: 'context',
-        title: 'Context & Routing',
+        id: 'setup',
+        title: 'Initialization & Context',
         icon: Box,
-        endpoints: [
+        items: [
             {
-                id: 'root-api',
-                method: 'GET',
-                path: 'https://api.apexkit.io/api/v1/...',
-                title: 'Root API',
-                description: 'The global control plane. Used for creating tenants and managing system-wide settings.',
-                response: `// Default context`
-            },
-            {
-                id: 'tenant-api',
-                method: 'GET',
-                path: 'https://{tenant-id}.api.apexkit.io/api/v1/...',
-                title: 'Tenant API',
-                description: 'Isolated environment for a specific customer. Data here is physically separated from others.',
-                response: `// Subdomain routing automatically selects the tenant database.`
-            },
-            {
-                id: 'sandbox-api',
-                method: 'GET',
-                path: '/sandbox/{session-id}/api/v1/...',
-                title: 'Sandbox API',
-                description: 'Ephemeral development environment for AI prototyping. Created via the Architect API.',
-                response: `// Path-based routing selects the sandbox database.`
+                id: 'init',
+                title: 'Initialize Client',
+                description: 'Configure the SDK. ApexKit supports multi-tenancy natively. You can switch contexts (Root, Tenant, Sandbox) using the same client library.',
+                sdk: `import { ApexKit } from 'apexkit-sdk';
+
+// 1. Root Connection (Platform Admin)
+const client = new ApexKit('https://api.apexkit.io');
+
+// 2. Tenant Context (Customer Data)
+const tenantClient = client.tenant('customer-123');
+
+// 3. Sandbox Context (AI Architect)
+const sandboxClient = client.sandbox('session-uuid');`,
+                curl: `# Root
+export BASE_URL="https://api.apexkit.io/api/v1"
+
+# Tenant (Subdomain Routing)
+export BASE_URL="https://customer-123.api.apexkit.io/api/v1"
+
+# Sandbox (Path Routing)
+export BASE_URL="https://api.apexkit.io/sandbox/session-uuid/api/v1"`
             }
         ]
     },
@@ -65,129 +66,264 @@ const DATA: ApiSection[] = [
         id: 'auth',
         title: 'Authentication',
         icon: Shield,
-        endpoints: [
+        items: [
             {
                 id: 'login',
-                method: 'POST',
-                path: '/api/v1/auth/login',
                 title: 'Login',
-                description: 'Authenticate a user and receive a JWT token.',
-                params: [
-                    { name: 'email', type: 'string', required: true, desc: 'User email.' },
-                    { name: 'password', type: 'string', required: true, desc: 'User password.' }
-                ],
-                response: `{
-  "token": "eyJhbGciOiJIUzI1...",
-  "user": {
-    "id": 1,
-    "email": "user@example.com",
-    "role": "user"
-  }
-}`
+                method: 'POST',
+                endpoint: '/auth/login',
+                description: 'Authenticate a user to receive a JWT. The token scope adapts automatically to the client context (Root/Tenant).',
+                sdk: `const { token, user } = await client.auth.login(
+  'alice@example.com', 
+  'password123'
+);
+
+// SDK automatically attaches token to future requests
+console.log(user.role); // "admin" | "user"`,
+                curl: `curl -X POST "$BASE_URL/auth/login" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "email": "alice@example.com", 
+    "password": "password123"
+  }'`
             },
             {
                 id: 'register',
-                method: 'POST',
-                path: '/api/v1/auth/register',
                 title: 'Register',
-                description: 'Create a new user account in the current context (Root/Tenant).',
-                response: `{ ...user_object }`
+                method: 'POST',
+                endpoint: '/auth/register',
+                description: 'Create a new user. Metadata is a flexible JSON object for profile fields.',
+                sdk: `await client.auth.register(
+  'bob@example.com', 
+  'securePass!', 
+  'user', // Role
+  { full_name: "Bob", plan: "free" } // Metadata
+);`,
+                curl: `curl -X POST "$BASE_URL/auth/register" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "email": "bob@example.com",
+    "password": "securePass!",
+    "role": "user",
+    "metadata": { "full_name": "Bob" }
+  }'`
             }
         ]
     },
     {
         id: 'records',
-        title: 'Records (CRUD)',
+        title: 'Database (CRUD)',
         icon: Database,
-        endpoints: [
+        items: [
             {
-                id: 'list-records',
-                method: 'GET',
-                path: '/api/v1/collections/{id}/records',
+                id: 'list',
                 title: 'List Records',
-                description: 'Fetch paginated records. Supports filtering and relation expansion.',
-                params: [
-                    { name: 'page', type: 'number', required: false, desc: 'Page number (default 1).' },
-                    { name: 'sort', type: 'string', required: false, desc: 'Sort field (e.g., "-created").' },
-                    { name: 'filter', type: 'json', required: false, desc: 'MongoDB-style filter object.' },
-                    { name: 'expand', type: 'string', required: false, desc: 'Comma-separated relations.' }
-                ],
-                response: `{
-  "items": [
-    { "id": 1, "data": { "title": "Hello" }, "created": "..." }
-  ],
-  "total": 100
-}`
+                method: 'GET',
+                endpoint: '/collections/{id}/records',
+                description: 'Fetch paginated data. Supports JSON filtering and Relation expansion.',
+                sdk: `const result = await client.collection('posts').list({
+  page: 1,
+  per_page: 20,
+  sort: '-created',
+  filter: { 
+    status: 'published',
+    views: { $gt: 100 }
+  },
+  expand: 'author_id'
+});
+
+console.log(result.items);`,
+                curl: `curl -G "$BASE_URL/collections/posts/records" \\
+  -H "Authorization: Bearer $TOKEN" \\
+  --data-urlencode 'filter={"status":"published"}' \\
+  --data-urlencode 'sort=-created' \\
+  --data-urlencode 'expand=author_id'`
             },
             {
-                id: 'search-vector',
+                id: 'create',
+                title: 'Create Record',
                 method: 'POST',
-                path: '/api/v1/collections/{id}/search-text-vector',
-                title: 'Semantic Search',
-                description: 'Perform a natural language search using vector embeddings.',
-                params: [
-                    { name: 'query_text', type: 'string', required: true, desc: 'The search query.' },
-                    { name: 'limit', type: 'number', required: false, desc: 'Max results (default 10).' }
-                ],
-                response: `[
-  { 
-    "id": 55, 
-    "data": { ... },
-    "_score": 0.89 
-  }
-]`
+                endpoint: '/collections/{id}/records',
+                description: 'Insert a new record. Schema validation runs automatically on the server.',
+                sdk: `const post = await client.collection('posts').create({
+  title: "Hello World",
+  content: "My first post...",
+  author_id: client.auth.user.id
+});`,
+                curl: `curl -X POST "$BASE_URL/collections/posts/records" \\
+  -H "Authorization: Bearer $TOKEN" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "data": {
+      "title": "Hello World",
+      "author_id": "user_123"
+    }
+  }'`
+            },
+            {
+                id: 'relations',
+                title: 'Manage Relations',
+                method: 'POST',
+                endpoint: '/.../relations',
+                description: 'Manually link two records (Graph Edge). Useful for Many-to-Many relationships.',
+                sdk: `await client.collection('posts').addRelation(
+  'post_123', // Origin Record
+  'tags',     // Target Collection
+  'tag_55',   // Target Record
+  'tagged_as' // Relation Name
+);`,
+                curl: `curl -X POST "$BASE_URL/collections/posts/records/post_123/relations" \\
+  -H "Authorization: Bearer $TOKEN" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "target_collection_id": "tags",
+    "target_record_id": "tag_55",
+    "relation_name": "tagged_as"
+  }'`
             }
         ]
     },
     {
-        id: 'sdk',
-        title: 'Client SDK',
-        icon: Code,
-        endpoints: [
+        id: 'search',
+        title: 'Search & AI',
+        icon: Search,
+        items: [
             {
-                id: 'sdk-init',
+                id: 'instant',
+                title: 'Instant Search',
                 method: 'GET',
-                path: 'npm install apexkit-sdk',
-                title: 'Initialization',
-                description: 'Initialize the SDK with context switching support.',
-                response: `import { ApexKit } from 'apexkit-sdk';
+                endpoint: '/.../instant-search',
+                description: 'Uses the Tantivy inverted index (RAM-based) for millisecond-fast full-text search with typo tolerance.',
+                sdk: `// Matches "Apple", "Aplle", "Apples"
+const hits = await client.collection('products')
+    .searchRecordsInstantlyWithOSE("aplle");
+    
+console.log(hits[0].snippet); // { name: "<b>Apple</b> Watch" }`,
+                curl: `curl -G "$BASE_URL/collections/products/instant-search" \\
+  --data-urlencode "q=aplle" \\
+  --data-urlencode "limit=10"`
+            },
+            {
+                id: 'vector',
+                title: 'Semantic Search',
+                method: 'POST',
+                endpoint: '/.../search-text-vector',
+                description: 'Converts query text to an embedding (via configured model like Gemini/Bert) and performs HNSW similarity search.',
+                sdk: `// Finds conceptually similar items
+const results = await client.collection('docs')
+    .searchTextVector("how to secure api", 5);
 
-// 1. Root Connection
-const pb = new ApexKit('http://localhost:5000');
+// Results sorted by similarity score`,
+                curl: `curl -X POST "$BASE_URL/collections/docs/search-text-vector" \\
+  -H "Authorization: Bearer $TOKEN" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "query_text": "how to secure api",
+    "limit": 5
+  }'`
+            }
+        ]
+    },
+    {
+        id: 'files',
+        title: 'File Storage',
+        icon: HardDrive,
+        items: [
+            {
+                id: 'upload',
+                title: 'Upload File',
+                method: 'POST',
+                endpoint: '/storage/upload',
+                description: 'Uploads to configured backend (Local Disk or S3). Returns a File Object with public URL.',
+                sdk: `const file = document.getElementById('fileInput').files[0];
+const uploaded = await client.files.upload(file);
 
-// 2. Switch to Tenant
-const tenantClient = pb.tenant('client-a');
-await tenantClient.collection('posts').list();
+console.log(uploaded.url); // Public URL
+console.log(uploaded.filename); // Store this in DB`,
+                curl: `curl -X POST "$BASE_URL/storage/upload" \\
+  -H "Authorization: Bearer $TOKEN" \\
+  -F "file=@/path/to/image.png"`
+            }
+        ]
+    },
+    {
+        id: 'logic',
+        title: 'Serverless Logic',
+        icon: Terminal,
+        items: [
+            {
+                id: 'run',
+                title: 'Run Script',
+                method: 'POST',
+                endpoint: '/run/{name}',
+                description: 'Execute a server-side JavaScript function. Ideal for payment processing, heavy calculations, or secure webhooks.',
+                sdk: `const response = await client.scripts.run(
+  'process-payment', 
+  { 
+    amount: 5000, 
+    currency: 'USD' 
+  }
+);`,
+                curl: `curl -X POST "$BASE_URL/run/process-payment" \\
+  -H "Content-Type: application/json" \\
+  -d '{ "amount": 5000, "currency": "USD" }'`
+            },
+            {
+                id: 'ai-run',
+                title: 'Run AI Action',
+                method: 'POST',
+                endpoint: '/ai/run/{slug}',
+                description: 'Execute a stored Prompt Template securely on the server. The server handles API keys and context.',
+                sdk: `const res = await client.ai.run('summarize', {
+    text: "Long article content..."
+});
 
-// 3. Switch to Sandbox
-const sandboxClient = pb.sandbox('uuid-123');`
+console.log(res.result); // AI Generated Text`,
+                curl: `curl -X POST "$BASE_URL/ai/run/summarize" \\
+  -H "Authorization: Bearer $TOKEN" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "variables": {
+       "text": "Long article content..."
+    }
+  }'`
             }
         ]
     },
     {
         id: 'realtime',
-        title: 'Realtime',
-        icon: Server,
-        endpoints: [
+        title: 'Realtime (WS)',
+        icon: Zap,
+        items: [
             {
-                id: 'ws-connect',
-                method: 'GET',
-                path: '/ws',
-                title: 'WebSocket Connection',
-                description: 'Connect to the realtime stream. Messages are automatically scoped to the current tenant/sandbox.',
-                response: `// Subscribe Message
+                id: 'subscribe',
+                title: 'Subscribe to Events',
+                method: 'WS',
+                endpoint: '/ws',
+                description: 'Listen for database changes (Insert, Update, Delete) or custom broadcast signals.',
+                sdk: `const rt = new ApexKitRealtimeWSClient(url, token);
+rt.connect();
+
+// 1. DB Changes
+rt.subscribe({
+    collectionId: 5,
+    eventType: 'Insert'
+});
+
+// 2. Custom Signals (Chat)
+rt.subscribe({ channel: 'room_1' });
+
+rt.onEvent((msg) => console.log(msg));`,
+                curl: `# Connect via WebSocket Client
+ws://localhost:5000/ws
+
+# Send Payload:
 {
   "type": "Subscribe",
   "payload": {
     "collection_id": 5,
     "event_type": "Insert"
   }
-}
-
-// Event Message
-{
-  "event": "Insert",
-  "payload": { "data": { ... } }
 }`
             }
         ]
@@ -195,7 +331,10 @@ const sandboxClient = pb.sandbox('uuid-123');`
 ];
 
 export default function ApiReferencePage() {
-    const scrollToEndpoint = (id: string) => {
+    const [activeSection, setActiveSection] = useState(DOCS[0].id);
+
+    const scrollToSection = (id: string) => {
+        setActiveSection(id);
         const el = document.getElementById(id);
         if (el) {
             el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -205,57 +344,49 @@ export default function ApiReferencePage() {
     return (
         <div className="flex flex-col md:flex-row min-h-screen bg-background text-foreground">
             
-            {/* Sidebar Navigation */}
-            <aside className="w-full md:w-64 border-r border-border bg-surface/50 backdrop-blur-xl md:sticky md:top-0 md:h-screen overflow-y-auto flex-shrink-0">
+            {/* --- SIDEBAR --- */}
+            <aside className="w-full md:w-64 border-r border-border bg-surface/50 backdrop-blur-xl md:sticky md:top-0 md:h-screen overflow-y-auto flex-shrink-0 z-20">
                 <div className="p-6">
-                    <h2 className="text-sm font-bold text-muted uppercase tracking-wider mb-6">API Reference</h2>
-                    <div className="space-y-6">
-                        {DATA.map(section => (
-                            <div key={section.id}>
-                                <div className="flex items-center gap-2 text-foreground font-semibold mb-2 px-2">
-                                    <section.icon size={16} className="text-primary" />
-                                    {section.title}
-                                </div>
-                                <ul className="space-y-0.5 border-l border-border ml-2 pl-2">
-                                    {section.endpoints.map(ep => (
-                                        <li key={ep.id}>
-                                            <button 
-                                                onClick={() => scrollToEndpoint(ep.id)}
-                                                className="w-full text-left px-3 py-1.5 text-sm text-muted hover:text-foreground hover:bg-foreground/5 rounded transition-colors truncate"
-                                            >
-                                                {ep.title}
-                                            </button>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
+                    <div className="flex items-center gap-2 mb-8">
+                        <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold">
+                            <Terminal size={18} />
+                        </div>
+                        <span className="font-bold text-lg">API Ref</span>
                     </div>
+
+                    <nav className="space-y-1">
+                        {DOCS.map(section => (
+                            <button
+                                key={section.id}
+                                onClick={() => scrollToSection(section.id)}
+                                className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                                    activeSection === section.id 
+                                    ? 'bg-primary/10 text-primary' 
+                                    : 'text-muted hover:bg-surface hover:text-foreground'
+                                }`}
+                            >
+                                <section.icon size={16} />
+                                {section.title}
+                            </button>
+                        ))}
+                    </nav>
                 </div>
             </aside>
 
-            {/* Main Content */}
+            {/* --- CONTENT --- */}
             <main className="flex-1 min-w-0">
-                <div className="max-w-4xl mx-auto p-6 md:p-12">
+                <div className="max-w-5xl mx-auto p-6 md:p-12 pb-24">
                     
-                    <div className="mb-12">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="p-3 bg-primary/10 rounded-xl text-primary"><Terminal size={32} /></div>
-                            <h1 className="text-4xl font-bold text-foreground">API Documentation</h1>
-                        </div>
-                        <p className="text-muted text-lg leading-relaxed">
-                            The ApexKit API is a unified interface for Root, Tenant, and Sandbox environments. 
-                            It is RESTful, resource-oriented, and supports real-time WebSocket subscriptions.
+                    <div className="mb-16">
+                        <h1 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">Documentation</h1>
+                        <p className="text-xl text-muted leading-relaxed max-w-3xl">
+                            ApexKit offers a dual-interface: a fully typed <strong>TypeScript SDK</strong> for rapid development, and a standard <strong>REST API</strong> for universal compatibility.
                         </p>
-                        <div className="mt-6 p-4 bg-surface border border-border rounded-lg flex items-center gap-3 text-sm font-mono text-muted">
-                            <span className="text-primary font-bold">Base URL:</span>
-                            <span>https://api.apexkit.io/api/v1</span>
-                        </div>
                     </div>
 
-                    <div className="space-y-16">
-                        {DATA.map(section => (
-                            <div key={section.id} id={section.id}>
+                    <div className="space-y-24">
+                        {DOCS.map(section => (
+                            <section key={section.id} id={section.id} className="scroll-mt-24">
                                 <div className="flex items-center gap-3 mb-8 border-b border-border pb-4">
                                     <div className="p-2 bg-primary/10 rounded-lg text-primary">
                                         <section.icon size={24} />
@@ -264,102 +395,101 @@ export default function ApiReferencePage() {
                                 </div>
 
                                 <div className="space-y-12">
-                                    {section.endpoints.map(ep => (
-                                        <EndpointCard key={ep.id} endpoint={ep} />
+                                    {section.items.map(item => (
+                                        <DocBlock key={item.id} item={item} />
                                     ))}
                                 </div>
-                            </div>
+                            </section>
                         ))}
                     </div>
 
-                    <div className="mt-20 pt-10 border-t border-border text-center text-muted">
-                        <p>Need help? Check out the <a href="/docs" className="text-primary hover:underline">Full Guides</a> or join our <a href="/community" className="text-primary hover:underline">Community</a>.</p>
-                    </div>
                 </div>
             </main>
         </div>
     );
 }
 
-const EndpointCard = ({ endpoint }: { endpoint: ApiEndpoint }) => {
-    const methodColors: Record<string, string> = {
-        GET: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-        POST: 'bg-green-500/10 text-green-500 border-green-500/20',
-        PATCH: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
-        DELETE: 'bg-red-500/10 text-red-500 border-red-500/20',
-    };
+// --- SUB COMPONENTS ---
 
+function DocBlock({ item }: { item: DocItem }) {
+    const [lang, setLang] = useState<Language>('sdk');
     const [copied, setCopied] = useState(false);
+
+    const code = lang === 'sdk' ? item.sdk : item.curl;
+
     const handleCopy = () => {
-        navigator.clipboard.writeText(endpoint.response);
+        navigator.clipboard.writeText(code);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
 
     return (
-        <div id={endpoint.id} className="scroll-mt-24">
-            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
-                <div>
-                    <h3 className="text-xl font-bold text-foreground mb-2 flex items-center gap-3">
-                        {endpoint.title}
-                    </h3>
-                    <p className="text-muted mb-4">{endpoint.description}</p>
-                </div>
-                <div className={`px-3 py-1.5 rounded-md font-mono text-sm font-bold border shrink-0 ${methodColors[endpoint.method] || 'bg-surface border-border'}`}>
-                    {endpoint.method}
-                </div>
-            </div>
-
-            <div className="bg-surface border border-border rounded-lg overflow-hidden mb-6 font-mono text-sm">
-                <div className="px-4 py-3 bg-black/20 border-b border-border text-foreground break-all flex items-center gap-3">
-                    <span className="text-muted select-none uppercase text-xs font-bold tracking-wider">Route</span>
-                    {endpoint.path}
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                {/* Parameters */}
-                <div>
-                    <h4 className="text-sm font-bold text-foreground uppercase tracking-wider mb-4">Parameters</h4>
-                    {endpoint.params ? (
-                        <div className="space-y-3">
-                            {endpoint.params.map(param => (
-                                <div key={param.name} className="flex gap-4 p-3 rounded-lg border border-border bg-surface/30">
-                                    <div className="font-mono text-sm text-primary w-24 shrink-0 break-all">{param.name}</div>
-                                    <div className="text-sm flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <span className="text-xs text-muted font-mono bg-white/5 px-1.5 py-0.5 rounded border border-white/10">{param.type}</span>
-                                            {param.required && <span className="text-[10px] text-red-400 font-bold uppercase">Required</span>}
-                                        </div>
-                                        <p className="text-muted">{param.desc}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="text-sm text-muted italic">No parameters required.</p>
+        <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
+            {/* Text Side */}
+            <div className="xl:col-span-2 space-y-4">
+                <div className="flex items-center gap-3">
+                    {item.method && (
+                        <span className={`text-[10px] font-bold px-2 py-1 rounded border uppercase tracking-wider ${getMethodColor(item.method)}`}>
+                            {item.method}
+                        </span>
                     )}
+                    <h3 className="text-lg font-bold text-foreground">{item.title}</h3>
                 </div>
+                
+                {item.endpoint && (
+                    <div className="font-mono text-xs bg-surface border border-border px-3 py-2 rounded text-muted break-all">
+                        {item.endpoint}
+                    </div>
+                )}
 
-                {/* Response Example */}
-                <div>
-                    <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-bold text-foreground uppercase tracking-wider">Example</h4>
-                        <button 
-                            onClick={handleCopy} 
-                            className="text-xs flex items-center gap-1 text-muted hover:text-foreground transition-colors"
-                        >
-                            {copied ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
-                            {copied ? 'Copied' : 'Copy'}
+                <div className="text-sm text-muted leading-relaxed">
+                    {item.description}
+                </div>
+            </div>
+
+            {/* Code Side */}
+            <div className="xl:col-span-3">
+                <div className="rounded-xl border border-border bg-[#0d0d0d] overflow-hidden shadow-2xl">
+                    {/* Toolbar */}
+                    <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-white/5">
+                        <div className="flex gap-4">
+                            <button 
+                                onClick={() => setLang('sdk')}
+                                className={`text-xs font-bold pb-2 -mb-2 border-b-2 transition-colors ${lang === 'sdk' ? 'text-primary border-primary' : 'text-zinc-500 border-transparent hover:text-zinc-300'}`}
+                            >
+                                SDK (JS)
+                            </button>
+                            <button 
+                                onClick={() => setLang('curl')}
+                                className={`text-xs font-bold pb-2 -mb-2 border-b-2 transition-colors ${lang === 'curl' ? 'text-primary border-primary' : 'text-zinc-500 border-transparent hover:text-zinc-300'}`}
+                            >
+                                cURL
+                            </button>
+                        </div>
+                        <button onClick={handleCopy} className="text-zinc-500 hover:text-white transition-colors">
+                            {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
                         </button>
                     </div>
-                    <div className="bg-[#0d0d0d] rounded-lg border border-border overflow-hidden relative group">
-                        <pre className="p-4 text-xs md:text-sm font-mono text-zinc-300 overflow-x-auto custom-scrollbar">
-                            {endpoint.response}
+
+                    {/* Editor */}
+                    <div className="p-4 overflow-x-auto custom-scrollbar">
+                        <pre className="text-sm font-mono text-blue-100 leading-relaxed">
+                            {code}
                         </pre>
                     </div>
                 </div>
             </div>
         </div>
     );
-};
+}
+
+function getMethodColor(method: string) {
+    switch (method) {
+        case 'GET': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+        case 'POST': return 'bg-green-500/10 text-green-500 border-green-500/20';
+        case 'PATCH': return 'bg-orange-500/10 text-orange-500 border-orange-500/20';
+        case 'DELETE': return 'bg-red-500/10 text-red-500 border-red-500/20';
+        case 'WS': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
+        default: return 'bg-zinc-500/10 text-zinc-500 border-zinc-500/20';
+    }
+}

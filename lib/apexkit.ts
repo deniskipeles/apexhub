@@ -1,5 +1,6 @@
 
-import {ApexKit} from "@/lib/sdk"
+// import {ApexKit} from "@/lib/sdk"
+import { ApexKit } from "@apexkit/sdk"; 
 import { APEX_HUB_TOKEN } from './constants';
 // Initialize Instance
 export const apex = new ApexKit(process.env.NEXT_PUBLIC_API_URL || 'https://5000-01ke6hmdydtz0mhahe6ktw06fm.cloudspaces.litng.ai');

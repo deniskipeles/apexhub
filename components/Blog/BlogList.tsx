@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { getFileUrl } from '@/lib/apexkit';
-import { BookOpen, User } from 'lucide-react';
+import { BookOpen, Plus, User } from 'lucide-react';
 
 export function BlogList({ initialPosts }: { initialPosts: any[] }) {
     const featuredPost = initialPosts[0];
@@ -31,6 +31,10 @@ export function BlogList({ initialPosts }: { initialPosts: any[] }) {
                 <p className="text-lg text-muted leading-relaxed">
                     Deep dives into database internals, Rust optimizations, and the future of vertical scaling.
                 </p>
+                {/* [NEW] Create Button */}
+                <Link href="/blog/new" className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary-hover transition-all shadow-lg shadow-primary/20">
+                    <Plus size={18} /> Write Post
+                </Link>
             </div>
 
             {initialPosts.length === 0 ? (

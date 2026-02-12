@@ -1,15 +1,7 @@
+import { AppRecord } from '@apexkit/sdk';
 import Link from 'next/link';
 
-interface NewsItem {
-    id: string;
-    data: {
-        headline: string;
-        body: string;
-        date: string;
-    };
-}
-
-export function NewsSection({ news }: { news: NewsItem[] }) {
+export function NewsSection({ news }: { news: AppRecord[] }) {
   if (news.length === 0) return null;
 
   return (

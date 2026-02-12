@@ -1,44 +1,84 @@
-// =========================== /app/ecosystem/page.tsx ===========================
-import { apex } from '@/lib/apexkit';
-import { EcosystemView } from '@/components/Ecosystem/EcosystemView'; // Client Component
+import { getApexServer } from '@/lib/apexkit'; // <--- CHANGED: Use server helper
+import { EcosystemView } from '@/components/Ecosystem/EcosystemView';
+import { Metadata } from 'next';
 
-// Define types for server response
-interface ShowcaseItem { id: string; data: any }
-interface StarterItem { id: string; data: any }
+export const metadata: Metadata = {
+  title: 'Ecosystem | ApexHub',
+  description: 'Community shared starters, scripts, and templates.',
+};
 
-async function getEcosystemData() {
+// Prevent caching to ensure we get fresh data/auth state on every request
+export const dynamic = 'force-dynamic';
+
+async function getData(page: number, perPage: number) {
+  // 1. Get request-scoped client (Authenticated)
+  const apex = await getApexServer();
+
   try {
-    const [showcaseRes, startersRes] = await Promise.all([
-         apex.collection('showcase').list({ sort: '-created', per_page: 50 }),
-         apex.collection('starters').list({ sort: '-created', per_page: 50 })
+    const [showcaseRes, startersRes, itemsRes] = await Promise.all([
+         apex.collection('showcase').list({ sort: '-created', page, per_page: perPage }),
+         apex.collection('starters').list({ sort: '-created', page, per_page: perPage }),
+         // The shared code collection
+         apex.collection('ecosystem_items').list({ 
+             sort: '-created', 
+             page, 
+             per_page: perPage, 
+             expand: 'author_id' 
+         })
     ]);
+    
+    console.log("Server Fetch Results:", {
+        showcase: showcaseRes.total,
+        starters: startersRes.total,
+        items: itemsRes.total
+    });
 
     return {
-        showcase: showcaseRes.items,
-        starters: startersRes.items
+        showcase: showcaseRes,
+        starters: startersRes,
+        sharedItems: itemsRes
     };
   } catch (e) {
       console.error("Ecosystem fetch failed", e);
-      return { showcase: [], starters: [] };
+      // Return structure matching ListResult
+      const empty = { items: [], total: 0, page: 1, per_page: perPage };
+      return { showcase: empty, starters: empty, sharedItems: empty };
   }
 }
 
-export const revalidate = 60; // ISR 1 min
+interface PageProps {
+    searchParams: { [key: string]: string | string[] | undefined };
+}
 
-export default async function EcosystemPage() {
-  const { showcase, starters } = await getEcosystemData();
+export default async function EcosystemPage({ searchParams }: PageProps) {
+  // 1. Parse Query Params
+  const activeTab = (searchParams.tab as string) || 'starters';
+  const page = Number(searchParams.page) || 1;
+  const perPage = 12; // Grid of 3 columns x 4 rows
+
+  // 2. Fetch Data
+  const { showcase, starters, sharedItems } = await getData(page, perPage);
+
+  // 3. Determine active pagination data based on tab
+  // (We fetch all for simplicity, but you could optimize to fetch only active tab)
+  let totalItems = 0;
+  if (activeTab === 'showcase') totalItems = showcase.total;
+  else if (activeTab === 'community') totalItems = sharedItems.total;
+  else totalItems = starters.total;
+
+  const totalPages = Math.ceil(totalItems / perPage);
 
   return (
     <div className="p-6 md:p-12 max-w-7xl mx-auto min-h-screen">
-        <div className="mb-8">
-            <h1 className="text-4xl font-bold text-foreground mb-4">Ecosystem</h1>
-            <p className="text-muted">Discover community projects and jumpstart your development.</p>
-        </div>
-
-        {/* Client Component handles tabs and filtering */}
         <EcosystemView 
-            initialShowcase={showcase} 
-            initialStarters={starters} 
+            initialTab={activeTab}
+            // Pass the full ListResult objects now, not just .items
+            showcaseData={showcase} 
+            startersData={starters} 
+            sharedData={sharedItems}
+            // Pagination Props
+            currentPage={page}
+            totalPages={totalPages}
         />
     </div>
   );

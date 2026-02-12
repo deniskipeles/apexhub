@@ -91,7 +91,7 @@ export function IssueList({ initialItems }: { initialItems: any[] }) {
                                 ))}
                             </div>
                             <div className="text-xs text-muted flex items-center gap-1">
-                                #{i.id.substring(0,8)} opened on {new Date(i.created).toLocaleDateString()} by {getUserName(i)}
+                                #{(i?.id+"")?.substring(0,8)} opened on {new Date(i.created).toLocaleDateString()} by {getUserName(i)}
                             </div>
                         </div>
                     </div>

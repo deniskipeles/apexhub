@@ -19,11 +19,12 @@ export function DiscussionList({ initialItems }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Create Form State
-  const [title, setTitle] = useState("");
+  const [topic, setTopic] = useState("");
+  const [description, setDescription] = useState("");
   const [category, setCategory] = useState("general");
 
   const filteredItems = items.filter(d => 
-      d.data.title.toLowerCase().includes(search.toLowerCase())
+      d.data.topic.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -31,15 +32,16 @@ export function DiscussionList({ initialItems }: Props) {
       setIsSubmitting(true);
       try {
           const res = await apex.collection('discussions').create({
-              title,
+              topic,
               category,
+              description,
               views: 0,
               replies: 0
           });
           // Add new item to top
           setItems([res, ...items]);
           setIsCreateOpen(false);
-          setTitle("");
+          setTopic("");
       } catch (err) {
           console.error(err);
       } finally {
@@ -89,7 +91,7 @@ export function DiscussionList({ initialItems }: Props) {
                                     <Clock size={10} /> {new Date(d.created).toLocaleDateString()}
                                 </span>
                             </div>
-                            <h3 className="text-lg font-bold text-foreground mb-3 group-hover:text-primary transition-colors">{d.data.title}</h3>
+                            <h3 className="text-lg font-bold text-foreground mb-3 group-hover:text-primary transition-colors">{d.data.topic}</h3>
                             
                             <div className="flex items-center gap-2">
                                 <div className="w-5 h-5 rounded-full bg-secondary overflow-hidden flex items-center justify-center text-[10px] font-bold border border-border">
@@ -115,8 +117,8 @@ export function DiscussionList({ initialItems }: Props) {
                     <h2 className="text-xl font-bold mb-6">New Discussion</h2>
                     <form onSubmit={handleCreate} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-muted mb-2">Title</label>
-                            <input required value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-background border border-border rounded-lg px-4 py-2" />
+                            <label className="block text-sm font-medium text-muted mb-2">Topic</label>
+                            <input required value={topic} onChange={e => setTopic(e.target.value)} className="w-full bg-background border border-border rounded-lg px-4 py-2" />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-muted mb-2">Category</label>
@@ -125,6 +127,10 @@ export function DiscussionList({ initialItems }: Props) {
                                 <option value="qna">Q & A</option>
                                 <option value="showcase">Showcase</option>
                             </select>
+                        </div>
+                        <div>
+                             <label className="block text-sm font-medium text-muted mb-2">Description</label>
+                             <textarea required rows={4} value={description} onChange={e => setDescription(e.target.value)} className="w-full bg-background border border-border rounded-lg px-4 py-2 resize-none" placeholder="Describe the issue..." />
                         </div>
                         <button type="submit" disabled={isSubmitting} className="w-full py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary-hover flex items-center justify-center gap-2">
                             {isSubmitting ? <Loader2 className="animate-spin" /> : 'Create Discussion'}

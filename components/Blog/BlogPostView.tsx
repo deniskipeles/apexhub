@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { getFileUrl } from '@/lib/apexkit';
-import { Calendar, Clock, ArrowLeft, Share2, User, Tag } from 'lucide-react';
+import { Calendar, Clock, ArrowLeft, Share2, User, Tag, Edit3 } from 'lucide-react';
 
 interface Props {
     post: any;
@@ -15,22 +15,30 @@ export function BlogPostView({ post, contentHtml }: Props) {
         name: post.expand?.author_id?.email?.split('@')[0] || 'ApexTeam',
         avatar: post.expand?.author_id?.metadata?.avatar ? getFileUrl(post.expand.author_id.metadata.avatar) : null
     };
-    
+
     const coverImage = post.data.cover_image ? getFileUrl(post.data.cover_image) : null;
 
     return (
         <div className="max-w-4xl mx-auto p-6 md:p-12 min-h-screen">
-            <Link 
+            <Link
                 href="/blog"
-                className="flex items-center gap-2 text-muted hover:text-primary transition-colors mb-8 text-sm font-medium w-fit"
+                className="flex items-center gap-2 text-muted hover:text-primary transition-colors text-sm font-medium w-fit"
             >
                 <ArrowLeft size={16} /> Back to Blog
+            </Link>
+
+            {/* [NEW] Edit Button */}
+            <Link
+                href={`/blog/${post.id}/edit`}
+                className="flex items-center gap-2 px-4 py-2 bg-surface hover:bg-surface/80 border border-border rounded-lg text-sm font-medium transition-colors"
+            >
+                <Edit3 size={16} /> Edit Post
             </Link>
 
             <div className="mb-8">
                 <div className="flex items-center gap-4 text-sm text-muted mb-4 font-mono">
                     <span className="flex items-center gap-1.5">
-                        <Calendar size={14} /> 
+                        <Calendar size={14} />
                         {new Date(post.created).toLocaleDateString()}
                     </span>
                     {post.data.read_time && (
@@ -43,7 +51,7 @@ export function BlogPostView({ post, contentHtml }: Props) {
                     {post.data.headline}
                 </h1>
                 <div className="flex items-center justify-between border-b border-border pb-8">
-                        <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3">
                         {author.avatar ? (
                             <img src={author.avatar} alt={author.name} className="w-10 h-10 rounded-full border border-border object-cover" />
                         ) : (
@@ -68,7 +76,7 @@ export function BlogPostView({ post, contentHtml }: Props) {
                 </div>
             )}
 
-            <div 
+            <div
                 className="prose prose-lg prose-zinc dark:prose-invert max-w-none"
                 dangerouslySetInnerHTML={{ __html: contentHtml }}
             />

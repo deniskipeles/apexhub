@@ -105,7 +105,7 @@ export default async function CommunityHubPage() {
                                         <span className={`text-[10px] px-2 py-0.5 rounded border uppercase font-bold tracking-wide ${i.data.type === 'bug' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'}`}>
                                             {i.data.type}
                                         </span>
-                                        <span className="text-xs text-muted self-center">#{i.id.substring(0,8)}</span>
+                                        <span className="text-xs text-muted self-center">#{(i.id + "").substring(0,8)}</span>
                                     </div>
                                 </div>
                             </div>

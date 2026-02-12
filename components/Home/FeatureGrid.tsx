@@ -2,23 +2,14 @@ import {
     Cpu, Server, Terminal, Database, ShieldCheck, Globe, Zap, Layout, Smartphone 
   } from 'lucide-react';
   import { apex } from '@/lib/apexkit';
+import { AppRecord } from '@apexkit/sdk';
   
   // Icon Mapping
   const Icons: Record<string, any> = {
     Cpu, Server, Terminal, Database, ShieldCheck, Globe, Zap, Layout, Smartphone
   };
   
-  interface FeatureItem {
-      id: string;
-      data: {
-          title: string;
-          description: string;
-          icon: string;
-          color?: string;
-      };
-  }
-  
-  export function FeatureGrid({ features }: { features: FeatureItem[] }) {
+  export function FeatureGrid({ features }: { features: AppRecord[] }) {
     return (
       <section>
           <div className="text-center mb-12">
