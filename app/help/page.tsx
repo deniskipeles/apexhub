@@ -294,11 +294,10 @@ function SandboxDetailView({ session }: { session: SandboxRequest }) {
 
     // Construct URL for the specific sandbox
     // Assuming backend mounts it at /_dashboard/sandbox/{id}
-    const targetUrl = `/_dashboard/sandbox/${session.sandbox_id}`;
+    const targetUrl = `${apex.baseUrl}/_dashboard/sandbox/${session.sandbox_id}/dashboard`;
 
     const handleCopy = () => {
-        const fullUrl = window.location.origin + targetUrl;
-        navigator.clipboard.writeText(fullUrl);
+        navigator.clipboard.writeText(targetUrl);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };

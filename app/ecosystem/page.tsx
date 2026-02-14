@@ -1,4 +1,4 @@
-import { getApexServer } from '@/lib/apexkit'; // <--- CHANGED: Use server helper
+import { getApexServer } from '@/lib/apexkit'; 
 import { EcosystemView } from '@/components/Ecosystem/EcosystemView';
 import { Metadata } from 'next';
 
@@ -16,38 +16,32 @@ async function getData(page: number, perPage: number) {
 
   try {
     const [showcaseRes, startersRes, itemsRes] = await Promise.all([
-         apex.collection('showcase').list({ sort: '-created', page, per_page: perPage }),
-         apex.collection('starters').list({ sort: '-created', page, per_page: perPage }),
-         // The shared code collection
-         apex.collection('ecosystem_items').list({ 
-             sort: '-created', 
-             page, 
-             per_page: perPage, 
-             expand: 'author_id' 
-         })
+      apex.collection('showcase').list({ sort: '-created', page, per_page: perPage }),
+      apex.collection('starters').list({ sort: '-created', page, per_page: perPage }),
+      // The shared code collection
+      apex.collection('ecosystem_items').list({
+        sort: '-created',
+        page,
+        per_page: perPage,
+        expand: 'author_id'
+      })
     ]);
-    
-    console.log("Server Fetch Results:", {
-        showcase: showcaseRes.total,
-        starters: startersRes.total,
-        items: itemsRes.total
-    });
 
     return {
-        showcase: showcaseRes,
-        starters: startersRes,
-        sharedItems: itemsRes
+      showcase: showcaseRes,
+      starters: startersRes,
+      sharedItems: itemsRes
     };
   } catch (e) {
-      console.error("Ecosystem fetch failed", e);
-      // Return structure matching ListResult
-      const empty = { items: [], total: 0, page: 1, per_page: perPage };
-      return { showcase: empty, starters: empty, sharedItems: empty };
+    console.error("Ecosystem fetch failed", e);
+    // Return structure matching ListResult
+    const empty = { items: [], total: 0, page: 1, per_page: perPage };
+    return { showcase: empty, starters: empty, sharedItems: empty };
   }
 }
 
 interface PageProps {
-    searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
 export default async function EcosystemPage({ searchParams }: PageProps) {
@@ -70,16 +64,16 @@ export default async function EcosystemPage({ searchParams }: PageProps) {
 
   return (
     <div className="p-6 md:p-12 max-w-7xl mx-auto min-h-screen">
-        <EcosystemView 
-            initialTab={activeTab}
-            // Pass the full ListResult objects now, not just .items
-            showcaseData={showcase} 
-            startersData={starters} 
-            sharedData={sharedItems}
-            // Pagination Props
-            currentPage={page}
-            totalPages={totalPages}
-        />
+      <EcosystemView
+        initialTab={activeTab}
+        // Pass the full ListResult objects now, not just .items
+        showcaseData={showcase}
+        startersData={starters}
+        sharedData={sharedItems}
+        // Pagination Props
+        currentPage={page}
+        totalPages={totalPages}
+      />
     </div>
   );
 }

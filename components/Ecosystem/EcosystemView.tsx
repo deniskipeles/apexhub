@@ -2,10 +2,13 @@
 
 import React, { useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { 
-    Layers, Box, Terminal, Copy, ExternalLink, 
-    Plus, Brain, Database, FileCode, Layout, Globe, 
-    User, Download, Eye, ArrowRight
+import {
+    Layers, Box, Terminal, Copy, ExternalLink,
+    Plus, Brain, Database, FileCode, Layout, Globe,
+    User, Download, Eye, ArrowRight,
+    Loader2,
+    Upload,
+    X
 } from 'lucide-react';
 import { apex, getFileUrl } from '@/lib/apexkit';
 import Link from 'next/link';
@@ -42,207 +45,299 @@ const TYPE_COLORS: Record<string, string> = {
     site: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20"
 };
 
-export function EcosystemView({ 
-    initialTab, 
-    showcaseData, 
-    startersData, 
+export function EcosystemView({
+    initialTab,
+    showcaseData,
+    startersData,
     sharedData,
     currentPage,
-    totalPages 
+    totalPages
 }: Props) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  
-  // State
-  const [activeTab, setActiveTab] = useState(initialTab);
-  const [isSubmitOpen, setIsSubmitOpen] = useState(false);
-  const [inspectingItem, setInspectingItem] = useState<any | null>(null);
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
 
-  // Sync URL on tab change (Reset page to 1)
-  const handleTabChange = (tab: string) => {
-      setActiveTab(tab);
-      const params = new URLSearchParams(searchParams);
-      params.set('tab', tab);
-      params.delete('page'); // Reset pagination on tab switch
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  };
+    // State
+    const [activeTab, setActiveTab] = useState(initialTab);
+    const [isSubmitOpen, setIsSubmitOpen] = useState(false);
+    const [inspectingItem, setInspectingItem] = useState<any | null>(null);
 
-  // Helper to generate pagination base path
-  const paginationBasePath = `${pathname}?tab=${activeTab}`;
+    // Sync URL on tab change (Reset page to 1)
+    const handleTabChange = (tab: string) => {
+        setActiveTab(tab);
+        const params = new URLSearchParams(searchParams);
+        params.set('tab', tab);
+        params.delete('page'); // Reset pagination on tab switch
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    };
 
-  return (
-    <div className="space-y-8">
-        {/* --- HEADER & NAV --- */}
-        <div className="flex flex-col gap-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-border pb-1">
-                <nav className="flex gap-6 -mb-px overflow-x-auto w-full md:w-auto no-scrollbar">
-                    <TabButton active={activeTab === 'starters'} onClick={() => handleTabChange('starters')} label="Starters" icon={<Terminal size={16}/>} />
-                    <TabButton active={activeTab === 'community'} onClick={() => handleTabChange('community')} label="Community" icon={<Database size={16}/>} />
-                    <TabButton active={activeTab === 'showcase'} onClick={() => handleTabChange('showcase')} label="Showcase" icon={<Layers size={16}/>} />
-                </nav>
-                
-                {/* Only show "Share" on community tab to reduce clutter, or keep globally */}
-                {activeTab === 'community' && (
-                    <Link href="/ecosystem/new" className="hidden md:flex px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary-hover items-center gap-2 shadow-sm transition-all mb-2">
-                        <Plus size={16} /> Share Code
-                    </Link>
-                )}
-            </div>
-        </div>
+    // Helper to generate pagination base path
+    const paginationBasePath = `${pathname}?tab=${activeTab}`;
 
-        {/* --- COMMUNITY CODE TAB --- */}
-        {activeTab === 'community' && (
-            <div className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
-                    {sharedData.items.map((item: any) => {
-                        const Icon = TYPE_ICONS[item.data.type] || Box;
-                        const colorClass = TYPE_COLORS[item.data.type] || "";
-                        const author = item.expand?.author_id?.email?.split('@')[0] || 'User';
+    // Form State
+    const [form, setForm] = useState({ title: '', description: '', type: 'script', tags: '' });
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-                        return (
-                            <div key={item.id} className="bg-surface/30 border border-border rounded-xl p-5 hover:border-primary/40 transition-all flex flex-col group relative overflow-hidden h-full">
-                                <div className="flex items-start justify-between mb-4">
-                                    <div className={`p-2.5 rounded-lg border ${colorClass} bg-opacity-20`}>
-                                        <Icon size={20} />
-                                    </div>
-                                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${colorClass} bg-transparent`}>
-                                        {item.data.type.replace('_', ' ')}
-                                    </span>
-                                </div>
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedFile) return alert("Please select a file to share");
 
-                                <div className="flex-1">
-                                    <h3 className="font-bold text-foreground text-lg mb-1 line-clamp-1" title={item.data.title}>{item.data.title}</h3>
-                                    <div className="flex items-center gap-1.5 text-xs text-muted mb-4">
-                                        <User size={12} /> <span className="font-medium">{author}</span>
-                                    </div>
-                                    <p className="text-sm text-muted leading-relaxed line-clamp-3 mb-4">
-                                        {item.data.description}
-                                    </p>
-                                </div>
-                                
-                                <div className="flex flex-wrap gap-1.5 mb-6">
-                                    {item.data.tags?.slice(0, 3).map((tag: string) => (
-                                        <span key={tag} className="text-[10px] bg-surface border border-border px-2 py-0.5 rounded text-muted font-medium">#{tag}</span>
-                                    ))}
-                                </div>
+        setIsSubmitting(true);
+        try {
+            const uploaded = await apex.files.upload(selectedFile);
 
-                                <div className="mt-auto grid grid-cols-2 gap-2">
-                                    <button 
-                                        onClick={() => setInspectingItem(item)}
-                                        className="py-2 bg-surface hover:bg-surface/80 border border-border text-foreground font-medium rounded-lg text-xs flex items-center justify-center gap-2 transition-colors"
-                                    >
-                                        <Eye size={14} /> Peek Code
-                                    </button>
-                                    <a 
-                                        href={getFileUrl(item.data.file)} 
-                                        download 
-                                        className="py-2 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary font-bold rounded-lg text-xs flex items-center justify-center gap-2 transition-colors"
-                                    >
-                                        <Download size={14} /> Download
-                                    </a>
-                                </div>
-                            </div>
-                        );
-                    })}
-                    {sharedData.items.length === 0 && (
-                        <div className="col-span-full py-20 text-center text-muted border-2 border-dashed border-border rounded-xl">
-                            No community items shared yet.
-                        </div>
+            const res = await apex.collection('ecosystem_items').create({
+                title: form.title,
+                description: form.description,
+                type: form.type,
+                file: uploaded.filename,
+                tags: form.tags.split(',').map(t => t.trim()).filter(Boolean)
+            });
+
+            sharedData.items = [res, ...sharedData.items];
+            setIsSubmitOpen(false);
+            setForm({ title: '', description: '', type: 'script', tags: '' });
+            setSelectedFile(null);
+        } catch (err: any) {
+            alert(err.message || "Failed to share item.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="space-y-8">
+            {/* --- HEADER & NAV --- */}
+            <div className="flex flex-col gap-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-border pb-1">
+                    <nav className="flex gap-6 -mb-px overflow-x-auto w-full md:w-auto no-scrollbar">
+                        <TabButton active={activeTab === 'starters'} onClick={() => handleTabChange('starters')} label="Starters" icon={<Terminal size={16} />} />
+                        <TabButton active={activeTab === 'community'} onClick={() => handleTabChange('community')} label="Community" icon={<Database size={16} />} />
+                        <TabButton active={activeTab === 'showcase'} onClick={() => handleTabChange('showcase')} label="Showcase" icon={<Layers size={16} />} />
+                    </nav>
+
+                    {/* Only show "Share" on community tab to reduce clutter, or keep globally */}
+                    {activeTab === 'community' && (
+                        <button
+                            onClick={() => setIsSubmitOpen(true)}
+                            className="hidden md:flex px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary-hover items-center gap-2 shadow-sm transition-all mb-2">
+                            <Plus size={16} /> Share Code
+                        </button>
                     )}
                 </div>
             </div>
-        )}
 
-        {/* --- STARTERS TAB --- */}
-        {activeTab === 'starters' && (
-             <div className="space-y-8">
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
-                    {startersData.items.map((kit: any) => (
-                        <div key={kit.id} className="bg-surface/30 border border-border rounded-xl p-6 flex flex-col group hover:shadow-lg transition-all">
-                            <div className="flex justify-between items-start mb-6">
-                                <div className="w-10 h-10 bg-background rounded-lg border border-border flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                                    <Terminal size={20} />
+            {/* --- COMMUNITY CODE TAB --- */}
+            {activeTab === 'community' && (
+                <div className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
+                        {sharedData.items.map((item: any) => {
+                            const Icon = TYPE_ICONS[item.data.type] || Box;
+                            const colorClass = TYPE_COLORS[item.data.type] || "";
+                            const author = item.expand?.author_id?.email?.split('@')[0] || 'User';
+
+                            return (
+                                <div key={item.id} className="bg-surface/30 border border-border rounded-xl p-5 hover:border-primary/40 transition-all flex flex-col group relative overflow-hidden h-full">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className={`p-2.5 rounded-lg border ${colorClass} bg-opacity-20`}>
+                                            <Icon size={20} />
+                                        </div>
+                                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${colorClass} bg-transparent`}>
+                                            {item.data.type.replace('_', ' ')}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex-1">
+                                        <h3 className="font-bold text-foreground text-lg mb-1 line-clamp-1" title={item.data.title}>{item.data.title}</h3>
+                                        <div className="flex items-center gap-1.5 text-xs text-muted mb-4">
+                                            <User size={12} /> <span className="font-medium">{author}</span>
+                                        </div>
+                                        <p className="text-sm text-muted leading-relaxed line-clamp-3 mb-4">
+                                            {item.data.description}
+                                        </p>
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-1.5 mb-6">
+                                        {item.data.tags?.slice(0, 3).map((tag: string) => (
+                                            <span key={tag} className="text-[10px] bg-surface border border-border px-2 py-0.5 rounded text-muted font-medium">#{tag}</span>
+                                        ))}
+                                    </div>
+
+                                    <div className="mt-auto grid grid-cols-2 gap-2">
+                                        <button
+                                            onClick={() => setInspectingItem(item)}
+                                            className="py-2 bg-surface hover:bg-surface/80 border border-border text-foreground font-medium rounded-lg text-xs flex items-center justify-center gap-2 transition-colors"
+                                        >
+                                            <Eye size={14} /> Peek Code
+                                        </button>
+                                        <a
+                                            href={getFileUrl(item.data.file)}
+                                            download
+                                            className="py-2 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary font-bold rounded-lg text-xs flex items-center justify-center gap-2 transition-colors"
+                                        >
+                                            <Download size={14} /> Download
+                                        </a>
+                                    </div>
                                 </div>
-                                {kit.data.repo_url && (
-                                    <Link href={kit.data.repo_url} target="_blank" className="text-muted hover:text-foreground">
-                                        <ExternalLink size={18} />
-                                    </Link>
-                                )}
+                            );
+                        })}
+                        {sharedData.items.length === 0 && (
+                            <div className="col-span-full py-20 text-center text-muted border-2 border-dashed border-border rounded-xl">
+                                No community items shared yet.
                             </div>
-                            <h3 className="text-lg font-bold text-foreground mb-2">{kit.data.framework}</h3>
-                            <p className="text-sm text-muted mb-6 leading-relaxed flex-1">{kit.data.description}</p>
-                            <div className="mt-auto bg-black/30 rounded-lg p-3 border border-white/5 font-mono text-[11px] text-zinc-300 flex justify-between items-center group/code relative">
-                                <code className="truncate mr-2">{kit.data.install_command}</code>
-                                <button 
-                                    onClick={() => navigator.clipboard.writeText(kit.data.install_command)} 
-                                    className="text-muted hover:text-white p-1 rounded hover:bg-white/10"
-                                    title="Copy Command"
-                                >
-                                    <Copy size={14} />
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                 </div>
-             </div>
-        )}
-
-        {/* --- SHOWCASE TAB --- */}
-        {activeTab === 'showcase' && (
-            <div className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-300">
-                     {showcaseData.items.map((proj: any) => (
-                        <div key={proj.id} className="group bg-surface/30 border border-border rounded-2xl overflow-hidden hover:border-primary/40 transition-all flex flex-col sm:flex-row h-full shadow-sm hover:shadow-md">
-                            <div className="w-full sm:w-48 h-48 bg-black/5 relative overflow-hidden shrink-0 border-b sm:border-b-0 sm:border-r border-border">
-                                {proj.data.thumbnail ? (
-                                    <img src={getFileUrl(proj.data.thumbnail)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="" />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-muted/20"><Globe size={48} /></div>
-                                )}
-                            </div>
-                            <div className="p-6 flex flex-col justify-center min-w-0 flex-1">
-                                <h3 className="text-xl font-bold text-foreground mb-2 truncate">{proj.data.title}</h3>
-                                <p className="text-sm text-muted line-clamp-2 mb-4 leading-relaxed">{proj.data.description}</p>
-                                <Link href={proj.data.url || "#"} target="_blank" className="text-primary text-xs font-bold flex items-center gap-1 hover:underline mt-auto">
-                                    View Live <ArrowRight size={12} />
-                                </Link>
-                            </div>
-                        </div>
-                     ))}
+                        )}
+                    </div>
                 </div>
+            )}
+
+            {/* --- STARTERS TAB --- */}
+            {activeTab === 'starters' && (
+                <div className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
+                        {startersData.items.map((kit: any) => (
+                            <div key={kit.id} className="bg-surface/30 border border-border rounded-xl p-6 flex flex-col group hover:shadow-lg transition-all">
+                                <div className="flex justify-between items-start mb-6">
+                                    <div className="w-10 h-10 bg-background rounded-lg border border-border flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                                        <Terminal size={20} />
+                                    </div>
+                                    {kit.data.repo_url && (
+                                        <Link href={kit.data.repo_url} target="_blank" className="text-muted hover:text-foreground">
+                                            <ExternalLink size={18} />
+                                        </Link>
+                                    )}
+                                </div>
+                                <h3 className="text-lg font-bold text-foreground mb-2">{kit.data.framework}</h3>
+                                <p className="text-sm text-muted mb-6 leading-relaxed flex-1">{kit.data.description}</p>
+                                <div className="mt-auto bg-black/30 rounded-lg p-3 border border-white/5 font-mono text-[11px] text-zinc-300 flex justify-between items-center group/code relative">
+                                    <code className="truncate mr-2">{kit.data.install_command}</code>
+                                    <button
+                                        onClick={() => navigator.clipboard.writeText(kit.data.install_command)}
+                                        className="text-muted hover:text-white p-1 rounded hover:bg-white/10"
+                                        title="Copy Command"
+                                    >
+                                        <Copy size={14} />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* --- SHOWCASE TAB --- */}
+            {activeTab === 'showcase' && (
+                <div className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-300">
+                        {showcaseData.items.map((proj: any) => (
+                            <div key={proj.id} className="group bg-surface/30 border border-border rounded-2xl overflow-hidden hover:border-primary/40 transition-all flex flex-col sm:flex-row h-full shadow-sm hover:shadow-md">
+                                <div className="w-full sm:w-48 h-48 bg-black/5 relative overflow-hidden shrink-0 border-b sm:border-b-0 sm:border-r border-border">
+                                    {proj.data.thumbnail ? (
+                                        <img src={getFileUrl(proj.data.thumbnail)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-muted/20"><Globe size={48} /></div>
+                                    )}
+                                </div>
+                                <div className="p-6 flex flex-col justify-center min-w-0 flex-1">
+                                    <h3 className="text-xl font-bold text-foreground mb-2 truncate">{proj.data.title}</h3>
+                                    <p className="text-sm text-muted line-clamp-2 mb-4 leading-relaxed">{proj.data.description}</p>
+                                    <Link href={proj.data.url || "#"} target="_blank" className="text-primary text-xs font-bold flex items-center gap-1 hover:underline mt-auto">
+                                        View Live <ArrowRight size={12} />
+                                    </Link>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* --- PAGINATION --- */}
+            <div className="flex justify-center pt-8 border-t border-border">
+                <Pagination
+                    totalPages={totalPages}
+                    currentPage={currentPage}
+                    basePath={paginationBasePath}
+                />
             </div>
-        )}
 
-        {/* --- PAGINATION --- */}
-        <div className="flex justify-center pt-8 border-t border-border">
-            <Pagination 
-                totalPages={totalPages} 
-                currentPage={currentPage} 
-                basePath={paginationBasePath} 
-            />
+            {/* --- FILE INSPECTION MODAL --- */}
+            {inspectingItem && (
+                <FileExplorerModal
+                    item={inspectingItem}
+                    onClose={() => setInspectingItem(null)}
+                />
+            )}
+
+            {/* --- SUBMISSION MODAL --- */}
+            {isSubmitOpen && (
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-surface border border-border rounded-xl p-6 md:p-8 max-w-lg w-full shadow-2xl relative animate-in zoom-in-95">
+                        <button onClick={() => setIsSubmitOpen(false)} className="absolute top-4 right-4 text-muted hover:text-foreground"><X size={20} /></button>
+
+                        <div className="mb-6">
+                            <h2 className="text-2xl font-bold text-foreground">Share Resource</h2>
+                            <p className="text-muted text-sm">Contribute templates, scripts, or schemas.</p>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="space-y-1">
+                                <label className="text-xs font-bold uppercase text-muted tracking-wider">Title</label>
+                                <input required className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="e.g. Auth flow with SMS" />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold uppercase text-muted tracking-wider">Type</label>
+                                    <select className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none" value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
+                                        <option value="script">Script (.json)</option>
+                                        <option value="ai_action">AI Action (.json)</option>
+                                        <option value="schema">Schema (.json)</option>
+                                        <option value="template">Template (.json)</option>
+                                        <option value="site">Site (.zip)</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold uppercase text-muted tracking-wider">Tags</label>
+                                    <input placeholder="auth, rust" className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none" value={form.tags} onChange={e => setForm({ ...form, tags: e.target.value })} />
+                                </div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-xs font-bold uppercase text-muted tracking-wider">Description</label>
+                                <textarea required rows={3} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none resize-none" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="What does this do?" />
+                            </div>
+
+                            <div className="relative border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-surface transition-colors cursor-pointer group">
+                                <input type="file" required className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => setSelectedFile(e.target.files?.[0] || null)} />
+                                <div className="flex flex-col items-center gap-2">
+                                    <Upload size={24} className="text-muted group-hover:text-primary transition-colors" />
+                                    <span className="text-xs font-medium text-foreground">{selectedFile ? selectedFile.name : 'Click to upload file'}</span>
+                                </div>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="w-full py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary-hover flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                                {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : 'Publish'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
-
-        {/* --- FILE INSPECTION MODAL --- */}
-        {inspectingItem && (
-            <FileExplorerModal 
-                item={inspectingItem} 
-                onClose={() => setInspectingItem(null)} 
-            />
-        )}
-    </div>
-  );
+    );
 }
 
 function TabButton({ active, onClick, label, icon }: { active: boolean, onClick: () => void, label: string, icon: React.ReactNode }) {
     return (
-        <button 
+        <button
             onClick={onClick}
-            className={`pb-3 text-sm font-medium transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${
-                active 
-                ? 'border-primary text-foreground' 
+            className={`pb-3 text-sm font-medium transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${active
+                ? 'border-primary text-foreground'
                 : 'border-transparent text-muted hover:text-foreground hover:border-border'
-            }`}
+                }`}
         >
             {icon} {label}
         </button>
