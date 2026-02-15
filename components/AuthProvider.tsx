@@ -18,10 +18,9 @@ export function AuthProvider({
   }
 
   const checkAuth = useCallback(async () => {
-    const storedToken = token || await getToken();
-    if (storedToken) {
+    if (token) {
       // 1. Ensure the main proxy client has the token
-      apex.setToken(storedToken);
+      apex.setToken(token);
       try {
         const user = await apex.auth.getMe();
         if (!user?.id) {

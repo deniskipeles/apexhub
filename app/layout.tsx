@@ -14,7 +14,7 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = cookies();
-  const token = cookieStore.get(APEX_HUB_TOKEN)?.value;
+  const token = cookieStore.get(APEX_HUB_TOKEN)?.value || ((typeof window !== 'undefined') ? localStorage.getItem(APEX_HUB_TOKEN) : null);
 
   return (
     <html lang="en" suppressHydrationWarning>

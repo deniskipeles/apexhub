@@ -55,24 +55,33 @@ export default function DownloadPage() {
         setDownloadingOS(os);
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.apexkit.io';
+            
+            // 1. Get the Signed URL
             const res = await fetch(`${apiUrl}/api/v1/run/get-latest-binary`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ os }),
-                redirect: "follow"
+                body: JSON.stringify({ os })
             });
-            const blob = await res.blob();
-            const url = window.URL.createObjectURL(blob);
+            
+            const data = await res.json();
+            
+            if (!res.ok || !data.success) {
+                alert(data.error || "Download failed.");
+                return;
+            }
+
+            // 2. Trigger Download via Hidden Anchor
+            // This ensures the browser handles the file stream natively
             const a = document.createElement('a');
-            a.href = url;
-            const ext = os === 'windows' ? '.exe' : '';
-            a.download = `apexkit-${os}-latest${ext}`;
+            a.href = data.downloadUrl;
+            a.download = data.filename; // Hint filename (though browser might prioritize header)
             document.body.appendChild(a);
             a.click();
-            window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
+
         } catch (err) {
-            alert("Download failed.");
+            console.error(err);
+            alert("Network error.");
         } finally {
             setDownloadingOS(null);
         }

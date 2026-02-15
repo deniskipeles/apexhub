@@ -6,6 +6,7 @@ import { apex } from '@/lib/apexkit';
 import { Mail, Lock, Github, ArrowRight, Loader2, ShieldCheck, AlertCircle, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { loginAction } from '../actions';
+import { APEX_HUB_TOKEN } from '@/lib/constants';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -24,6 +25,7 @@ export default function LoginPage() {
             if (res.token) {
                 // 1. Set Cookie (Persist for Server/Next Visit)
                 await loginAction(res.token);
+                if(typeof window !== 'undefined') localStorage.setItem(APEX_HUB_TOKEN, res.token);
 
                 // 2. Set SDK (Immediate Client Use)
                 apex.setToken(res.token);
