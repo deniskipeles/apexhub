@@ -1,5 +1,4 @@
 
-// import {ApexKit} from "@/lib/sdk"
 import { ApexKit } from "@apexkit/sdk"; 
 import { APEX_HUB_TOKEN } from './constants';
 // Initialize Instance

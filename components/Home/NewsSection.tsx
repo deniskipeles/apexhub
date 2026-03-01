@@ -1,4 +1,4 @@
-import { AppRecord } from '@apexkit/sdk';
+import {  BaseRecord as AppRecord  } from '@apexkit/sdk';
 import Link from 'next/link';
 
 export function NewsSection({ news }: { news: AppRecord[] }) {

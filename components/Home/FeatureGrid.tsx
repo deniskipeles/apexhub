@@ -2,7 +2,7 @@ import {
     Cpu, Server, Terminal, Database, ShieldCheck, Globe, Zap, Layout, Smartphone 
   } from 'lucide-react';
   import { apex } from '@/lib/apexkit';
-import { AppRecord } from '@apexkit/sdk';
+import { BaseRecord as AppRecord } from '@apexkit/sdk';
   
   // Icon Mapping
   const Icons: Record<string, any> = {

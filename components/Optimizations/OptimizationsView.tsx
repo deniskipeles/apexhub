@@ -2,15 +2,15 @@
 
 import React, { useState } from 'react';
 import { 
-    TrendingUp, ArrowUp, ArrowDown, Tag, Plus, MessageSquare, User, 
+    TrendingUp, ArrowUp, ArrowDown, Plus, MessageSquare, User, 
     Loader2, X, CheckCircle2, Trash2, Edit2
 } from 'lucide-react';
 import { apex, getFileUrl } from '@/lib/apexkit';
-import { RealtimeChat } from '../Community/RealtimeChat';
+import Link from 'next/link';
 
 interface Props {
     initialStrategies: any[];
-    currentUser?: any; // Pass { id: 1, role: 'admin' } from page.tsx
+    currentUser?: any; 
 }
 
 export function OptimizationsView({ initialStrategies, currentUser }: Props) {
@@ -19,7 +19,6 @@ export function OptimizationsView({ initialStrategies, currentUser }: Props) {
     // UI State
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [editingStrat, setEditingStrat] = useState<any | null>(null);
-    const [activeDiscussion, setActiveDiscussion] = useState<any | null>(null);
     
     // Form State
     const [formTitle, setFormTitle] = useState("");
@@ -30,24 +29,18 @@ export function OptimizationsView({ initialStrategies, currentUser }: Props) {
     // --- ACTIONS ---
 
     const handleVote = async (strat: any, type: 'up' | 'down', e: React.MouseEvent) => {
+        e.preventDefault(); // Prevent link navigation
         e.stopPropagation();
         
-        // Optimistic UI update (optional, but complex with up/down logic, so we wait for server usually)
-        // For responsiveness, let's just trigger the call:
         try {
             const res = await apex.scripts.run('vote-optimization', {
                 optimization_id: strat.id,
                 type
             });
 
-            // Update local state with new counts from server
             setStrategies(prev => prev.map(s => s.id === strat.id ? {
                 ...s,
-                data: { 
-                    ...s.data, 
-                    upvotes: res.upvotes, 
-                    downvotes: res.downvotes 
-                }
+                data: { ...s.data, upvotes: res.upvotes, downvotes: res.downvotes }
             } : s));
 
         } catch (err: any) {
@@ -56,19 +49,20 @@ export function OptimizationsView({ initialStrategies, currentUser }: Props) {
     };
 
     const handleDelete = async (id: string, e: React.MouseEvent) => {
+        e.preventDefault();
         e.stopPropagation();
         if (!confirm("Are you sure you want to delete this strategy?")) return;
         
         try {
             await apex.collection('optimizations').delete(id);
             setStrategies(prev => prev.filter(s => s.id !== id));
-            if (activeDiscussion?.id === id) setActiveDiscussion(null);
         } catch (e) {
             alert("Failed to delete. You might not have permission.");
         }
     };
 
     const openEdit = (strat: any, e: React.MouseEvent) => {
+        e.preventDefault();
         e.stopPropagation();
         setEditingStrat(strat);
         setFormTitle(strat.data.title);
@@ -82,24 +76,16 @@ export function OptimizationsView({ initialStrategies, currentUser }: Props) {
         setIsSubmitting(true);
         try {
             const tagsArray = formTags.split(',').map(t => t.trim()).filter(Boolean);
-            const payload = {
-                title: formTitle,
-                content: formContent,
-                tags: tagsArray,
-            };
+            const payload = { title: formTitle, content: formContent, tags: tagsArray };
 
             if (editingStrat) {
                 const res = await apex.collection('optimizations').update(editingStrat.id, payload);
-                // Expand author manually to keep UI consistent without refetch
                 res.expand = editingStrat.expand; 
                 setStrategies(prev => prev.map(s => s.id === editingStrat.id ? res : s));
             } else {
                 const res = await apex.collection('optimizations').create({
-                    ...payload,
-                    upvotes: 0,
-                    downvotes: 0
+                    ...payload, upvotes: 0, downvotes: 0
                 });
-                // Inject current user as author for immediate display
                 if (currentUser) {
                     res.expand = { author_id: { email: currentUser.email, ...currentUser } };
                 }
@@ -110,7 +96,6 @@ export function OptimizationsView({ initialStrategies, currentUser }: Props) {
             setEditingStrat(null);
             setFormTitle(""); setFormContent(""); setFormTags("");
         } catch (e) {
-            console.error(e);
             alert("Failed to save. Check your inputs.");
         } finally {
             setIsSubmitting(false);
@@ -128,9 +113,7 @@ export function OptimizationsView({ initialStrategies, currentUser }: Props) {
 
     return (
         <div className="flex h-full min-h-screen relative">
-            
-            {/* MAIN CONTENT AREA */}
-            <div className={`flex-1 transition-all duration-300 ${activeDiscussion ? 'hidden lg:block lg:mr-[400px]' : ''}`}>
+            <div className="flex-1 transition-all duration-300">
                 
                 {/* Header */}
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 gap-6 border-b border-border pb-8">
@@ -151,39 +134,30 @@ export function OptimizationsView({ initialStrategies, currentUser }: Props) {
                     </button>
                 </div>
 
-                {/* List */}
+                {/* List - Wrapped in standard Next.js Links for SEO */}
                 <div className="flex flex-col gap-6">
                     {strategies.map((strat: any) => {
                         const author = getAuthor(strat);
-                        // Check if current user is author or admin
                         const isOwner = currentUser && (String(currentUser.id) === String(author.id) || currentUser.role === 'admin');
 
                         return (
-                            <div 
+                            <Link 
+                                href={`/optimizations/${strat.id}`}
                                 key={strat.id} 
-                                onClick={() => setActiveDiscussion(strat)}
-                                className={`group relative bg-surface/30 border border-border rounded-2xl p-6 hover:bg-surface/50 transition-all cursor-pointer overflow-hidden ${activeDiscussion?.id === strat.id ? 'ring-2 ring-primary border-transparent' : ''}`}
+                                className="group relative bg-surface/30 border border-border rounded-2xl p-6 hover:bg-surface/50 transition-all cursor-pointer overflow-hidden block"
                             >
                                 <div className="absolute top-0 left-0 w-1 h-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                 
                                 <div className="flex gap-6">
                                     {/* Vote Controls */}
                                     <div className="flex flex-col items-center gap-2 min-w-[50px] bg-background/50 rounded-xl p-2 border border-border/50 h-fit">
-                                        <button 
-                                            onClick={(e) => handleVote(strat, 'up', e)}
-                                            className="p-1.5 rounded-lg hover:bg-green-500/10 text-muted hover:text-green-500 transition-colors"
-                                            title="Upvote"
-                                        >
+                                        <button onClick={(e) => handleVote(strat, 'up', e)} className="p-1.5 rounded-lg hover:bg-green-500/10 text-muted hover:text-green-500 transition-colors" title="Upvote">
                                             <ArrowUp size={20} />
                                         </button>
                                         <span className="font-bold text-sm text-foreground">
                                             {(strat.data.upvotes || 0) - (strat.data.downvotes || 0)}
                                         </span>
-                                        <button 
-                                            onClick={(e) => handleVote(strat, 'down', e)}
-                                            className="p-1.5 rounded-lg hover:bg-red-500/10 text-muted hover:text-red-500 transition-colors"
-                                            title="Downvote"
-                                        >
+                                        <button onClick={(e) => handleVote(strat, 'down', e)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-muted hover:text-red-500 transition-colors" title="Downvote">
                                             <ArrowDown size={20} />
                                         </button>
                                     </div>
@@ -191,9 +165,9 @@ export function OptimizationsView({ initialStrategies, currentUser }: Props) {
                                     {/* Content */}
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-start justify-between mb-2">
-                                            <h3 className="text-2xl font-bold text-foreground leading-tight group-hover:text-primary transition-colors">
+                                            <h2 className="text-2xl font-bold text-foreground leading-tight group-hover:text-primary transition-colors">
                                                 {strat.data.title}
-                                            </h3>
+                                            </h2>
                                             
                                             {isOwner && (
                                                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -237,7 +211,7 @@ export function OptimizationsView({ initialStrategies, currentUser }: Props) {
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </Link>
                         );
                     })}
                     
@@ -248,39 +222,6 @@ export function OptimizationsView({ initialStrategies, currentUser }: Props) {
                     )}
                 </div>
             </div>
-
-            {/* DISCUSSION SLIDE-OVER (Desktop) / FULLSCREEN (Mobile) */}
-            {activeDiscussion && (
-                <div className="fixed inset-y-0 right-0 w-full lg:w-[400px] bg-background border-l border-border shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
-                    <div className="flex items-center justify-between p-4 border-b border-border bg-surface/50 backdrop-blur-md">
-                        <h3 className="font-bold truncate pr-4">Discussion</h3>
-                        <button onClick={() => setActiveDiscussion(null)} className="p-2 hover:bg-surface rounded-lg"><X size={18} /></button>
-                    </div>
-
-                    <div className="flex-1 overflow-hidden relative">
-                        {/* Scrollable Container */}
-                        <div className="absolute inset-0 flex flex-col">
-                            {/* Original Post Context */}
-                            <div className="p-4 border-b border-border bg-secondary/5 shrink-0 max-h-[200px] overflow-y-auto">
-                                <h4 className="font-bold text-sm mb-2">{activeDiscussion.data.title}</h4>
-                                <p className="text-xs text-muted font-mono whitespace-pre-wrap">{activeDiscussion.data.content}</p>
-                            </div>
-
-                            {/* Chat Component */}
-                            <div className="flex-1 relative">
-                                <RealtimeChat 
-                                    parentId={activeDiscussion.id}
-                                    parentData={activeDiscussion}
-                                    initialComments={[]} // Empty initially, chat component fetches or subscribes
-                                    collectionName="discussions_conversations" // Reuse existing collection or create 'optimization_comments'
-                                    parentField="discussion_id" // Reuse discussion logic or add 'optimization_id' to schema
-                                    channel={`opt_${activeDiscussion.id}`}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* CREATE/EDIT MODAL */}
             {isCreateOpen && (
