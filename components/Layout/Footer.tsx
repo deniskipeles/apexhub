@@ -29,10 +29,7 @@ export function Footer() {
             {/* Branding Column */}
             <div className="col-span-2 md:col-span-1">
                 <div className="flex items-center gap-2 mb-4">
-                     <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-                        <path d="M16 2L2 26H30L16 2Z" stroke="currentColor" className="text-primary" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M18.5 10L13.5 18H17.5L14.5 26L21.5 16H17L18.5 10Z" fill="currentColor" className="text-accent" stroke="currentColor" strokeWidth="1" strokeLinejoin="round"/>
-                    </svg>
+                     <img src="/favicon.png" alt="ApexHub Logo" className="h-10" />
                     <div className="font-bold text-lg text-foreground">Apex<span className="text-primary">Hub</span></div>
                 </div>
                 <p className="text-muted text-sm mb-6 max-w-xs">

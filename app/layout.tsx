@@ -18,6 +18,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/favicon.png" />
+        {/*
+          The script below is to prevent a flash of the incorrect theme (FOUC).
+          It's placed in the head and runs before React renders.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                if (
+                  localStorage.theme === 'dark' || 
+                  (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+                ) {
+                  document.documentElement.classList.add('dark');
+                } else {
+                  document.documentElement.classList.remove('dark');
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="bg-background text-foreground flex min-h-screen font-sans">
         <AuthProvider token={token}>
           {/* Wrap EVERYTHING in ThemeProvider */}
