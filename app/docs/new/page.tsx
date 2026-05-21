@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { apex } from '@/lib/apexkit';
 import { Loader2, Plus, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
+import { MarkdownEditor } from '@/components/MarkdownEditor';
+
 
 export default function NewDocPage() {
     const router = useRouter();
@@ -123,13 +125,18 @@ export default function NewDocPage() {
 
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">Content (Markdown)</label>
-                    <textarea 
+                    {/* <textarea 
                         required
                         rows={15}
                         value={content}
                         onChange={e => setContent(e.target.value)}
                         placeholder="# Introduction&#10;&#10;Explain the topic here..."
                         className="w-full bg-background border border-border rounded-lg px-4 py-3 text-foreground focus:ring-2 focus:ring-primary focus:outline-none font-mono text-sm resize-y placeholder:text-muted/50 leading-relaxed"
+                    /> */}
+                    <MarkdownEditor
+                        initialValue={content}
+                        // onSave={(md) => api.save(md)}
+                        onChange={(md) => setContent(md)}
                     />
                     <p className="text-xs text-muted text-right">Supports GitHub Flavored Markdown</p>
                 </div>

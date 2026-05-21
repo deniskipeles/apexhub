@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { Metadata, ResolvingMetadata } from 'next';
 import { ArrowLeft, User, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
+import { MarkdownRenderer } from '@/components/MarkdowRenderer';
 
 // 1. Fetch Data
 async function getData(id: string) {
@@ -115,9 +116,7 @@ export default async function OptimizationDetailPage({ params }: { params: { id:
                 </div>
 
                 {/* Pre-rendered content for crawlers */}
-                <div className="prose prose-zinc dark:prose-invert max-w-none font-mono text-sm opacity-90 whitespace-pre-wrap">
-                    {strategy.data.content}
-                </div>
+                <MarkdownRenderer content={strategy.data?.content || ''} className="prose prose-zinc dark:prose-invert max-w-none font-mono text-sm opacity-90 whitespace-pre-wrap" />
             </article>
 
             {/* Interactive Realtime Chat */}

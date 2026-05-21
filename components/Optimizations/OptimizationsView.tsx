@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { apex, getFileUrl } from '@/lib/apexkit';
 import Link from 'next/link';
+import MarkdownEditor from '../MarkdownEditor';
 
 interface Props {
     initialStrategies: any[];
@@ -247,13 +248,19 @@ export function OptimizationsView({ initialStrategies, currentUser }: Props) {
                             
                             <div>
                                 <label className="block text-sm font-medium text-muted mb-2">Technique (Markdown)</label>
-                                <textarea 
+                                {/* <textarea 
                                     required 
                                     rows={8} 
                                     value={formContent} 
                                     onChange={e => setFormContent(e.target.value)} 
                                     className="w-full bg-background border border-border rounded-lg px-4 py-3 text-foreground focus:ring-2 focus:ring-primary focus:outline-none font-mono text-sm resize-none" 
                                     placeholder="Describe the optimization..." 
+                                /> */}
+                                <MarkdownEditor
+                                    initialValue={formContent} 
+                                    // onSave={(md) => api.save(md)}
+                                    onChange={(md) => setFormContent(md)}
+                                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-foreground focus:ring-2 focus:ring-primary focus:outline-none font-mono text-sm resize-none"
                                 />
                             </div>
 

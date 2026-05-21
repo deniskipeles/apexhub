@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { apex, getFileUrl } from '@/lib/apexkit';
 import { Loader2, Save, ArrowLeft, Image as ImageIcon, X } from 'lucide-react';
 import Link from 'next/link';
+import MarkdownEditor from '../MarkdownEditor';
 
 interface Props {
     initialData?: any;
@@ -160,13 +161,19 @@ export function BlogEditor({ initialData }: Props) {
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">Body Content (Markdown)</label>
                     <div className="relative">
-                        <textarea 
+                        {/* <textarea 
                             required
                             rows={20}
                             value={body}
                             onChange={e => setBody(e.target.value)}
                             className="w-full bg-surface/50 border border-border rounded-lg px-6 py-4 text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none font-mono text-sm resize-y leading-relaxed placeholder:text-muted/30"
                             placeholder="# Write your story here..."
+                        /> */}
+                        <MarkdownEditor
+                            initialValue={body}
+                            // onSave={(md) => api.save(md)}
+                            onChange={(md) => setBody(md)}
+                            className="w-full bg-surface/50 border border-border rounded-lg px-6 py-4 text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none font-mono text-sm resize-y leading-relaxed placeholder:text-muted/30"
                         />
                         <div className="absolute top-2 right-2 text-[10px] text-muted bg-background/50 px-2 py-1 rounded border border-border">Markdown Supported</div>
                     </div>

@@ -4,13 +4,14 @@ import React from 'react';
 import Link from 'next/link';
 import { getFileUrl } from '@/lib/apexkit';
 import { Calendar, Clock, ArrowLeft, Share2, User, Tag, Edit3 } from 'lucide-react';
+import { MarkdownRenderer } from '../MarkdowRenderer';
 
 interface Props {
     post: any;
-    contentHtml: string;
+    content: string;
 }
 
-export function BlogPostView({ post, contentHtml }: Props) {
+export function BlogPostView({ post, content }: Props) {
     const author = {
         name: post.expand?.author_id?.email?.split('@')[0] || 'ApexTeam',
         avatar: post.expand?.author_id?.metadata?.avatar ? getFileUrl(post.expand.author_id.metadata.avatar) : null
@@ -75,11 +76,8 @@ export function BlogPostView({ post, contentHtml }: Props) {
                     <img src={coverImage} alt={post.data.headline} className="w-full h-full object-cover" />
                 </div>
             )}
-
-            <div
-                className="prose prose-lg prose-zinc dark:prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ __html: contentHtml }}
-            />
+            
+            <MarkdownRenderer content={content} className="prose prose-lg prose-zinc dark:prose-invert max-w-none" />
 
             <div className="mt-12 pt-8 border-t border-border">
                 <h3 className="text-sm font-bold text-muted uppercase mb-4 flex items-center gap-2">

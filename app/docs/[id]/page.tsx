@@ -1,5 +1,5 @@
 import { apex } from '@/lib/apexkit';
-import { renderMarkdown } from '@/lib/commonHelpers';
+import { MarkdownRenderer } from '@/components/MarkdowRenderer';
 import { notFound } from 'next/navigation';
 import { DocsSidebar } from '@/components/Docs/DocsSidebar'; // Sidebar reused here
 import { Menu, Share2, Calendar, User, Sparkles, ArrowRight } from 'lucide-react';
@@ -10,7 +10,6 @@ async function getRelatedDocs(id: string) {
     try {
         // 1. Get raw vectors stored for this record
         const vectors = await apex.collection('docs').getVector(id);
-        console.log("raw vectors", vectors)
         
         if (!vectors || vectors.length === 0) return [];
 
@@ -23,8 +22,6 @@ async function getRelatedDocs(id: string) {
             target.vector, 
             5 // Fetch 4 to allow filtering self
         );
-
-        console.log("HNSW Similarity Search", results)
 
         // 4. Filter out the current document
         return results
@@ -76,7 +73,7 @@ export default async function DocView({ params }: { params: { id: string } }) {
   if (!data) notFound();
   
   const { groups, doc, related } = data;
-  const contentHtml = await renderMarkdown(doc.data.content);
+//   const contentHtml = await renderMarkdown();
   const authorName = doc.expand?.added_by?.email?.split('@')[0] || 'ApexTeam';
 
   return (
@@ -111,10 +108,7 @@ export default async function DocView({ params }: { params: { id: string } }) {
                </span>
            </div>
 
-           <div 
-               className="prose prose-zinc dark:prose-invert max-w-none" 
-               dangerouslySetInnerHTML={{ __html: contentHtml }} 
-           />
+           <MarkdownRenderer content={doc?.data?.content} />
             
             {/* Related Content Section */}
             {related.length > 0 && (

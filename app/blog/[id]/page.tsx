@@ -1,7 +1,6 @@
 import { apex } from '@/lib/apexkit';
 import { BlogPostView } from '@/components/Blog/BlogPostView';
 import { notFound } from 'next/navigation';
-import { renderMarkdown } from '@/lib/commonHelpers';
 
 async function getPost(id: string) {
     try {
@@ -21,8 +20,5 @@ export default async function BlogPostPage({ params }: { params: { id: string } 
     
     if (!post) notFound();
 
-    // Render markdown on server
-    const contentHtml = await renderMarkdown(post.data.body || '');
-
-    return <BlogPostView post={post} contentHtml={contentHtml} />;
+    return <BlogPostView post={post} content={post.data.body || ''} />;
 }
