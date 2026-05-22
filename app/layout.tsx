@@ -6,6 +6,8 @@ import { ThemeProvider } from '@/components/ThemeContext';
 import { cookies } from 'next/headers';
 import { AuthProvider } from '@/components/AuthProvider';
 import { APEX_HUB_TOKEN } from '@/lib/constants';
+import 'highlight.js/styles/github-dark.css'; // You can change this to your preferred theme (e.g., atom-one-dark.css)
+
 
 export const metadata = {
   title: 'ApexHub',

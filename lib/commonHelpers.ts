@@ -1,5 +1,6 @@
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import hljs from 'highlight.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -10,14 +11,9 @@ function escapeFull(text: string): string {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
-    // { } % are intentionally NOT escaped — safe in HTML text nodes,
-    // and readers need to see Tera syntax like {% for %} / {{ var }} literally.
 }
 
 // ─── Renderer ────────────────────────────────────────────────────────────────
-// Colors rhyme with the ApexHub logo: green (#16a34a) + amber (#f59e0b).
-// All text uses CSS variables so light/dark mode is inherited from the app.
-
 const renderer = new marked.Renderer();
 
 renderer.heading = function ({ tokens, depth }: any) {
@@ -81,7 +77,6 @@ renderer.table = function (token: any) {
     }).join('');
 
     return (
-        // FIX: Added max-width: 100% and box-sizing: border-box to the wrapper
         `<div style="overflow-x:auto;margin:0 0 1.25rem;max-width:100%;box-sizing:border-box;">\n` +
         `<table style="width:100%;border-collapse:collapse;font-size:0.9rem;">\n` +
         `<thead><tr>${headerCells}</tr></thead>\n` +
@@ -90,7 +85,6 @@ renderer.table = function (token: any) {
     );
 };
 
-// Add this anywhere above the `marked.use(...)` line
 renderer.image = function ({ href, title, text }: any) {
     const t = title ? ` title="${title}"` : '';
     const a = text ? ` alt="${text}"` : '';
@@ -123,10 +117,6 @@ renderer.codespan = function ({ text }: any) {
     );
 };
 
-// renderer.code is intentionally omitted — fenced code blocks are extracted
-// from the markdown source before marked runs (see extractCodeBlocks below),
-// so this renderer method is never invoked for fenced blocks.
-
 renderer.strong = function ({ tokens }: any) {
     // @ts-ignore
     const text = this.parser.parseInline(tokens);
@@ -140,14 +130,6 @@ renderer.strong = function ({ tokens }: any) {
 marked.use({ renderer, breaks: true, gfm: true });
 
 // ─── Code-block pre/post processor ───────────────────────────────────────────
-// marked with gfm:true treats any line starting with an HTML tag (<script>,
-// <div>, <!DOCTYPE>, etc.) as an HTML block token — even inside a fenced code
-// block. This breaks the fence mid-parse and swallows the rest of the document.
-//
-// Fix: extract every fenced code block BEFORE marked sees the source, render
-// each one to final HTML, stash it, replace the fence with a plain-text marker,
-// let marked parse the safe source, sanitize, then regex-restore the stashed
-// code HTML (matching both the raw marker and any <p>-wrapped variant).
 
 interface CodeStash {
     marker: string;
@@ -155,17 +137,28 @@ interface CodeStash {
 }
 
 function renderCodeBlock(lang: string, text: string): string {
-    const escaped = escapeFull(text);
+    let highlighted = escapeFull(text);
+    const cleanLang = lang ? lang.trim().toLowerCase() : '';
+
+    // If highlight.js supports the language, attempt to highlight it
+    if (cleanLang && hljs.getLanguage(cleanLang)) {
+        try {
+            highlighted = hljs.highlight(text, { language: cleanLang }).value;
+        } catch (e) {
+            console.warn("Syntax highlighting failed for language:", cleanLang, e);
+        }
+    }
+
     return (
-        `<div style="margin:1rem 0;border-radius:8px;border:1px solid color-mix(in srgb,var(--foreground) 10%,transparent);` +
-        `background:color-mix(in srgb,var(--foreground) 4%,transparent);overflow:hidden;max-width:100%;box-sizing:border-box;">` +
+        `<div class="hljs" style="margin:1rem 0;border-radius:8px;border:1px solid color-mix(in srgb,var(--foreground) 10%,transparent);` +
+        `overflow:hidden;max-width:100%;box-sizing:border-box;">` +
         (lang
             ? `<div style="padding:0.3rem 1rem;font-size:0.7rem;font-family:monospace;` +
               `color:var(--muted-foreground);border-bottom:1px solid color-mix(in srgb,var(--foreground) 8%,transparent);` +
               `letter-spacing:0.05em;opacity:0.7;">${lang}</div>`
             : '') +
-        `<pre style="margin:0;padding:1rem;overflow-x:auto;max-width:100%;box-sizing:border-box;">` +
-        `<code style="font-family:monospace;font-size:0.875rem;color:var(--foreground);white-space:pre;">${escaped}</code></pre></div>`
+        `<pre style="margin:0;padding:1rem;overflow-x:auto;max-width:100%;box-sizing:border-box;background:transparent;">` +
+        `<code class="hljs ${cleanLang ? 'language-' + cleanLang : ''}" style="font-family:monospace;font-size:0.875rem;white-space:pre;background:transparent;border:none;padding:0;">${highlighted}</code></pre></div>`
     );
 }
 
@@ -177,7 +170,6 @@ function extractCodeBlocks(markdown: string): { safe: string; stash: CodeStash[]
             marker,
             html: renderCodeBlock(lang.trim(), body),
         });
-        // Two blank lines so marked treats it as a standalone paragraph, not inline
         return `\n\n${marker}\n\n`;
     });
     return { safe, stash };
@@ -186,7 +178,6 @@ function extractCodeBlocks(markdown: string): { safe: string; stash: CodeStash[]
 function restoreCodeBlocks(html: string, stash: CodeStash[]): string {
     let result = html;
     for (const { marker, html: codeHtml } of stash) {
-        // Match the marker whether marked left it bare or wrapped it in a <p> tag
         const regex = new RegExp(`<p[^>]*>\\s*${marker}\\s*<\\/p>|${marker}`, 'g');
         result = result.replace(regex, codeHtml);
     }
@@ -195,13 +186,6 @@ function restoreCodeBlocks(html: string, stash: CodeStash[]): string {
 
 // ─── Export ───────────────────────────────────────────────────────────────────
 
-/**
- * Renders a Markdown string to sanitized HTML.
- * Uses marked for parsing and DOMPurify for sanitization (browser only).
- *
- * Fenced code blocks are extracted before marked runs to prevent gfm's
- * HTML-block tokenizer from breaking on <script>, <div>, etc. inside fences.
- */
 export const renderMarkdown = async (content: string): Promise<string> => {
     if (!content) return '';
 
@@ -226,6 +210,6 @@ export const renderMarkdown = async (content: string): Promise<string> => {
         })
         : rawHtml;
 
-    // 4. Restore pre-rendered code blocks
+    // 4. Restore pre-rendered code blocks (bypassing sanitization for hljs class tags)
     return restoreCodeBlocks(sanitized, stash);
 };
