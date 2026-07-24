@@ -2,15 +2,15 @@
 import { ApexKit } from "@apexkit/sdk"; 
 import { APEX_HUB_TOKEN } from './constants';
 // Initialize Instance
-export const apex = new ApexKit(process.env.NEXT_PUBLIC_API_URL || 'https://5000-01ke6hmdydtz0mhahe6ktw06fm.cloudspaces.litng.ai');
+export const apex = new ApexKit(process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000');
 
-// // Client-side only: Hydrate token
-// if (typeof window !== 'undefined') {
-//   const token = localStorage.getItem(APEX_HUB_TOKEN);
-//   if (token) {
-//       apex.setToken(token);
-//   }
-// }
+// Client-side only: Hydrate token
+if (typeof window !== 'undefined') {
+  const token = localStorage.getItem(APEX_HUB_TOKEN);
+  if (token) {
+      apex.setToken(token);
+  }
+}
 
 // Server-side helper (Call this in Server Components/Pages)
 export async function getApexServer() {
