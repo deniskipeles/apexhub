@@ -14,8 +14,8 @@ export const metadata = {
   description: 'The vertical-scale backend platform.',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = cookies();
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const cookieStore = await cookies();
   const token = cookieStore.get(APEX_HUB_TOKEN)?.value || ((typeof window !== 'undefined') ? localStorage.getItem(APEX_HUB_TOKEN) : null);
 
   return (

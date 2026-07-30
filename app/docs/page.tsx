@@ -48,14 +48,14 @@ async function searchDocs(query: string, page: number, type: 'instant' | 'vector
         };
     } else {
         // Vector Search (Usually top-k, hard to paginate deep)
-        const res = await apex.collection('docs').searchTextVector(query, 20); // Get top 20
+        const res = await apex.collection('docs').searchVectorWithText(query, {per_page:20}); // Get top 20
         return {
-            items: res.map((r: any) => ({
+            items: res.items.map((r: any) => ({
                  id: r.id,
                  data: r.data,
                  _score: r._score
             })),
-            total: res.length // Vector search usually returns fixed limit
+            total: res.items.length // Vector search usually returns fixed limit
         };
     }
   } catch {

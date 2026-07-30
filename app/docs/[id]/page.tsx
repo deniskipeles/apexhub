@@ -17,15 +17,15 @@ async function getRelatedDocs(id: string) {
         const target = vectors[0];
         
         // 3. Perform HNSW Similarity Search
-        const results = await apex.collection('docs').searchVector(
+        const results = await apex.collection('docs').searchVectorWithVector(
             target.field_name, 
             target.vector, 
-            5 // Fetch 4 to allow filtering self
+            {per_page:5} // Fetch 4 to allow filtering self
         );
 
         // 4. Filter out the current document
         return results
-            .filter((r: any) => r.id.toString() !== id.toString())
+            .items.filter((r: any) => r.id.toString() !== id.toString())
             .slice(0, 3);
             
     } catch (e) {

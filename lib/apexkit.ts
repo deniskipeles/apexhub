@@ -1,6 +1,7 @@
 
 import { ApexKit } from "@apexkit/sdk"; 
 import { APEX_HUB_TOKEN } from './constants';
+import { use } from "react";
 // Initialize Instance
 export const apex = new ApexKit(process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000');
 
@@ -18,7 +19,7 @@ export async function getApexServer() {
   
   // Dynamically import cookies to avoid build errors on client
   const { cookies } = await import('next/headers');
-  const token = cookies().get(APEX_HUB_TOKEN)?.value;
+  const token = (await cookies()).get(APEX_HUB_TOKEN)?.value;
   
   if (token) {
       client.setToken(token);
@@ -28,7 +29,15 @@ export async function getApexServer() {
 
 // Helper for server components
 export const getFileUrl = (filename: string) => {
-  return apex.files.getFileUrl(filename);
+  const result = apex.files.getFileUrl(filename);
+
+  // If it's already a resolved string, just return it directly!
+  if (typeof result === 'string') {
+    return result;
+  }
+
+  // Otherwise, result is narrowed to Promise<string>, so use() works:
+  return use(result);
 };
 
 // Fallback Mock Data (For graceful degradation if DB is empty)

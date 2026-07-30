@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { apex } from '@/lib/apexkit';
+import { apex, getFileUrl } from '@/lib/apexkit';
 import { X, FileCode, FileJson, Folder, Archive, Loader2, Download, AlertCircle } from 'lucide-react';
 
 interface Props {
@@ -108,7 +108,7 @@ export function FileExplorerModal({ item, onClose }: Props) {
                     </div>
                     <div className="flex items-center gap-2">
                          <a 
-                            href={apex.files.getFileUrl(item.data.file)} 
+                            href={getFileUrl(item.data.file)} 
                             download 
                             className="p-2 hover:bg-secondary rounded-lg text-muted hover:text-foreground transition-colors"
                             title="Download"

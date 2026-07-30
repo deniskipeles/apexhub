@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
 
 export async function loginAction(token: string) {
   // Set HTTP-only cookie
-  cookies().set(APEX_HUB_TOKEN, token, {
+  (await cookies()).set(APEX_HUB_TOKEN, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     maxAge: 60 * 60 * 24 * 7, // 1 week
@@ -16,11 +16,11 @@ export async function loginAction(token: string) {
 }
 
 export async function logoutAction() {
-  cookies().delete(APEX_HUB_TOKEN);
+  (await cookies()).delete(APEX_HUB_TOKEN);
   redirect('/');
 }
 
 export async function getToken() {
-  const cookieStore = cookies();
+  const cookieStore = (await cookies());
   return cookieStore.get(APEX_HUB_TOKEN)?.value;
 }
