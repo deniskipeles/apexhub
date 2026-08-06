@@ -1,18 +1,22 @@
+// apexhub/app/community/discussions/page.tsx
 'use client';
 
+import { useEffect, useState } from 'react';
 import { apex } from '@/lib/apexkit';
-import { DiscussionList } from '@/components/Community/DiscussionList'; // Client Component for search/create
+import { DiscussionList } from '@/components/Community/DiscussionList';
+import { Loader2 } from 'lucide-react';
 
-async function getDiscussions() {
-    try {
-        const res = await apex.collection('discussions').list({ sort: '-created', expand: 'author_id' });
-        return res.items;
-    } catch { return []; }
-}
+export default function DiscussionsPage() {
+    const [items, setItems] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
-// export const revalidate = 0;
+    useEffect(() => {
+        apex.collection('discussions').list({ sort: '-created', expand: 'author_id' })
+            .then(res => setItems(res.items))
+            .catch(() => setItems([]))
+            .finally(() => setLoading(false));
+    }, []);
 
-export default async function DiscussionsPage() {
-    const items = await getDiscussions();
+    if (loading) return <div className="flex justify-center items-center min-h-[50vh]"><Loader2 className="animate-spin text-muted h-8 w-8" /></div>;
     return <DiscussionList initialItems={items} />;
 }

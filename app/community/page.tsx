@@ -1,40 +1,34 @@
+// apexhub/app/community/page.tsx
 'use client';
 
+import { useEffect, useState } from 'react';
 import { apex } from '@/lib/apexkit';
 import Link from 'next/link';
-import { 
-  MessageSquare, Bug, Server, ArrowRight, 
-  MessageCircle, Eye, ThumbsUp, MapPin, Cpu 
-} from 'lucide-react';
+import { MessageSquare, Bug, Server, ArrowRight, MessageCircle, Eye, ThumbsUp, MapPin, Cpu, Loader2 } from 'lucide-react';
 
-async function getSummaryData() {
-  try {
-    const [discussions, issues, offers] = await Promise.all([
+export default function CommunityHubPage() {
+  const [data, setData] = useState<{discussions: any[], issues: any[], offers: any[]}>({ discussions: [], issues: [], offers: [] });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
          apex.collection('discussions').list({ sort: '-created', per_page: 3 }),
          apex.collection('issues').list({ sort: '-created', per_page: 3 }),
          apex.collection('tenancy_offers').list({ sort: '-created', per_page: 3 })
-    ]);
+    ])
+    .then(([d, i, o]) => {
+        setData({ discussions: d.items, issues: i.items, offers: o.items });
+    })
+    .catch(console.error)
+    .finally(() => setLoading(false));
+  }, []);
 
-    return {
-        discussions: discussions.items,
-        issues: issues.items,
-        offers: offers.items
-    };
-  } catch (e) {
-      console.error("Community summary fetch failed", e);
-      return { discussions: [], issues: [], offers: [] };
-  }
-}
+  if (loading) return <div className="flex justify-center items-center min-h-[50vh]"><Loader2 className="animate-spin text-muted h-8 w-8" /></div>;
 
-// export const revalidate = 0;
-
-export default async function CommunityHubPage() {
-  const { discussions, issues, offers } = await getSummaryData();
+  const { discussions, issues, offers } = data;
 
   return (
     <div className="space-y-16">
-        
-        {/* --- Discussions Section --- */}
         <section>
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
@@ -74,7 +68,6 @@ export default async function CommunityHubPage() {
             </div>
         </section>
 
-        {/* --- Issues Section --- */}
         <section>
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
@@ -120,7 +113,6 @@ export default async function CommunityHubPage() {
             </div>
         </section>
 
-        {/* --- Tenancy Market Section --- */}
         <section>
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
@@ -165,7 +157,6 @@ export default async function CommunityHubPage() {
                 {offers.length === 0 && <div className="col-span-3 text-sm text-muted italic text-center py-8">No active offers.</div>}
             </div>
         </section>
-
     </div>
   );
 }

@@ -1,26 +1,23 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { apex } from '@/lib/apexkit';
 import { BlogPostView } from '@/components/Blog/BlogPostView';
-import { notFound } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
-async function getPost(id: string) {
-    try {
-        const post = await apex.collection('blog').get(id, { expand: 'author_id' });
-        return post;
-    } catch { return null; }
-}
+export default function BlogPostPage({ params }: { params: { id: string } }) {
+    const [post, setPost] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
 
-// export async function generateMetadata({ params }: { params: { id: string } }) {
-//     const post = await getPost(params.id);
-//     if (!post) return { title: 'Post Not Found' };
-//     return { title: post.data.headline };
-// }
+    useEffect(() => {
+        apex.collection('blog').get(params.id, { expand: 'author_id' })
+            .then(setPost)
+            .catch(() => setPost(null))
+            .finally(() => setLoading(false));
+    }, [params.id]);
 
-export default async function BlogPostPage({ params }: { params: { id: string } }) {
-    const post = await getPost(params.id);
-    
-    if (!post) notFound();
+    if (loading) return <div className="flex justify-center items-center min-h-[50vh]"><Loader2 className="animate-spin text-muted h-8 w-8" /></div>;
+    if (!post) return <div className="p-12 text-center text-muted">Post not found</div>;
 
     return <BlogPostView post={post} content={post.data.body || ''} />;
 }

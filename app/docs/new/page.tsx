@@ -3,10 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { apex } from '@/lib/apexkit';
-import { Loader2, Plus, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { Loader2, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { MarkdownEditor } from '@/components/MarkdownEditor';
-
 
 export default function NewDocPage() {
     const router = useRouter();
@@ -21,15 +20,12 @@ export default function NewDocPage() {
     useEffect(() => {
         const loadCategories = async () => {
             try {
-                // Fetch collection schema to get options
-                // Note: Assuming public access to schema or logged in user
                 const docCol = await apex.admins.getCollection('docs');
                 
                 let options: string[] = [];
                 if (docCol?.schema?.fields?.['category']?.options) {
                     options = docCol.schema.fields['category'].options;
                 } else if (Array.isArray(docCol?.schema)) {
-                    // Legacy check
                     const f = docCol.schema.find((f: any) => f.name === 'category');
                     if (f?.options) options = f.options;
                 }
@@ -57,7 +53,6 @@ export default function NewDocPage() {
                 category,
             });
             
-            // Redirect to the new doc page
             router.push(`/docs/${res.id}`);
             router.refresh(); 
 
@@ -70,7 +65,6 @@ export default function NewDocPage() {
 
     return (
         <div className="min-h-screen p-6 md:p-12 max-w-3xl mx-auto">
-            
             <div className="mb-8">
                 <Link href="/docs" className="text-sm text-muted hover:text-primary flex items-center gap-1 mb-4 w-fit transition-colors">
                     <ArrowLeft size={14} /> Back to Docs
@@ -80,7 +74,6 @@ export default function NewDocPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6 bg-surface/30 border border-border p-6 md:p-8 rounded-2xl shadow-sm">
-                
                 {error && (
                     <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg text-sm">
                         {error}
@@ -125,17 +118,8 @@ export default function NewDocPage() {
 
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">Content (Markdown)</label>
-                    {/* <textarea 
-                        required
-                        rows={15}
-                        value={content}
-                        onChange={e => setContent(e.target.value)}
-                        placeholder="# Introduction&#10;&#10;Explain the topic here..."
-                        className="w-full bg-background border border-border rounded-lg px-4 py-3 text-foreground focus:ring-2 focus:ring-primary focus:outline-none font-mono text-sm resize-y placeholder:text-muted/50 leading-relaxed"
-                    /> */}
                     <MarkdownEditor
                         initialValue={content}
-                        // onSave={(md) => api.save(md)}
                         onChange={(md) => setContent(md)}
                     />
                     <p className="text-xs text-muted text-right">Supports GitHub Flavored Markdown</p>
@@ -153,7 +137,6 @@ export default function NewDocPage() {
                         {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : <><CheckCircle2 size={18} /> Publish Guide</>}
                     </button>
                 </div>
-
             </form>
         </div>
     );

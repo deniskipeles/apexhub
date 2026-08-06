@@ -1,22 +1,26 @@
+// apexhub/app/blog/page.tsx
 'use client';
 
+import { useEffect, useState } from 'react';
 import { apex } from '@/lib/apexkit';
 import { BlogList } from '@/components/Blog/BlogList';
+import { Loader2 } from 'lucide-react';
 
-async function getPosts() {
-    try {
-        const res = await apex.collection('blog').list({ 
+export default function BlogPage() {
+    const [posts, setPosts] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        apex.collection('blog').list({ 
             sort: '-created', 
             expand: 'author_id',
             per_page: 20
-        });
-        return res.items;
-    } catch { return []; }
-}
+        })
+        .then(res => setPosts(res.items))
+        .catch(() => setPosts([]))
+        .finally(() => setLoading(false));
+    }, []);
 
-// export const revalidate = 60; // ISR
-
-export default async function BlogPage() {
-    const posts = await getPosts();
+    if (loading) return <div className="flex justify-center items-center min-h-[50vh]"><Loader2 className="animate-spin text-muted h-8 w-8" /></div>;
     return <BlogList initialPosts={posts} />;
 }

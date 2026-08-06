@@ -1,31 +1,25 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { apex } from '@/lib/apexkit';
 import { MarkdownRenderer } from '@/components/MarkdowRenderer';
-import { notFound } from 'next/navigation';
-import { DocsSidebar } from '@/components/Docs/DocsSidebar'; // Sidebar reused here
-import { Menu, Share2, Calendar, User, Sparkles, ArrowRight } from 'lucide-react';
+import { DocsSidebar } from '@/components/Docs/DocsSidebar';
+import { Share2, Calendar, Sparkles, ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
-// Helper to find related content using stored vectors (No CPU re-embedding)
+// Helper to find related content using stored vectors
 async function getRelatedDocs(id: string) {
     try {
-        // 1. Get raw vectors stored for this record
         const vectors = await apex.collection('docs').getVector(id);
-        
         if (!vectors || vectors.length === 0) return [];
 
-        // 2. Use the first vector found to search (usually 'content' or 'title')
         const target = vectors[0];
-        
-        // 3. Perform HNSW Similarity Search
         const results = await apex.collection('docs').searchVectorWithVector(
             target.field_name, 
             target.vector, 
-            {per_page:5} // Fetch 4 to allow filtering self
+            { per_page: 5 }
         );
 
-        // 4. Filter out the current document
         return results
             .items.filter((r: any) => r.id.toString() !== id.toString())
             .slice(0, 3);
@@ -36,51 +30,52 @@ async function getRelatedDocs(id: string) {
     }
 }
 
-// Fetch groups for sidebar AND specific doc AND related content
-async function getData(id: string) {
-    const [listRes, docRes] = await Promise.all([
-        apex.collection('docs').list({ sort: 'title', per_page: 200 }),
-        apex.collection('docs').get(id, { expand: 'added_by' }).catch(() => null)
-    ]);
+export default function DocView({ params }: { params: { id: string } }) {
+  const [data, setData] = useState<{ groups: Record<string, any[]>, doc: any, related: any[] } | null>(null);
+  const [loading, setLoading] = useState(true);
 
-    if (!docRes) return null;
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [listRes, docRes] = await Promise.all([
+            apex.collection('docs').list({ sort: 'title', per_page: 200 }),
+            apex.collection('docs').get(params.id, { expand: 'added_by' }).catch(() => null)
+        ]);
 
-    // Fetch related content in parallel after confirming doc exists
-    // We don't block the main render on this if it fails
-    const related = await getRelatedDocs(id);
+        if (!docRes) {
+            setData(null);
+            return;
+        }
 
-    const groups: Record<string, any[]> = {};
-    listRes.items.forEach((d: any) => {
-        const cat = d.data.category || 'general';
-        if (!groups[cat]) groups[cat] = [];
-        groups[cat].push(d);
-    });
+        const related = await getRelatedDocs(params.id);
 
-    return { groups, doc: docRes, related };
-}
+        const groups: Record<string, any[]> = {};
+        listRes.items.forEach((d: any) => {
+            const cat = d.data.category || 'general';
+            if (!groups[cat]) groups[cat] = [];
+            groups[cat].push(d);
+        });
 
-// export async function generateMetadata({ params }: { params: { id: string } }) {
-//   try {
-//     const doc = await apex.collection('docs').get(params.id) as any;
-//     const title = doc.data ? doc.data?.title : ''
-//     return { title: `${title} - ApexHub Docs` };
-//   } catch {
-//     return { title: 'Doc Not Found' };
-//   }
-// }
+        setData({ groups, doc: docRes, related });
+      } catch (e) {
+        console.error(e);
+        setData(null);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-export default async function DocView({ params }: { params: { id: string } }) {
-  const data = await getData(params.id);
-  
-  if (!data) notFound();
-  
+    loadData();
+  }, [params.id]);
+
+  if (loading) return <div className="flex justify-center items-center min-h-[50vh]"><Loader2 className="animate-spin text-muted h-8 w-8" /></div>;
+  if (!data) return <div className="p-12 text-center text-muted">Doc Not Found</div>;
+
   const { groups, doc, related } = data;
-//   const contentHtml = await renderMarkdown();
   const authorName = doc.expand?.added_by?.email?.split('@')[0] || 'ApexTeam';
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen">
-       
        {/* Sidebar - Visible on Desktop */}
        <div className="hidden md:block sticky top-0 h-screen overflow-y-auto">
            <DocsSidebar groups={groups} />

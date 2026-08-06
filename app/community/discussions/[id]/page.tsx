@@ -1,45 +1,43 @@
+// apexhub/app/community/discussions/[id]/page.tsx
 'use client';
 
+import { useEffect, useState } from 'react';
 import { apex } from '@/lib/apexkit';
 import { RealtimeChat } from '@/components/Community/RealtimeChat';
-import { notFound } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
-async function getData(id: string) {
-    try {
-        // 1. Fetch Parent
-        const discussion = await apex.collection('discussions').get(id, { expand: 'author_id' });
-        
-        // 2. Fetch Comments (Latest 20)
-        // We assume a collection 'discussions_conversations' with field 'discussion_id'
-        const commentsRes = await apex.collection('discussions_conversations').list({
-            filter: JSON.stringify({ discussion_id: id }),
-            sort: '-created', // Newest first
-            per_page: 20,
-            expand: 'author_id'
-        });
+export default function DiscussionDetailPage({ params }: { params: { id: string } }) {
+    const [data, setData] = useState<{ discussion: any, comments: any[] } | null>(null);
+    const [loading, setLoading] = useState(true);
 
-        // Reverse to show oldest first in chat UI (standard chat flow)
-        // But since we fetched newest first for pagination, we reverse array
-        const comments = commentsRes.items.reverse();
+    useEffect(() => {
+        Promise.all([
+            apex.collection('discussions').get(params.id, { expand: 'author_id' }),
+            apex.collection('discussions_conversations').list({
+                filter: JSON.stringify({ discussion_id: params.id }),
+                sort: '-created',
+                per_page: 20,
+                expand: 'author_id'
+            })
+        ])
+        .then(([discussion, commentsRes]) => {
+            setData({ discussion, comments: commentsRes.items.reverse() });
+        })
+        .catch(() => setData(null))
+        .finally(() => setLoading(false));
+    }, [params.id]);
 
-        return { discussion, comments };
-    } catch {
-        return null;
-    }
-}
-
-export default async function DiscussionDetailPage({ params }: { params: { id: string } }) {
-    const data = await getData(params.id);
-    if (!data) notFound();
+    if (loading) return <div className="flex justify-center items-center min-h-[50vh]"><Loader2 className="animate-spin text-muted h-8 w-8" /></div>;
+    if (!data) return <div className="p-12 text-center text-muted">Discussion not found</div>;
 
     return (
         <RealtimeChat 
             parentId={params.id}
             parentData={data.discussion}
             initialComments={data.comments}
-            collectionName="discussions_conversations" // Target collection for chats
-            parentField="discussion_id"                // Foreign key field
-            channel={`discussion_${params.id}`}        // WS Channel
+            collectionName="discussions_conversations"
+            parentField="discussion_id"
+            channel={`discussion_${params.id}`}
         />
     );
 }
