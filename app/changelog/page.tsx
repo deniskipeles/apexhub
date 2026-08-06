@@ -1,3 +1,5 @@
+'use client';
+
 import { apex } from '@/lib/apexkit';
 import { ChangelogView } from '@/components/Changelog/ChangelogView';
 
@@ -8,7 +10,7 @@ async function getReleases() {
     } catch { return []; }
 }
 
-export const revalidate = 60; // ISR
+// export const revalidate = 60; // ISR
 
 export default async function ChangelogPage() {
     const releases = await getReleases();

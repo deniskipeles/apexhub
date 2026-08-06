@@ -1,3 +1,5 @@
+'use client';
+
 import { apex } from '@/lib/apexkit';
 import { RealtimeChat } from '@/components/Community/RealtimeChat';
 import { notFound } from 'next/navigation';
@@ -41,4 +43,3 @@ export default async function DiscussionDetailPage({ params }: { params: { id: s
         />
     );
 }
-export const runtime = 'edge';

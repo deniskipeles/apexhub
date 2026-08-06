@@ -1,4 +1,6 @@
-import { getApexServer } from '@/lib/apexkit';
+'use client';
+
+import { apex } from '@/lib/apexkit';
 import Link from 'next/link';
 import { 
   MessageSquare, Bug, Server, ArrowRight, 
@@ -6,7 +8,6 @@ import {
 } from 'lucide-react';
 
 async function getSummaryData() {
-  const apex = await getApexServer();
   try {
     const [discussions, issues, offers] = await Promise.all([
          apex.collection('discussions').list({ sort: '-created', per_page: 3 }),
@@ -25,7 +26,7 @@ async function getSummaryData() {
   }
 }
 
-export const revalidate = 0;
+// export const revalidate = 0;
 
 export default async function CommunityHubPage() {
   const { discussions, issues, offers } = await getSummaryData();
@@ -168,4 +169,3 @@ export default async function CommunityHubPage() {
     </div>
   );
 }
-export const runtime = 'edge';

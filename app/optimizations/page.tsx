@@ -1,22 +1,24 @@
-import { apex, getApexServer } from '@/lib/apexkit';
-import { OptimizationsView } from '@/components/Optimizations/OptimizationsView';
-import { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = {
-    title: 'Performance Optimization Strategies | ApexHub',
-    description: 'Discover and share advanced performance tuning, caching, and database optimization strategies for modern backend engineering.',
-    keywords: ['performance', 'optimization', 'database', 'caching', 'rust', 'sqlite', 'backend scaling'],
-    openGraph: {
-        title: 'Performance Optimization Strategies | ApexHub',
-        description: 'Squeeze every drop of performance from your stack. Share and discuss techniques.',
-        type: 'website',
-    },
-    twitter: {
-        card: 'summary_large_image',
-        title: 'Optimization Strategies | ApexHub',
-        description: 'Discover and share advanced backend performance tuning.',
-    }
-};
+import { apex } from '@/lib/apexkit';
+import { OptimizationsView } from '@/components/Optimizations/OptimizationsView';
+// import { Metadata } from 'next';
+
+// export const metadata: Metadata = {
+//     title: 'Performance Optimization Strategies | ApexHub',
+//     description: 'Discover and share advanced performance tuning, caching, and database optimization strategies for modern backend engineering.',
+//     keywords: ['performance', 'optimization', 'database', 'caching', 'rust', 'sqlite', 'backend scaling'],
+//     openGraph: {
+//         title: 'Performance Optimization Strategies | ApexHub',
+//         description: 'Squeeze every drop of performance from your stack. Share and discuss techniques.',
+//         type: 'website',
+//     },
+//     twitter: {
+//         card: 'summary_large_image',
+//         title: 'Optimization Strategies | ApexHub',
+//         description: 'Discover and share advanced backend performance tuning.',
+//     }
+// };
 
 async function getStrategies() {
     try {
@@ -25,7 +27,7 @@ async function getStrategies() {
     } catch { return []; }
 }
 
-export const revalidate = 60; // ISR for SEO
+// export const revalidate = 60; // ISR for SEO
 
 export default async function OptimizationsPage() {
     const strategies = await getStrategies();
@@ -33,8 +35,7 @@ export default async function OptimizationsPage() {
     // Fetch user server-side to pass to client component safely
     let currentUser = null;
     try {
-        const serverApex = await getApexServer();
-        const user = await serverApex.auth.getMe();
+        const user = await apex.auth.getMe();
         if (user && user.id) currentUser = user;
     } catch(e) {}
 
@@ -44,4 +45,3 @@ export default async function OptimizationsPage() {
         </div>
     );
 }
-export const runtime = 'edge';

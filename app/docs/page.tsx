@@ -1,4 +1,5 @@
-// =========================== /app/docs/page.tsx ===========================
+'use client';
+
 import { apex } from '@/lib/apexkit';
 import Link from 'next/link';
 import { SearchBar } from '@/components/Docs/SearchBar';
@@ -63,7 +64,7 @@ async function searchDocs(query: string, page: number, type: 'instant' | 'vector
   }
 }
 
-export const revalidate = 0; // Dynamic for search
+// export const revalidate = 0; // Dynamic for search
 
 export default async function DocsPage({ searchParams }: DocsPageProps) {
   const query = searchParams.q || "";
@@ -207,4 +208,3 @@ export default async function DocsPage({ searchParams }: DocsPageProps) {
     </div>
   );
 }
-export const runtime = 'edge';

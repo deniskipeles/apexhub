@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { apex, getFileUrl } from '@/lib/apexkit';
 import { RealtimeChat } from '@/components/Community/RealtimeChat';
@@ -30,38 +32,38 @@ async function getData(id: string) {
     }
 }
 
-// 2. Generate Dynamic SEO Metadata
-export async function generateMetadata(
-    { params }: { params: { id: string } },
-    parent: ResolvingMetadata
-): Promise<Metadata> {
-    const data = await getData(params.id);
+// // 2. Generate Dynamic SEO Metadata
+// export async function generateMetadata(
+//     { params }: { params: { id: string } },
+//     parent: ResolvingMetadata
+// ): Promise<Metadata> {
+//     const data = await getData(params.id);
 
-    if (!data) {
-        return { title: 'Not Found | ApexHub' };
-    }
+//     if (!data) {
+//         return { title: 'Not Found | ApexHub' };
+//     }
 
-    const title = `${data.strategy.data.title} | ApexHub Optimizations`;
-    const description = String(data.strategy.data.content).substring(0, 160) + '...';
+//     const title = `${data.strategy.data.title} | ApexHub Optimizations`;
+//     const description = String(data.strategy.data.content).substring(0, 160) + '...';
 
-    return {
-        title,
-        description,
-        keywords: data.strategy.data.tags || ['performance', 'optimization'],
-        openGraph: {
-            title,
-            description,
-            type: 'article',
-        },
-        twitter: {
-            card: 'summary',
-            title,
-            description,
-        }
-    };
-}
+//     return {
+//         title,
+//         description,
+//         keywords: data.strategy.data.tags || ['performance', 'optimization'],
+//         openGraph: {
+//             title,
+//             description,
+//             type: 'article',
+//         },
+//         twitter: {
+//             card: 'summary',
+//             title,
+//             description,
+//         }
+//     };
+// }
 
-export const revalidate = 60; // ISR for SEO freshness
+// export const revalidate = 60; // ISR for SEO freshness
 
 // 3. Render Page
 export default async function OptimizationDetailPage({ params }: { params: { id: string } }) {
@@ -139,4 +141,3 @@ export default async function OptimizationDetailPage({ params }: { params: { id:
         </div>
     );
 }
-export const runtime = 'edge';

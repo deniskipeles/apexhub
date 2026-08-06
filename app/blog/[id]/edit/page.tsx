@@ -1,3 +1,5 @@
+'use client';
+
 import { apex } from '@/lib/apexkit';
 import { BlogEditor } from '@/components/Blog/BlogEditor';
 import { notFound } from 'next/navigation';
@@ -10,4 +12,3 @@ export default async function EditBlogPage({ params }: { params: { id: string } 
         notFound();
     }
 }
-export const runtime = 'edge';

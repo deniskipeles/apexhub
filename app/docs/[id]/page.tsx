@@ -1,3 +1,5 @@
+'use client';
+
 import { apex } from '@/lib/apexkit';
 import { MarkdownRenderer } from '@/components/MarkdowRenderer';
 import { notFound } from 'next/navigation';
@@ -57,15 +59,15 @@ async function getData(id: string) {
     return { groups, doc: docRes, related };
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
-  try {
-    const doc = await apex.collection('docs').get(params.id) as any;
-    const title = doc.data ? doc.data?.title : ''
-    return { title: `${title} - ApexHub Docs` };
-  } catch {
-    return { title: 'Doc Not Found' };
-  }
-}
+// export async function generateMetadata({ params }: { params: { id: string } }) {
+//   try {
+//     const doc = await apex.collection('docs').get(params.id) as any;
+//     const title = doc.data ? doc.data?.title : ''
+//     return { title: `${title} - ApexHub Docs` };
+//   } catch {
+//     return { title: 'Doc Not Found' };
+//   }
+// }
 
 export default async function DocView({ params }: { params: { id: string } }) {
   const data = await getData(params.id);
@@ -147,4 +149,3 @@ export default async function DocView({ params }: { params: { id: string } }) {
     </div>
   );
 }
-export const runtime = 'edge';

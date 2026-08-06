@@ -1,11 +1,13 @@
+'use client';
+
 import { getApexServer } from '@/lib/apexkit'; 
 import { EcosystemView } from '@/components/Ecosystem/EcosystemView';
-import { Metadata } from 'next';
+// import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-  title: 'Ecosystem | ApexHub',
-  description: 'Community shared starters, scripts, and templates.',
-};
+// export const metadata: Metadata = {
+//   title: 'Ecosystem | ApexHub',
+//   description: 'Community shared starters, scripts, and templates.',
+// };
 
 // Prevent caching to ensure we get fresh data/auth state on every request
 export const dynamic = 'force-dynamic';
@@ -77,4 +79,3 @@ export default async function EcosystemPage({ searchParams }: PageProps) {
     </div>
   );
 }
-export const runtime = 'edge';

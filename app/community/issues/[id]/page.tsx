@@ -1,3 +1,5 @@
+'use client';
+
 import { apex } from '@/lib/apexkit';
 import { RealtimeChat } from '@/components/Community/RealtimeChat';
 import { notFound } from 'next/navigation';
@@ -24,7 +26,7 @@ async function getData(id: string) {
     }
 }
 
-export const revalidate = 0; // Dynamic
+// export const revalidate = 0; // Dynamic
 
 export default async function IssueDetailPage({ params }: { params: { id: string } }) {
     const data = await getData(params.id);
@@ -41,4 +43,3 @@ export default async function IssueDetailPage({ params }: { params: { id: string
         />
     );
 }
-export const runtime = 'edge';

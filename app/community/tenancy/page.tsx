@@ -1,3 +1,5 @@
+'use client';
+
 import { apex } from '@/lib/apexkit';
 import { TenancyList } from '@/components/Community/TenancyList';
 
@@ -11,10 +13,9 @@ async function getOffers() {
     } catch { return []; }
 }
 
-export const revalidate = 0;
+// export const revalidate = 0;
 
 export default async function TenancyPage() {
     const items = await getOffers();
     return <TenancyList initialItems={items} />;
 } 
-export const runtime = 'edge';

@@ -1,3 +1,5 @@
+'use client';
+
 import { apex } from '@/lib/apexkit';
 import { RoadmapView } from '@/components/Roadmap/RoadmapView';
 import { Map } from 'lucide-react';
@@ -34,7 +36,7 @@ async function getRoadmapData() {
   }
 }
 
-export const revalidate = 60;
+// export const revalidate = 60;
 
 export default async function RoadmapPage() {
   const { groups, sortedQuarters } = await getRoadmapData();
