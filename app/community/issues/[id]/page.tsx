@@ -24,8 +24,6 @@ async function getData(id: string) {
     }
 }
 
-// Opt-in the entire application to the Edge Runtime (required for Cloudflare Pages)
-export const runtime = 'edge';
 export const revalidate = 0; // Dynamic
 
 export default async function IssueDetailPage({ params }: { params: { id: string } }) {

@@ -26,8 +26,6 @@ async function getData(id: string) {
     }
 }
 
-// Opt-in the entire application to the Edge Runtime (required for Cloudflare Pages)
-export const runtime = 'edge';
 export default async function DiscussionDetailPage({ params }: { params: { id: string } }) {
     const data = await getData(params.id);
     if (!data) notFound();

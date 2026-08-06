@@ -7,8 +7,6 @@ export const metadata: Metadata = {
     description: 'Join the team or find opportunities in the ApexKit ecosystem.',
 };
 
-// Opt-in the entire application to the Edge Runtime (required for Cloudflare Pages)
-export const runtime = 'edge';
 export const dynamic = 'force-dynamic'; // Ensure params update
 
 async function getJobsData(tab: string, query: string, page: number) {

@@ -8,8 +8,6 @@ async function getReleases() {
     } catch { return []; }
 }
 
-// Opt-in the entire application to the Edge Runtime (required for Cloudflare Pages)
-export const runtime = 'edge';
 export const revalidate = 60; // ISR
 
 export default async function ChangelogPage() {

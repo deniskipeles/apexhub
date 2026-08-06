@@ -57,9 +57,6 @@ async function getData(id: string) {
     return { groups, doc: docRes, related };
 }
 
-// Opt-in the entire application to the Edge Runtime (required for Cloudflare Pages)
-export const runtime = 'edge';
-
 export async function generateMetadata({ params }: { params: { id: string } }) {
   try {
     const doc = await apex.collection('docs').get(params.id) as any;

@@ -1,30 +1,47 @@
-import { getApexServer } from '@/lib/apexkit';
-import { redirect } from 'next/navigation';
-import { User, Mail, Shield, Clock, Package } from 'lucide-react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { apex } from '@/lib/apexkit';
+import { User, Shield, Clock, Package, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
-async function getUserProfile() {
-    const apex = await getApexServer();
-    try {
-        const user = await apex.auth.getMe();
-        return {
-            ...user,
-            joined: '2023-10-01', // Timestamp not yet on user obj, add later?
-            contributions: { issues: 0, discussions: 0, optimizations: 0 } // Mock stats for now
+export default function ProfilePage() {
+    const router = useRouter();
+    const [user, setUser] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const u = await apex.auth.getMe();
+                if (u && u.id) {
+                    setUser({
+                        ...u,
+                        joined: '2023-10-01',
+                        contributions: { issues: 0, discussions: 0, optimizations: 0 }
+                    });
+                } else {
+                    router.push('/login');
+                }
+            } catch {
+                router.push('/login');
+            } finally {
+                setLoading(false);
+            }
         };
-    } catch {
-        return null;
-    }
-}
+        fetchProfile();
+    }, [router]);
 
-// Opt-in the entire application to the Edge Runtime (required for Cloudflare Pages)
-export const runtime = 'edge';
-export default async function ProfilePage() {
-    const user = await getUserProfile();
-
-    if (!user) {
-        redirect('/login');
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center min-h-[60vh]">
+                <Loader2 className="animate-spin text-muted h-8 w-8" />
+            </div>
+        );
     }
+
+    if (!user) return null;
 
     return (
         <div className="p-6 md:p-12 max-w-4xl mx-auto min-h-screen">
