@@ -8,6 +8,8 @@ import { AuthProvider } from '@/components/AuthProvider';
 import { APEX_HUB_TOKEN } from '@/lib/constants';
 import 'highlight.js/styles/github-dark.css'; // You can change this to your preferred theme (e.g., atom-one-dark.css)
 
+// Opt-in the entire application to the Edge Runtime (required for Cloudflare Pages)
+export const runtime = 'edge';
 
 export const metadata = {
   title: 'ApexHub',
