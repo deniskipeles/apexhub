@@ -1,4 +1,3 @@
-// app/blog/[id]/page.tsx
 'use client';
 
 import { useParams } from 'next/navigation';
@@ -15,7 +14,7 @@ export default function BlogPostPage() {
     useEffect(() => {
         apex.collection('blog').get(id, { expand: 'author_id' })
             .then(setPost)
-            .catch(() => setPost(null))
+            .catch((err) => { console.error("Failed to load blog post", err); setPost(null); })
             .finally(() => setLoading(false));
     }, [id]);
 
