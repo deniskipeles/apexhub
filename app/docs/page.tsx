@@ -63,6 +63,8 @@ async function searchDocs(query: string, page: number, type: 'instant' | 'vector
   }
 }
 
+// Opt-in the entire application to the Edge Runtime (required for Cloudflare Pages)
+export const runtime = 'edge';
 export const revalidate = 0; // Dynamic for search
 
 export default async function DocsPage({ searchParams }: DocsPageProps) {

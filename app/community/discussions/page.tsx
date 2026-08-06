@@ -9,6 +9,8 @@ async function getDiscussions() {
     } catch { return []; }
 }
 
+// Opt-in the entire application to the Edge Runtime (required for Cloudflare Pages)
+export const runtime = 'edge';
 export const revalidate = 0;
 
 export default async function DiscussionsPage() {

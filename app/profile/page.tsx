@@ -17,6 +17,8 @@ async function getUserProfile() {
     }
 }
 
+// Opt-in the entire application to the Edge Runtime (required for Cloudflare Pages)
+export const runtime = 'edge';
 export default async function ProfilePage() {
     const user = await getUserProfile();
 

@@ -61,6 +61,8 @@ export async function generateMetadata(
     };
 }
 
+// Opt-in the entire application to the Edge Runtime (required for Cloudflare Pages)
+export const runtime = 'edge';
 export const revalidate = 60; // ISR for SEO freshness
 
 // 3. Render Page

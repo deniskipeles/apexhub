@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   description: 'Community shared starters, scripts, and templates.',
 };
 
+
+// Opt-in the entire application to the Edge Runtime (required for Cloudflare Pages)
+export const runtime = 'edge';
 // Prevent caching to ensure we get fresh data/auth state on every request
 export const dynamic = 'force-dynamic';
 
