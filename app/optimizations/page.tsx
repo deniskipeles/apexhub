@@ -44,3 +44,4 @@ export default async function OptimizationsPage() {
         </div>
     );
 }
+export const runtime = 'edge';

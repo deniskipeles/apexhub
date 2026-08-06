@@ -10,3 +10,4 @@ export default async function EditBlogPage({ params }: { params: { id: string } 
         notFound();
     }
 }
+export const runtime = 'edge';

@@ -168,3 +168,4 @@ export default async function CommunityHubPage() {
     </div>
   );
 }
+export const runtime = 'edge';

@@ -14,3 +14,4 @@ export default async function IssuesPage() {
     const items = await getIssues();
     return <IssueList initialItems={items} />;
 }
+export const runtime = 'edge';

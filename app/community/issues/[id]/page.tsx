@@ -41,3 +41,4 @@ export default async function IssueDetailPage({ params }: { params: { id: string
         />
     );
 }
+export const runtime = 'edge';

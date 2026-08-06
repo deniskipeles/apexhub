@@ -22,3 +22,4 @@ export default async function BlogPostPage({ params }: { params: { id: string } 
 
     return <BlogPostView post={post} content={post.data.body || ''} />;
 }
+export const runtime = 'edge';

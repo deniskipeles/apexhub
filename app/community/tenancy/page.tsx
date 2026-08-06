@@ -17,3 +17,4 @@ export default async function TenancyPage() {
     const items = await getOffers();
     return <TenancyList initialItems={items} />;
 } 
+export const runtime = 'edge';

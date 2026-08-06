@@ -15,3 +15,4 @@ export default async function DiscussionsPage() {
     const items = await getDiscussions();
     return <DiscussionList initialItems={items} />;
 }
+export const runtime = 'edge';

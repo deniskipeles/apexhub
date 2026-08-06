@@ -147,3 +147,4 @@ export default async function DocView({ params }: { params: { id: string } }) {
     </div>
   );
 }
+export const runtime = 'edge';

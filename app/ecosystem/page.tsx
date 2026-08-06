@@ -77,3 +77,4 @@ export default async function EcosystemPage({ searchParams }: PageProps) {
     </div>
   );
 }
+export const runtime = 'edge';

@@ -41,3 +41,4 @@ export default async function DiscussionDetailPage({ params }: { params: { id: s
         />
     );
 }
+export const runtime = 'edge';

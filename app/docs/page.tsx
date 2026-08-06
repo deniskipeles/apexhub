@@ -207,3 +207,4 @@ export default async function DocsPage({ searchParams }: DocsPageProps) {
     </div>
   );
 }
+export const runtime = 'edge';

@@ -97,3 +97,4 @@ export default async function CareersPage({ searchParams }: PageProps) {
         </div>
     );
 }
+export const runtime = 'edge';

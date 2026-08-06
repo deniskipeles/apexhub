@@ -139,3 +139,4 @@ export default async function OptimizationDetailPage({ params }: { params: { id:
         </div>
     );
 }
+export const runtime = 'edge';
