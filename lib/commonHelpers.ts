@@ -1,8 +1,5 @@
 import { marked } from 'marked';
-import DOMPurify from 'dompurify';
-import hljs from 'highlight.js';
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+import hljs from 'highlight.js/lib/common';
 
 function escapeFull(text: string): string {
     return text
@@ -13,7 +10,6 @@ function escapeFull(text: string): string {
         .replace(/'/g, '&#39;');
 }
 
-// ─── Renderer ────────────────────────────────────────────────────────────────
 const renderer = new marked.Renderer();
 
 renderer.heading = function ({ tokens, depth }: any) {
@@ -23,7 +19,7 @@ renderer.heading = function ({ tokens, depth }: any) {
         1: 'font-size:1.875rem;font-weight:700;margin:0 0 1.25rem;letter-spacing:-0.02em;color:var(--foreground);line-height:1.2;word-break:break-word;',
         2: 'font-size:1.4rem;font-weight:700;margin:2rem 0 0.875rem;padding-bottom:0.5rem;border-bottom:1px solid color-mix(in srgb,var(--foreground) 15%,transparent);color:var(--foreground);line-height:1.3;word-break:break-word;',
         3: 'font-size:1.15rem;font-weight:700;margin:1.5rem 0 0.625rem;color:var(--foreground);word-break:break-word;',
-        4: 'font-size:1rem;font-weight:600;margin:1.25rem 0 0.5rem;color:var(--foreground);',
+        4: 'font-size:1.0rem;font-weight:600;margin:1.25rem 0 0.5rem;color:var(--foreground);',
         5: 'font-size:0.9rem;font-weight:600;margin:1rem 0 0.25rem;color:var(--foreground);',
         6: 'font-size:0.8rem;font-weight:500;margin:0.75rem 0 0.25rem;color:var(--muted-foreground);',
     };
@@ -129,8 +125,6 @@ renderer.strong = function ({ tokens }: any) {
 
 marked.use({ renderer, breaks: true, gfm: true });
 
-// ─── Code-block pre/post processor ───────────────────────────────────────────
-
 interface CodeStash {
     marker: string;
     html:   string;
@@ -140,7 +134,6 @@ function renderCodeBlock(lang: string, text: string): string {
     let highlighted = escapeFull(text);
     const cleanLang = lang ? lang.trim().toLowerCase() : '';
 
-    // If highlight.js supports the language, attempt to highlight it
     if (cleanLang && hljs.getLanguage(cleanLang)) {
         try {
             highlighted = hljs.highlight(text, { language: cleanLang }).value;
@@ -184,20 +177,16 @@ function restoreCodeBlocks(html: string, stash: CodeStash[]): string {
     return result;
 }
 
-// ─── Export ───────────────────────────────────────────────────────────────────
-
 export const renderMarkdown = async (content: string): Promise<string> => {
     if (!content) return '';
 
-    // 1. Extract fenced code blocks before marked sees the source
     const { safe, stash } = extractCodeBlocks(content);
-
-    // 2. Parse the now-safe markdown
     const rawHtml = await marked.parse(safe) as string;
 
-    // 3. Sanitize everything except the (not-yet-injected) code blocks
-    const sanitized = typeof window !== 'undefined'
-        ? DOMPurify.sanitize(rawHtml, {
+    let sanitized = rawHtml;
+    if (typeof window !== 'undefined') {
+        const DOMPurify = (await import('dompurify')).default;
+        sanitized = DOMPurify.sanitize(rawHtml, {
             ALLOWED_TAGS: [
                 'h1','h2','h3','h4','h5','h6',
                 'p','br','hr','blockquote',
@@ -207,9 +196,8 @@ export const renderMarkdown = async (content: string): Promise<string> => {
                 'a','strong','em','b','i',
             ],
             ALLOWED_ATTR: ['style', 'href', 'target', 'rel', 'title', 'start'],
-        })
-        : rawHtml;
+        });
+    }
 
-    // 4. Restore pre-rendered code blocks (bypassing sanitization for hljs class tags)
     return restoreCodeBlocks(sanitized, stash);
 };

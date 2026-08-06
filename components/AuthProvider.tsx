@@ -2,24 +2,17 @@
 
 import { useCallback, useEffect } from 'react';
 import { apex } from '@/lib/apexkit';
-import { getToken, logoutAction } from '@/app/actions';
+import { logoutAction } from '@/app/actions';
+import { APEX_HUB_TOKEN } from '@/lib/constants';
 
 export function AuthProvider({
-  token,
   children
 }: {
-  token: string | undefined;
   children: React.ReactNode
 }) {
-
-  // This runs once when the app hydrates on the client
-  if (token) {
-    apex.setToken(token);
-  }
-
   const checkAuth = useCallback(async () => {
+    const token = apex.getToken() || (typeof window !== 'undefined' ? localStorage.getItem(APEX_HUB_TOKEN) : null);
     if (token) {
-      // 1. Ensure the main proxy client has the token
       apex.setToken(token);
       try {
         const user = await apex.auth.getMe();
@@ -35,9 +28,8 @@ export function AuthProvider({
   }, []);
 
   useEffect(() => {
-    // Optional: Handle token refresh logic here if needed
     checkAuth();
-  }, [token]);
+  }, [checkAuth]);
 
   return <>{children}</>;
 }

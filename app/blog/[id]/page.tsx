@@ -2,6 +2,8 @@ import { apex } from '@/lib/apexkit';
 import { BlogPostView } from '@/components/Blog/BlogPostView';
 import { notFound } from 'next/navigation';
 
+// Opt-in the entire application to the Edge Runtime (required for Cloudflare Pages)
+export const runtime = 'edge';
 async function getPost(id: string) {
     try {
         const post = await apex.collection('blog').get(id, { expand: 'author_id' });
