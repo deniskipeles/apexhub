@@ -14,7 +14,6 @@ export function TenancyList({ initialItems }: { initialItems: any[] }) {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Form
     const [name, setName] = useState("");
     const [region, setRegion] = useState("");
     const [specs, setSpecs] = useState("");
@@ -38,7 +37,6 @@ export function TenancyList({ initialItems }: { initialItems: any[] }) {
             });
             setItems([res, ...items]);
             setIsCreateOpen(false);
-            // Reset
             setName(""); setRegion(""); setSpecs(""); setDesc("");
         } catch (err) { console.error(err); }
         finally { setIsSubmitting(false); }
@@ -46,7 +44,7 @@ export function TenancyList({ initialItems }: { initialItems: any[] }) {
 
     return (
         <div>
-            <div className="flex flex-col sm:flex-row gap-4 justify-between mb-6">
+            <div className="flex flex-col sm:flex-row gap-4 justify-between mb-6 animate-in fade-in">
                 <div className="relative flex-1 sm:max-w-md">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={16} />
                     <input
@@ -58,7 +56,7 @@ export function TenancyList({ initialItems }: { initialItems: any[] }) {
                     />
                 </div>
                 <div className="flex gap-2">
-                    <Link href="/community/tenancy/request-apexkit-official-tenancy" className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary-hover flex items-center gap-2 whitespace-nowrap shadow-sm transition-colors">
+                    <Link href="/ecosystem/tenancy/request-apexkit-official-tenancy" className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary-hover flex items-center gap-2 whitespace-nowrap shadow-sm transition-colors">
                         <Zap size={16} /> Official Host
                     </Link>
                     <button onClick={() => setIsCreateOpen(true)} className="px-4 py-2 bg-surface border border-border text-foreground hover:bg-background text-sm font-bold rounded-lg flex items-center gap-2 whitespace-nowrap transition-colors">
@@ -122,7 +120,7 @@ export function TenancyList({ initialItems }: { initialItems: any[] }) {
             </div>
 
             {isCreateOpen && (
-                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="bg-surface border border-border rounded-2xl p-8 max-w-md w-full shadow-2xl relative animate-in zoom-in-95">
                         <button onClick={() => setIsCreateOpen(false)} className="absolute top-4 right-4 text-muted hover:text-foreground"><X /></button>
                         <h2 className="text-xl font-bold mb-6">List a Server</h2>

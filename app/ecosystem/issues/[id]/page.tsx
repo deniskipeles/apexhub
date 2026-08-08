@@ -8,7 +8,6 @@ async function getData(id: string) {
         const issue = await apex.collection('issues').get(id, { expand: 'author_id' });
         
         // 2. Fetch Comments (Latest 20)
-        // Assumes collection 'issues_conversations' exists with field 'issue_id'
         const commentsRes = await apex.collection('issues_conversations').list({
             filter: JSON.stringify({ issue_id: id }),
             sort: '-created',

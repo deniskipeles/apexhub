@@ -6,14 +6,17 @@ import {
     Layers, Box, Terminal, Copy, ExternalLink,
     Plus, Brain, Database, FileCode, Layout, Globe,
     User, Download, Eye, ArrowRight,
-    Loader2,
-    Upload,
-    X
+    Loader2, Upload, X, MessageSquare, Bug, Server
 } from 'lucide-react';
 import { apex, getFileUrl } from '@/lib/apexkit';
 import Link from 'next/link';
 import { FileExplorerModal } from './FileExplorerModal';
-import { Pagination } from '../ui/Pagination'; // Ensure this path is correct
+import { Pagination } from '../ui/Pagination';
+
+// Import Community Components
+import { DiscussionList } from '../Community/DiscussionList';
+import { IssueList } from '../Community/IssueList';
+import { TenancyList } from '../Community/TenancyList';
 
 interface ListData {
     items: any[];
@@ -25,6 +28,9 @@ interface Props {
     showcaseData: ListData;
     startersData: ListData;
     sharedData: ListData;
+    discussionsData: any[];
+    issuesData: any[];
+    tenancyData: any[];
     currentPage: number;
     totalPages: number;
 }
@@ -50,6 +56,9 @@ export function EcosystemView({
     showcaseData,
     startersData,
     sharedData,
+    discussionsData,
+    issuesData,
+    tenancyData,
     currentPage,
     totalPages
 }: Props) {
@@ -62,16 +71,15 @@ export function EcosystemView({
     const [isSubmitOpen, setIsSubmitOpen] = useState(false);
     const [inspectingItem, setInspectingItem] = useState<any | null>(null);
 
-    // Sync URL on tab change (Reset page to 1)
+    // Sync URL on tab change
     const handleTabChange = (tab: string) => {
         setActiveTab(tab);
         const params = new URLSearchParams(searchParams);
         params.set('tab', tab);
-        params.delete('page'); // Reset pagination on tab switch
+        params.delete('page'); 
         router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     };
 
-    // Helper to generate pagination base path
     const paginationBasePath = `${pathname}?tab=${activeTab}`;
 
     // Form State
@@ -113,12 +121,14 @@ export function EcosystemView({
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-border pb-1">
                     <nav className="flex gap-6 -mb-px overflow-x-auto w-full md:w-auto no-scrollbar">
                         <TabButton active={activeTab === 'starters'} onClick={() => handleTabChange('starters')} label="Starters" icon={<Terminal size={16} />} />
-                        <TabButton active={activeTab === 'community'} onClick={() => handleTabChange('community')} label="Community" icon={<Database size={16} />} />
+                        <TabButton active={activeTab === 'code'} onClick={() => handleTabChange('code')} label="Snippets" icon={<FileCode size={16} />} />
                         <TabButton active={activeTab === 'showcase'} onClick={() => handleTabChange('showcase')} label="Showcase" icon={<Layers size={16} />} />
+                        <TabButton active={activeTab === 'discussions'} onClick={() => handleTabChange('discussions')} label="Discussions" icon={<MessageSquare size={16} />} />
+                        <TabButton active={activeTab === 'issues'} onClick={() => handleTabChange('issues')} label="Issues" icon={<Bug size={16} />} />
+                        <TabButton active={activeTab === 'tenancy'} onClick={() => handleTabChange('tenancy')} label="Tenancy" icon={<Server size={16} />} />
                     </nav>
 
-                    {/* Only show "Share" on community tab to reduce clutter, or keep globally */}
-                    {activeTab === 'community' && (
+                    {activeTab === 'code' && (
                         <button
                             onClick={() => setIsSubmitOpen(true)}
                             className="hidden md:flex px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary-hover items-center gap-2 shadow-sm transition-all mb-2">
@@ -128,8 +138,8 @@ export function EcosystemView({
                 </div>
             </div>
 
-            {/* --- COMMUNITY CODE TAB --- */}
-            {activeTab === 'community' && (
+            {/* --- CONTENT TABS --- */}
+            {activeTab === 'code' && (
                 <div className="space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
                         {sharedData.items.map((item: any) => {
@@ -191,7 +201,6 @@ export function EcosystemView({
                 </div>
             )}
 
-            {/* --- STARTERS TAB --- */}
             {activeTab === 'starters' && (
                 <div className="space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
@@ -225,7 +234,6 @@ export function EcosystemView({
                 </div>
             )}
 
-            {/* --- SHOWCASE TAB --- */}
             {activeTab === 'showcase' && (
                 <div className="space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-300">
@@ -251,14 +259,20 @@ export function EcosystemView({
                 </div>
             )}
 
+            {activeTab === 'discussions' && <DiscussionList initialItems={discussionsData} />}
+            {activeTab === 'issues' && <IssueList initialItems={issuesData} />}
+            {activeTab === 'tenancy' && <TenancyList initialItems={tenancyData} />}
+
             {/* --- PAGINATION --- */}
-            <div className="flex justify-center pt-8 border-t border-border">
-                <Pagination
-                    totalPages={totalPages}
-                    currentPage={currentPage}
-                    basePath={paginationBasePath}
-                />
-            </div>
+            {['starters', 'code', 'showcase'].includes(activeTab) && totalPages > 1 && (
+                <div className="flex justify-center pt-8 border-t border-border">
+                    <Pagination
+                        totalPages={totalPages}
+                        currentPage={currentPage}
+                        basePath={paginationBasePath}
+                    />
+                </div>
+            )}
 
             {/* --- FILE INSPECTION MODAL --- */}
             {inspectingItem && (

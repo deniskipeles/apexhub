@@ -26,7 +26,6 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             
-            {/* Branding Column */}
             <div className="col-span-2 md:col-span-1">
                 <div className="flex items-center gap-2 mb-4">
                      <img src="/favicon.png" alt="ApexHub Logo" className="h-10" />
@@ -42,7 +41,6 @@ export function Footer() {
                 </div>
             </div>
             
-            {/* Links Columns */}
             <div>
                 <h4 className="font-bold text-foreground mb-4">Product</h4>
                 <ul className="space-y-2 text-sm text-muted">
@@ -57,7 +55,7 @@ export function Footer() {
                 <ul className="space-y-2 text-sm text-muted">
                     <FooterLink href="/docs">Documentation</FooterLink>
                     <FooterLink href="/api-reference">API Reference</FooterLink>
-                    <FooterLink href="/community">Community</FooterLink>
+                    <FooterLink href="/ecosystem">Ecosystem</FooterLink>
                     <FooterLink href="/optimizations">Optimizations</FooterLink>
                 </ul>
             </div>

@@ -29,13 +29,11 @@ export default function RequestOfficialTenancyPage() {
         setError(null);
 
         try {
-            // Call the Root Edge Function we created
             const result = await apex.scripts.run('provision-tenant', {
                 name: appName,
                 tier: tier
             });
 
-            // The script returns { success: true, tenant_id: "...", ... }
             if (result.success) {
                 setSuccessData(result);
             } else {
@@ -83,10 +81,8 @@ export default function RequestOfficialTenancyPage() {
 
     return (
         <div className="min-h-screen p-6 md:p-12 max-w-3xl mx-auto">
-            
-            {/* Header */}
             <div className="mb-10">
-                <Link href="/community/tenancy" className="text-sm text-muted hover:text-primary flex items-center gap-1 mb-6 w-fit transition-colors">
+                <Link href="/ecosystem?tab=tenancy" className="text-sm text-muted hover:text-primary flex items-center gap-1 mb-6 w-fit transition-colors">
                     <ArrowLeft size={14} /> Back to Market
                 </Link>
                 
@@ -102,8 +98,6 @@ export default function RequestOfficialTenancyPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="bg-surface/30 border border-border p-6 md:p-8 rounded-3xl shadow-sm space-y-8 relative overflow-hidden">
-                
-                {/* Background glow */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
 
                 {error && (
@@ -134,7 +128,6 @@ export default function RequestOfficialTenancyPage() {
                         <label className="text-sm font-bold text-foreground">Select Tier</label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             
-                            {/* Free Tier */}
                             <div 
                                 onClick={() => setTier('free')}
                                 className={`cursor-pointer border rounded-xl p-4 transition-all ${tier === 'free' ? 'bg-primary/5 border-primary shadow-sm' : 'bg-background border-border hover:border-primary/50'}`}
@@ -150,7 +143,6 @@ export default function RequestOfficialTenancyPage() {
                                 </div>
                             </div>
 
-                            {/* Pro Tier (Disabled visual for now) */}
                             <div className="cursor-not-allowed border border-border bg-background/50 rounded-xl p-4 opacity-60 relative overflow-hidden">
                                 <div className="absolute top-3 right-3 text-[10px] font-bold uppercase bg-surface px-2 py-0.5 rounded text-muted">Coming Soon</div>
                                 <div className="flex items-center justify-between mb-2">

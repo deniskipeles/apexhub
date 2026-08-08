@@ -1,6 +1,6 @@
 import { getApexServer } from '@/lib/apexkit';
 import { redirect } from 'next/navigation';
-import { User, Mail, Shield, Clock, Package } from 'lucide-react';
+import { User, Shield, Clock, Package } from 'lucide-react';
 import Link from 'next/link';
 
 async function getUserProfile() {
@@ -9,8 +9,8 @@ async function getUserProfile() {
         const user = await apex.auth.getMe();
         return {
             ...user,
-            joined: '2023-10-01', // Timestamp not yet on user obj, add later?
-            contributions: { issues: 0, discussions: 0, optimizations: 0 } // Mock stats for now
+            joined: '2023-10-01',
+            contributions: { issues: 0, discussions: 0, optimizations: 0 } 
         };
     } catch {
         return null;
@@ -58,8 +58,8 @@ export default async function ProfilePage() {
 
             <h3 className="text-xl font-bold mb-4">Activity</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <StatCard label="Issues" value={user.contributions.issues} href="/community/issues" />
-                <StatCard label="Discussions" value={user.contributions.discussions} href="/community/discussions" />
+                <StatCard label="Issues" value={user.contributions.issues} href="/ecosystem?tab=issues" />
+                <StatCard label="Discussions" value={user.contributions.discussions} href="/ecosystem?tab=discussions" />
                 <StatCard label="Optimizations" value={user.contributions.optimizations} href="/optimizations" />
             </div>
         </div>

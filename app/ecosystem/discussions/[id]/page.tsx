@@ -8,7 +8,6 @@ async function getData(id: string) {
         const discussion = await apex.collection('discussions').get(id, { expand: 'author_id' });
         
         // 2. Fetch Comments (Latest 20)
-        // We assume a collection 'discussions_conversations' with field 'discussion_id'
         const commentsRes = await apex.collection('discussions_conversations').list({
             filter: JSON.stringify({ discussion_id: id }),
             sort: '-created', // Newest first
@@ -16,8 +15,6 @@ async function getData(id: string) {
             expand: 'author_id'
         });
 
-        // Reverse to show oldest first in chat UI (standard chat flow)
-        // But since we fetched newest first for pagination, we reverse array
         const comments = commentsRes.items.reverse();
 
         return { discussion, comments };

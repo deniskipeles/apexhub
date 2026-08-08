@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { 
   MessageSquare, MessageCircle, Eye, Clock, 
-  Search, Plus, Filter, Loader2, X 
+  Search, Plus, Loader2, X 
 } from 'lucide-react';
 import { apex, getFileUrl } from '@/lib/apexkit';
 
@@ -38,7 +38,6 @@ export function DiscussionList({ initialItems }: Props) {
               views: 0,
               replies: 0
           });
-          // Add new item to top
           setItems([res, ...items]);
           setIsCreateOpen(false);
           setTopic("");
@@ -57,7 +56,7 @@ export function DiscussionList({ initialItems }: Props) {
 
   return (
     <div>
-        <div className="flex flex-col sm:flex-row gap-4 justify-between mb-6">
+        <div className="flex flex-col sm:flex-row gap-4 justify-between mb-6 animate-in fade-in">
             <div className="relative flex-1 sm:max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={16} />
                 <input 
@@ -78,7 +77,7 @@ export function DiscussionList({ initialItems }: Props) {
 
         <div className="grid gap-4">
             {filteredItems.map(d => (
-                <Link key={d.id} href={`/community/discussions/${d.id}`}>
+                <Link key={d.id} href={`/ecosystem/discussions/${d.id}`}>
                     <div className="bg-surface border border-border rounded-xl p-5 hover:border-primary/40 transition-all flex flex-col md:flex-row gap-6 group hover:shadow-md">
                         <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
@@ -111,7 +110,7 @@ export function DiscussionList({ initialItems }: Props) {
         </div>
 
         {isCreateOpen && (
-            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
                 <div className="bg-surface border border-border rounded-2xl p-8 max-w-md w-full shadow-2xl relative animate-in zoom-in-95">
                     <button onClick={() => setIsCreateOpen(false)} className="absolute top-4 right-4 text-muted hover:text-foreground"><X /></button>
                     <h2 className="text-xl font-bold mb-6">New Discussion</h2>

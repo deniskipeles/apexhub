@@ -27,7 +27,7 @@ export function IssueList({ initialItems }: { initialItems: any[] }) {
           const res = await apex.collection('issues').create({
               title,
               type,
-              description: desc, // Assuming description field exists
+              description: desc,
               status: 'open',
               upvotes: 0,
               tags: ['triage']
@@ -44,7 +44,7 @@ export function IssueList({ initialItems }: { initialItems: any[] }) {
 
   return (
     <div>
-        <div className="flex flex-col sm:flex-row gap-4 justify-between mb-6">
+        <div className="flex flex-col sm:flex-row gap-4 justify-between mb-6 animate-in fade-in">
             <div className="relative flex-1 sm:max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={16} />
                 <input 
@@ -62,7 +62,7 @@ export function IssueList({ initialItems }: { initialItems: any[] }) {
 
         <div className="grid gap-4">
             {filteredItems.map(i => (
-                <Link key={i.id} href={`/community/issues/${i.id}`}>
+                <Link key={i.id} href={`/ecosystem/issues/${i.id}`}>
                     <div className="bg-surface border border-border rounded-xl p-5 hover:border-primary/40 transition-colors flex gap-4 group cursor-pointer">
                         <div className="flex flex-col items-center gap-1 min-w-[50px] pt-1">
                             <div className="text-muted group-hover:text-primary transition-colors p-1 rounded hover:bg-surface/80">
@@ -101,7 +101,7 @@ export function IssueList({ initialItems }: { initialItems: any[] }) {
         </div>
 
         {isCreateOpen && (
-            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
                 <div className="bg-surface border border-border rounded-2xl p-8 max-w-md w-full shadow-2xl relative animate-in zoom-in-95">
                     <button onClick={() => setIsCreateOpen(false)} className="absolute top-4 right-4 text-muted hover:text-foreground"><X /></button>
                     <h2 className="text-xl font-bold mb-6">New Issue</h2>

@@ -3,41 +3,42 @@ import { EcosystemView } from '@/components/Ecosystem/EcosystemView';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Ecosystem | ApexHub',
-  description: 'Community shared starters, scripts, and templates.',
+  title: 'Ecosystem & Community | ApexHub',
+  description: 'Community shared starters, scripts, templates, discussions, issues, and tenancy market.',
 };
 
 // Prevent caching to ensure we get fresh data/auth state on every request
 export const dynamic = 'force-dynamic';
 
-async function getData(page: number, perPage: number) {
-  // 1. Get request-scoped client (Authenticated)
+async function getData(tab: string, page: number, perPage: number) {
   const apex = await getApexServer();
 
-  try {
-    const [showcaseRes, startersRes, itemsRes] = await Promise.all([
-      apex.collection('showcase').list({ sort: '-created', page, per_page: perPage }),
-      apex.collection('starters').list({ sort: '-created', page, per_page: perPage }),
-      // The shared code collection
-      apex.collection('ecosystem_items').list({
-        sort: '-created',
-        page,
-        per_page: perPage,
-        expand: 'author_id'
-      })
-    ]);
+  let showcase = { items: [], total: 0 };
+  let starters = { items: [], total: 0 };
+  let sharedCode = { items: [], total: 0 };
+  let discussions = { items: [], total: 0 };
+  let issues = { items: [], total: 0 };
+  let tenancy = { items: [], total: 0 };
 
-    return {
-      showcase: showcaseRes,
-      starters: startersRes,
-      sharedItems: itemsRes
-    };
+  try {
+    if (tab === 'showcase') {
+      showcase = await apex.collection('showcase').list({ sort: '-created', page, per_page: perPage });
+    } else if (tab === 'code') {
+      sharedCode = await apex.collection('ecosystem_items').list({ sort: '-created', page, per_page: perPage, expand: 'author_id' });
+    } else if (tab === 'discussions') {
+      discussions = await apex.collection('discussions').list({ sort: '-created', page: 1, per_page: 50, expand: 'author_id' });
+    } else if (tab === 'issues') {
+      issues = await apex.collection('issues').list({ sort: '-created', page: 1, per_page: 50, expand: 'author_id' });
+    } else if (tab === 'tenancy') {
+      tenancy = await apex.collection('tenancy_offers').list({ sort: '-created', page: 1, per_page: 50, expand: 'provider_id' });
+    } else {
+      starters = await apex.collection('starters').list({ sort: '-created', page, per_page: perPage });
+    }
   } catch (e) {
     console.error("Ecosystem fetch failed", e);
-    // Return structure matching ListResult
-    const empty = { items: [], total: 0, page: 1, per_page: perPage };
-    return { showcase: empty, starters: empty, sharedItems: empty };
   }
+
+  return { showcase, starters, sharedCode, discussions, issues, tenancy };
 }
 
 interface PageProps {
@@ -45,32 +46,39 @@ interface PageProps {
 }
 
 export default async function EcosystemPage({ searchParams }: PageProps) {
-  // 1. Parse Query Params
+  // Parse Query Params
   const activeTab = (searchParams.tab as string) || 'starters';
   const page = Number(searchParams.page) || 1;
   const perPage = 12; // Grid of 3 columns x 4 rows
 
-  // 2. Fetch Data
-  const { showcase, starters, sharedItems } = await getData(page, perPage);
+  // Fetch Data
+  const { showcase, starters, sharedCode, discussions, issues, tenancy } = await getData(activeTab, page, perPage);
 
-  // 3. Determine active pagination data based on tab
-  // (We fetch all for simplicity, but you could optimize to fetch only active tab)
+  // Determine active pagination data based on tab
   let totalItems = 0;
   if (activeTab === 'showcase') totalItems = showcase.total;
-  else if (activeTab === 'community') totalItems = sharedItems.total;
-  else totalItems = starters.total;
-
+  else if (activeTab === 'code') totalItems = sharedCode.total;
+  else if (activeTab === 'starters') totalItems = starters.total;
+  
   const totalPages = Math.ceil(totalItems / perPage);
 
   return (
     <div className="p-6 md:p-12 max-w-7xl mx-auto min-h-screen">
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-foreground mb-4">Ecosystem Hub</h1>
+        <p className="text-muted max-w-2xl">
+            Explore community-built starters, share code snippets, report issues, or join the conversation.
+        </p>
+      </div>
+
       <EcosystemView
         initialTab={activeTab}
-        // Pass the full ListResult objects now, not just .items
         showcaseData={showcase}
         startersData={starters}
-        sharedData={sharedItems}
-        // Pagination Props
+        sharedData={sharedCode}
+        discussionsData={discussions.items}
+        issuesData={issues.items}
+        tenancyData={tenancy.items}
         currentPage={page}
         totalPages={totalPages}
       />

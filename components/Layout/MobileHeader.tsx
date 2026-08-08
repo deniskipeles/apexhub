@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Menu, X, Home, Cpu, BookOpen, Layers, MessageCircle, Map, Zap, LifeBuoy, LogIn, Sun, Moon } from 'lucide-react';
+import { Menu, X, Home, Cpu, BookOpen, Layers, Map, Zap, LifeBuoy, Sun, Moon } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from '../ThemeContext';
 import { UserMenu } from '../Auth/UserMenu';
@@ -15,7 +15,6 @@ export function MobileHeader() {
     { href: '/features', label: 'Features', icon: Cpu },
     { href: '/docs', label: 'Documentation', icon: BookOpen },
     { href: '/ecosystem', label: 'Ecosystem', icon: Layers },
-    { href: '/community', label: 'Community', icon: MessageCircle },
     { href: '/roadmap', label: 'Road Ahead', icon: Map },
     { href: '/optimizations', label: 'Optimizations', icon: Zap },
     { href: '/help', label: 'Help & Sandbox', icon: LifeBuoy },
@@ -23,7 +22,6 @@ export function MobileHeader() {
 
   return (
     <>
-      {/* Header Bar */}
       <div className="md:hidden h-16 border-b border-border flex items-center justify-between px-4 sticky top-0 bg-background/80 backdrop-blur z-50">
         <div className="flex items-center gap-2">
           <Link href="/" className="font-bold text-lg text-foreground flex items-center gap-2">
@@ -41,7 +39,6 @@ export function MobileHeader() {
         </div>
       </div>
 
-      {/* Full Screen Overlay */}
       {isOpen && (
         <div className="md:hidden fixed inset-0 z-40 bg-background pt-20 px-6 animate-in fade-in slide-in-from-top-5 duration-200">
           <nav className="flex flex-col space-y-2">
