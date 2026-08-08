@@ -1,76 +1,99 @@
-'use client';
-
-import React, { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { apex } from '@/lib/apexkit';
+import { getApexServer } from '@/lib/apexkit';
 import { CareersView } from '@/components/Careers/CareersView';
-import { Loader2 } from 'lucide-react';
+import { Metadata } from 'next';
 
-function CareersContainer() {
-    const searchParams = useSearchParams();
-    const tab = searchParams.get('tab') || 'official';
-    const query = searchParams.get('q') || '';
-    const page = Number(searchParams.get('page')) || 1;
+export const metadata: Metadata = {
+    title: 'Careers & Jobs | ApexHub',
+    description: 'Join the team or find opportunities in the ApexKit ecosystem.',
+};
 
-    const [data, setData] = useState({ items: [], total: 0, totalPages: 0 });
-    const [loading, setLoading] = useState(true);
+export const dynamic = 'force-dynamic'; // Ensure params update
 
-    useEffect(() => {
-        let isMounted = true;
-        const fetchJobs = async () => {
-            setLoading(true);
-            const collection = tab === 'official' ? 'careers' : 'jobs';
-            const perPage = 10;
-            try {
-                let res;
-                if (query) {
-                    const searchRes = await apex.collection(collection).searchRecordsInstantlyWithOSE(query);
-                    const allIds = searchRes.map((r: any) => r.id);
-                    const offset = (page - 1) * perPage;
-                    const pageIds = allIds.slice(offset, offset + perPage);
-                    if (pageIds.length > 0) {
-                        res = await apex.collection(collection).list({
-                            page: 1, per_page: 25, expand: 'author_id', filter: JSON.stringify({ id: { $in: pageIds } })
-                        });
-                    } else {
-                        res = { items: [], total: 0 };
-                    }
-                } else {
-                    res = await apex.collection(collection).list({ sort: '-created', page, per_page: perPage, expand: 'author_id' });
-                }
-                if (isMounted) {
-                    setData({ items: res.items || [], total: res.total || 0, totalPages: Math.ceil((res.total || 0) / perPage) });
-                }
-            } catch (e) {
-                if (isMounted) setData({ items: [], total: 0, totalPages: 0 });
-            } finally {
-                if (isMounted) setLoading(false);
+async function getJobsData(tab: string, query: string, page: number) {
+    const apex = await getApexServer();
+    const perPage = 10;
+    const offset = (page - 1) * perPage;
+
+    try {
+        // Determine collection based on tab
+        const collection = tab === 'official' ? 'careers' : 'jobs';
+
+        let items = [];
+        let total = 0;
+
+        if (query) {
+            // Use Instant Search (Tantivy) for speed if searching
+            // Note: Instant search usually doesn't support deep pagination well via offset in some configs, 
+            // but we will use the standard list with filter if available or just slice the search results manually if the SDK returns all.
+            // Assuming SDK 'searchRecordsInstantlyWithOSE' returns all matches or we slice locally.
+            // For true pagination with search, 'searchRecordsWithSQL' or specific vector search is used.
+            // Let's use the standard list with 'filter' if possible, or fallback to search.
+
+            // Using OSE Search (Returns { id, score, snippet }) - we need full records
+            // Better: Use `list` with a filter query if possible, or fetch IDs then get records.
+            // For simplicity here, let's use list with a basic text filter if supported, 
+            // OR just fetch all and filter in memory if dataset small (Careers usually small).
+
+            // REAL APPROACH: Fetch search results IDs then fetch records
+            const searchRes = await apex.collection(collection).searchRecordsInstantlyWithOSE(query);
+            const allIds = searchRes.map((r: any) => r.id);
+            total = allIds.length;
+
+            // Slice IDs for current page
+            const pageIds = allIds.slice(offset, offset + perPage);
+
+            if (pageIds.length > 0) {
+                const res = await apex.collection(collection).list({
+                    sort: '-created',
+                    page: 1,
+                    per_page: 25,
+                    expand: 'author_id',
+                    filter: JSON.stringify({ id: { $in: pageIds } })
+                });
+                items = res.items;
+                total = res.total;
             }
-        };
-        fetchJobs();
-        return () => { isMounted = false; };
-    }, [tab, query, page]);
+        } else {
+            // Standard List
+            const res = await apex.collection(collection).list({
+                sort: '-created',
+                page,
+                per_page: perPage,
+                expand: 'author_id'
+            });
+            items = res.items;
+            total = res.total;
+        }
 
-    if (loading) return <div className="flex justify-center items-center min-h-[60vh]"><Loader2 className="animate-spin text-muted h-8 w-8" /></div>;
+        return { items, total, totalPages: Math.ceil(total / perPage) };
 
-    return (
-        <CareersView
-            initialData={data.items}
-            totalItems={data.total}
-            totalPages={data.totalPages}
-            currentPage={page}
-            currentTab={tab}
-            currentQuery={query}
-        />
-    );
+    } catch (e) {
+        console.error("Careers fetch failed", e);
+        return { items: [], total: 0, totalPages: 0 };
+    }
 }
 
-export default function CareersPage() {
+interface PageProps {
+    searchParams: { [key: string]: string | string[] | undefined };
+}
+
+export default async function CareersPage({ searchParams }: PageProps) {
+    const tab = (searchParams.tab as string) || 'official';
+    const query = (searchParams.q as string) || '';
+    const page = Number(searchParams.page) || 1;
+
+    const data = await getJobsData(tab, query, page);
+
     return (
         <div className="p-6 md:p-12 max-w-7xl mx-auto min-h-screen">
-            <Suspense fallback={<div className="flex justify-center items-center min-h-[60vh]"><Loader2 className="animate-spin text-muted h-8 w-8" /></div>}>
-                <CareersContainer />
-            </Suspense>
+            <CareersView
+                initialData={data.items}
+                totalItems={data.total}
+                totalPages={data.totalPages}
+                currentPage={page}
+                currentTab={tab}
+                currentQuery={query}
+            />
         </div>
     );
 }

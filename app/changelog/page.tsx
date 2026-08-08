@@ -1,22 +1,16 @@
-// apexhub/app/changelog/page.tsx
-'use client';
-
-import { useEffect, useState } from 'react';
 import { apex } from '@/lib/apexkit';
 import { ChangelogView } from '@/components/Changelog/ChangelogView';
-import { Loader2 } from 'lucide-react';
 
-export default function ChangelogPage() {
-    const [releases, setReleases] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+async function getReleases() {
+    try {
+        const res = await apex.collection('changelog').list({ sort: '-release_date' });
+        return res.items;
+    } catch { return []; }
+}
 
-    useEffect(() => {
-        apex.collection('changelog').list({ sort: '-release_date' })
-            .then(res => setReleases(res.items))
-            .catch(() => setReleases([]))
-            .finally(() => setLoading(false));
-    }, []);
+export const revalidate = 60; // ISR
 
-    if (loading) return <div className="flex justify-center items-center min-h-[50vh]"><Loader2 className="animate-spin text-muted h-8 w-8" /></div>;
+export default async function ChangelogPage() {
+    const releases = await getReleases();
     return <ChangelogView releases={releases} />;
 }

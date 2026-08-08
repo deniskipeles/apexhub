@@ -1,71 +1,79 @@
-'use client';
-
-import React, { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { apex } from '@/lib/apexkit';
+import { getApexServer } from '@/lib/apexkit'; 
 import { EcosystemView } from '@/components/Ecosystem/EcosystemView';
-import { Loader2 } from 'lucide-react';
+import { Metadata } from 'next';
 
-function EcosystemContainer() {
-    const searchParams = useSearchParams();
-    const activeTab = searchParams.get('tab') || 'starters';
-    const page = Number(searchParams.get('page')) || 1;
-    const perPage = 12;
+export const metadata: Metadata = {
+  title: 'Ecosystem | ApexHub',
+  description: 'Community shared starters, scripts, and templates.',
+};
 
-    const [data, setData] = useState<any>({
-        showcase: { items: [], total: 0 },
-        starters: { items: [], total: 0 },
-        sharedItems: { items: [], total: 0 }
-    });
-    const [loading, setLoading] = useState(true);
+// Prevent caching to ensure we get fresh data/auth state on every request
+export const dynamic = 'force-dynamic';
 
-    useEffect(() => {
-        let isMounted = true;
-        const fetchData = async () => {
-            setLoading(true);
-            try {
-                const [showcaseRes, startersRes, itemsRes] = await Promise.all([
-                    apex.collection('showcase').list({ sort: '-created', page, per_page: perPage }),
-                    apex.collection('starters').list({ sort: '-created', page, per_page: perPage }),
-                    apex.collection('ecosystem_items').list({ sort: '-created', page, per_page: perPage, expand: 'author_id' })
-                ]);
-                if (isMounted) setData({ showcase: showcaseRes, starters: startersRes, sharedItems: itemsRes });
-            } catch (e) {
-                console.error(e);
-            } finally {
-                if (isMounted) setLoading(false);
-            }
-        };
-        fetchData();
-        return () => { isMounted = false; };
-    }, [page]);
+async function getData(page: number, perPage: number) {
+  // 1. Get request-scoped client (Authenticated)
+  const apex = await getApexServer();
 
-    let totalItems = 0;
-    if (activeTab === 'showcase') totalItems = data.showcase.total;
-    else if (activeTab === 'community') totalItems = data.sharedItems.total;
-    else totalItems = data.starters.total;
-    const totalPages = Math.ceil(totalItems / perPage);
+  try {
+    const [showcaseRes, startersRes, itemsRes] = await Promise.all([
+      apex.collection('showcase').list({ sort: '-created', page, per_page: perPage }),
+      apex.collection('starters').list({ sort: '-created', page, per_page: perPage }),
+      // The shared code collection
+      apex.collection('ecosystem_items').list({
+        sort: '-created',
+        page,
+        per_page: perPage,
+        expand: 'author_id'
+      })
+    ]);
 
-    if (loading) return <div className="flex justify-center items-center min-h-[60vh]"><Loader2 className="animate-spin text-muted h-8 w-8" /></div>;
-
-    return (
-        <EcosystemView
-            initialTab={activeTab}
-            showcaseData={data.showcase}
-            startersData={data.starters}
-            sharedData={data.sharedItems}
-            currentPage={page}
-            totalPages={totalPages}
-        />
-    );
+    return {
+      showcase: showcaseRes,
+      starters: startersRes,
+      sharedItems: itemsRes
+    };
+  } catch (e) {
+    console.error("Ecosystem fetch failed", e);
+    // Return structure matching ListResult
+    const empty = { items: [], total: 0, page: 1, per_page: perPage };
+    return { showcase: empty, starters: empty, sharedItems: empty };
+  }
 }
 
-export default function EcosystemPage() {
-    return (
-        <div className="p-6 md:p-12 max-w-7xl mx-auto min-h-screen">
-            <Suspense fallback={<div className="flex justify-center items-center min-h-[60vh]"><Loader2 className="animate-spin text-muted h-8 w-8" /></div>}>
-                <EcosystemContainer />
-            </Suspense>
-        </div>
-    );
+interface PageProps {
+  searchParams: { [key: string]: string | string[] | undefined };
+}
+
+export default async function EcosystemPage({ searchParams }: PageProps) {
+  // 1. Parse Query Params
+  const activeTab = (searchParams.tab as string) || 'starters';
+  const page = Number(searchParams.page) || 1;
+  const perPage = 12; // Grid of 3 columns x 4 rows
+
+  // 2. Fetch Data
+  const { showcase, starters, sharedItems } = await getData(page, perPage);
+
+  // 3. Determine active pagination data based on tab
+  // (We fetch all for simplicity, but you could optimize to fetch only active tab)
+  let totalItems = 0;
+  if (activeTab === 'showcase') totalItems = showcase.total;
+  else if (activeTab === 'community') totalItems = sharedItems.total;
+  else totalItems = starters.total;
+
+  const totalPages = Math.ceil(totalItems / perPage);
+
+  return (
+    <div className="p-6 md:p-12 max-w-7xl mx-auto min-h-screen">
+      <EcosystemView
+        initialTab={activeTab}
+        // Pass the full ListResult objects now, not just .items
+        showcaseData={showcase}
+        startersData={starters}
+        sharedData={sharedItems}
+        // Pagination Props
+        currentPage={page}
+        totalPages={totalPages}
+      />
+    </div>
+  );
 }

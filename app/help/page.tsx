@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, Suspense } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apex } from '@/lib/apexkit';
 import { 
@@ -21,13 +21,14 @@ interface SandboxRequest {
     };
 }
 
-function HelpPageContent() {
+export default function HelpPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     
     // --- State ---
     const [sessions, setSessions] = useState<SandboxRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isCreating, setIsCreating] = useState(false);
     
     // URL-Driven State
     const activeSessionId = searchParams.get('session');
@@ -151,18 +152,6 @@ function HelpPageContent() {
                 )}
             </div>
         </div>
-    );
-}
-
-export default function HelpPage() {
-    return (
-        <Suspense fallback={
-            <div className="flex justify-center items-center min-h-[60vh]">
-                <Loader2 className="animate-spin text-muted h-8 w-8" />
-            </div>
-        }>
-            <HelpPageContent />
-        </Suspense>
     );
 }
 
@@ -300,9 +289,11 @@ function CreateSandboxView({ onSuccess }: { onSuccess: (id: string) => void }) {
 
 function SandboxDetailView({ session }: { session: SandboxRequest }) {
     const [view, setView] = useState<'preview' | 'info'>('preview');
+    const [iframeUrl, setIframeUrl] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
 
     // Construct URL for the specific sandbox
+    // Assuming backend mounts it at /_dashboard/sandbox/{id}
     const targetUrl = `${apex.baseUrl}/_dashboard/sandbox/${session.sandbox_id}/dashboard`;
 
     const handleCopy = () => {

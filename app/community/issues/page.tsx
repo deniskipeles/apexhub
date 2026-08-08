@@ -1,22 +1,16 @@
-// apexhub/app/community/issues/page.tsx
-'use client';
-
-import { useEffect, useState } from 'react';
 import { apex } from '@/lib/apexkit';
 import { IssueList } from '@/components/Community/IssueList';
-import { Loader2 } from 'lucide-react';
 
-export default function IssuesPage() {
-    const [items, setItems] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+async function getIssues() {
+    try {
+        const res = await apex.collection('issues').list({ sort: '-created', expand: 'author_id' });
+        return res.items;
+    } catch { return []; }
+}
 
-    useEffect(() => {
-        apex.collection('issues').list({ sort: '-created', expand: 'author_id' })
-            .then(res => setItems(res.items))
-            .catch(() => setItems([]))
-            .finally(() => setLoading(false));
-    }, []);
+export const revalidate = 0;
 
-    if (loading) return <div className="flex justify-center items-center min-h-[50vh]"><Loader2 className="animate-spin text-muted h-8 w-8" /></div>;
+export default async function IssuesPage() {
+    const items = await getIssues();
     return <IssueList initialItems={items} />;
 }

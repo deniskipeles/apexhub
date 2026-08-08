@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { GitCommit, Calendar, Tag, ArrowRight } from 'lucide-react';
+import { renderMarkdown } from '@/lib/commonHelpers';
 
 interface Props {
     releases: any[];
@@ -11,18 +12,15 @@ export function ChangelogView({ releases }: Props) {
     const [renderedContent, setRenderedContent] = useState<Record<string, string>>({});
 
     useEffect(() => {
+        // Pre-render markdown on client mount
         const renderAll = async () => {
-            // Dynamic import keeps heavy libraries completely out of the Cloudflare Edge Worker
-            const { renderMarkdown } = await import('@/lib/commonHelpers');
             const htmlMap: Record<string, string> = {};
             for (const item of releases) {
                 htmlMap[item.id] = await renderMarkdown(item.data.body || '');
             }
             setRenderedContent(htmlMap);
         };
-        if (releases && releases.length > 0) {
-            renderAll();
-        }
+        renderAll();
     }, [releases]);
 
     return (
@@ -53,6 +51,7 @@ export function ChangelogView({ releases }: Props) {
 
                         return (
                             <div key={release.id} className="relative pl-8 md:pl-12 group">
+                                {/* Timeline Dot */}
                                 <div className={`absolute -left-[9px] top-1.5 w-4 h-4 rounded-full border-4 border-background transition-colors duration-300 ${isLatest ? 'bg-primary ring-4 ring-primary/20' : 'bg-border group-hover:bg-muted'}`}></div>
                                 
                                 <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
@@ -73,10 +72,10 @@ export function ChangelogView({ releases }: Props) {
                                 </div>
 
                                 <div className="bg-surface/40 border border-border rounded-2xl p-6 md:p-8 hover:bg-surface/60 hover:border-primary/20 transition-all shadow-sm group-hover:shadow-md">
-                                    <div 
+                                     <div 
                                         className="prose prose-zinc dark:prose-invert max-w-none"
-                                        dangerouslySetInnerHTML={{ __html: renderedContent[release.id] || '<div class="animate-pulse h-10 bg-surface/50 rounded"></div>' }}
-                                    />
+                                        dangerouslySetInnerHTML={{ __html: renderedContent[release.id] || '' }}
+                                     />
                                 </div>
                             </div>
                         );

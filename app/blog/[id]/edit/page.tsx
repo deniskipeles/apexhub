@@ -1,7 +1,12 @@
-import EditBlogClientPage from './EditBlogClientPage';
+import { apex } from '@/lib/apexkit';
+import { BlogEditor } from '@/components/Blog/BlogEditor';
+import { notFound } from 'next/navigation';
 
-export const runtime = 'edge';
-
-export default function EditBlogPage({ params }: { params: { id: string } }) {
-    return <EditBlogClientPage id={params.id} />;
+export default async function EditBlogPage({ params }: { params: { id: string } }) {
+    try {
+        const post = await apex.collection('blog').get(params.id);
+        return <BlogEditor initialData={post} />;
+    } catch {
+        notFound();
+    }
 }
