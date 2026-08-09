@@ -1,7 +1,7 @@
 import { ApexKit } from "@apexkit/sdk"; 
 import { APEX_HUB_TOKEN } from './constants';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://apexkit.onrender.com';
 
 export const apex = new ApexKit(API_URL);
 

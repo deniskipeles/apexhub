@@ -8,25 +8,27 @@ import { Sidebar } from './components/Layout/Sidebar';
 import { MobileHeader } from './components/Layout/MobileHeader';
 import { Footer } from './components/Layout/Footer';
 
-// Views
-import { HomeView } from './components/Home/HomeView';
-import { FeaturesView } from './components/Features/FeaturesView';
-import { DocsView } from './components/Docs/DocsView';
-import { ApiReferenceView } from './components/ApiReference/ApiReferenceView';
-import { EcosystemView } from './components/Ecosystem/EcosystemView';
-import { RequestOfficialTenancyView } from './components/Ecosystem/RequestOfficialTenancyView';
-import { BlogView } from './components/Blog/BlogView';
-import { RoadmapView } from './components/Roadmap/RoadmapView';
-import { ChangelogView } from './components/Changelog/ChangelogView';
-import { CareersView } from './components/Careers/CareersView';
-import { HelpView } from './components/Help/HelpView';
-import { DownloadView } from './components/Download/DownloadView';
-import { AboutView } from './components/About/AboutView';
-import { ContactView } from './components/Contact/ContactView';
-import { LoginView } from './components/Auth/LoginView';
-import { RegisterView } from './components/Auth/RegisterView';
-import { ProfileView } from './components/Auth/ProfileView';
-import { OptimizationsView } from './components/Optimizations/OptimizationsView';
+// Pages
+import { HomePage } from './pages/home/HomePage';
+import { FeaturesPage } from './pages/features/FeaturesPage';
+import { DocsPage } from './pages/docs/DocsPage';
+import { ApiReferencePage } from './pages/docs/ApiReferencePage';
+import { EcosystemPage } from './pages/ecosystem/EcosystemPage';
+import { DiscussionsPage } from './pages/ecosystem/DiscussionsPage';
+import { IssuesPage } from './pages/ecosystem/IssuesPage';
+import { TenancyRequestPage } from './pages/ecosystem/TenancyRequestPage';
+import { BlogPage } from './pages/blog/BlogPage';
+import { RoadmapPage } from './pages/roadmap/RoadmapPage';
+import { ChangelogPage } from './pages/changelog/ChangelogPage';
+import { CareersPage } from './pages/careers/CareersPage';
+import { HelpPage } from './pages/help/HelpPage';
+import { DownloadPage } from './pages/download/DownloadPage';
+import { AboutPage } from './pages/about/AboutPage';
+import { ContactPage } from './pages/contact/ContactPage';
+import { LoginPage } from './pages/auth/LoginPage';
+import { RegisterPage } from './pages/auth/RegisterPage';
+import { ProfilePage } from './pages/auth/ProfilePage';
+import { OptimizationsPage } from './pages/optimizations/OptimizationsPage';
 
 export default function App() {
   const { currentRoute } = useApexStore();
@@ -34,51 +36,53 @@ export default function App() {
   const renderActiveView = () => {
     switch (currentRoute) {
       case 'home':
-        return <HomeView />;
+        return <HomePage />;
       case 'about':
-        return <AboutView />;
+        return <AboutPage />;
       case 'features':
-        return <FeaturesView />;
+        return <FeaturesPage />;
       case 'api-ref':
-        return <ApiReferenceView />;
+        return <ApiReferencePage />;
       case 'docs':
       case 'doc-detail':
       case 'doc-new':
-        return <DocsView />;
+        return <DocsPage />;
       case 'blog':
       case 'blog-detail':
       case 'blog-new':
       case 'blog-edit':
-        return <BlogView />;
+        return <BlogPage />;
       case 'ecosystem':
+        return <EcosystemPage />;
       case 'discussion-detail':
+        return <DiscussionsPage />;
       case 'issue-detail':
-        return <EcosystemView />;
+        return <IssuesPage />;
       case 'tenancy-request':
-        return <RequestOfficialTenancyView />;
+        return <TenancyRequestPage />;
       case 'roadmap':
-        return <RoadmapView />;
+        return <RoadmapPage />;
       case 'optimizations':
       case 'optimization-detail':
-        return <OptimizationsView />;
+        return <OptimizationsPage />;
       case 'changelog':
-        return <ChangelogView />;
+        return <ChangelogPage />;
       case 'careers':
-        return <CareersView />;
+        return <CareersPage />;
       case 'contact':
-        return <ContactView />;
+        return <ContactPage />;
       case 'help':
-        return <HelpView />;
+        return <HelpPage />;
       case 'download':
-        return <DownloadView />;
+        return <DownloadPage />;
       case 'login':
-        return <LoginView />;
+        return <LoginPage />;
       case 'register':
-        return <RegisterView />;
+        return <RegisterPage />;
       case 'profile':
-        return <ProfileView />;
+        return <ProfilePage />;
       default:
-        return <HomeView />;
+        return <HomePage />;
     }
   };
 

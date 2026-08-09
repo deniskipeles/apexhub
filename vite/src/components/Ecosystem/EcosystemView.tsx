@@ -91,11 +91,15 @@ const DEFAULT_ECOSYSTEM_ITEMS = [
     }
 ];
 
-export function EcosystemView() {
+interface EcosystemViewProps {
+  defaultTab?: string;
+}
+
+export function EcosystemView({ defaultTab = 'marketplace' }: EcosystemViewProps = {}) {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    const activeTab = searchParams.get('tab') || 'marketplace';
+    const activeTab = searchParams.get('tab') || defaultTab;
     const [search, setSearch] = useState("");
     const [items, setItems] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
