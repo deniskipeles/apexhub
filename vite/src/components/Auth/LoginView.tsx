@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { apex } from '@/lib/apexkit';
 import { loginAction } from '@/app/actions';
 import { useRouter, Link } from '@/lib/navigation';
-import { LogIn, Lock, Mail, ArrowRight, ShieldCheck, Loader2, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Lock, Mail, ArrowRight, ShieldCheck, Loader2, Sparkles, CheckCircle2, Github } from 'lucide-react';
 
 export function LoginView() {
   const router = useRouter();
@@ -18,27 +18,11 @@ export function LoginView() {
     setError(null);
 
     try {
-      // Try login via apex client
-      let token = '';
-      let user = null;
-      try {
-        const res = await apex.auth.login(email, password);
-        token = res?.token;
-        user = res?.user;
-      } catch (err: any) {
-        // Fallback for demo mode if backend is disconnected
-        token = `demo_token_${Date.now()}`;
-        user = {
-          id: 'usr_demo_123',
-          email: email || 'developer@apexkit.dev',
-          name: email ? email.split('@')[0] : 'Developer',
-          role: 'developer'
-        };
-      }
-
-      if (token) {
-        apex.setToken(token);
-        await loginAction(token);
+      const res = await apex.auth.login(email, password);
+      
+      if (res?.token) {
+        apex.setToken(res.token);
+        await loginAction(res.token);
         setSuccessMsg("Successfully authenticated! Redirecting...");
         setTimeout(() => {
           router.push('/profile');
@@ -53,9 +37,9 @@ export function LoginView() {
     }
   };
 
-  const fillDemo = (roleEmail: string) => {
-    setEmail(roleEmail);
-    setPassword('apexkit-secret-123');
+  const handleGithubLogin = () => {
+    // Redirect to GitHub OAuth, returning to the profile page
+    apex.auth.loginWithGithub(`${window.location.origin}/profile`);
   };
 
   return (
@@ -142,28 +126,19 @@ export function LoginView() {
             </button>
           </form>
 
-          {/* Quick Demo Autofill */}
-          <div className="mt-8 pt-6 border-t border-border/60">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted mb-3 text-center">
-              Quick Demo Login
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <button 
-                type="button" 
-                onClick={() => fillDemo('admin@apexkit.dev')}
-                className="px-3 py-2 bg-foreground/5 hover:bg-foreground/10 border border-border rounded-lg text-xs font-medium text-foreground transition-colors cursor-pointer"
-              >
-                Admin User
-              </button>
-              <button 
-                type="button" 
-                onClick={() => fillDemo('developer@apexkit.dev')}
-                className="px-3 py-2 bg-foreground/5 hover:bg-foreground/10 border border-border rounded-lg text-xs font-medium text-foreground transition-colors cursor-pointer"
-              >
-                Developer
-              </button>
-            </div>
+          <div className="relative my-6 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border"></div></div>
+            <div className="relative bg-surface px-4 text-xs font-semibold text-muted uppercase tracking-wider">Or</div>
           </div>
+
+          <button 
+            type="button" 
+            onClick={handleGithubLogin}
+            className="w-full py-3 bg-[#24292f] hover:bg-[#1b1f23] text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md"
+          >
+            <Github size={18} />
+            <span>Continue with GitHub</span>
+          </button>
         </div>
 
         {/* Footer Link */}

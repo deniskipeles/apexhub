@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { apex } from '@/lib/apexkit';
 import { loginAction } from '@/app/actions';
 import { useRouter, Link } from '@/lib/navigation';
-import { UserPlus, Lock, Mail, User, ArrowRight, ShieldCheck, Loader2, Sparkles, CheckCircle2 } from 'lucide-react';
+import { UserPlus, Lock, Mail, User, ArrowRight, ShieldCheck, Loader2, Sparkles, CheckCircle2, Github } from 'lucide-react';
 
 export function RegisterView() {
   const router = useRouter();
@@ -19,26 +19,11 @@ export function RegisterView() {
     setError(null);
 
     try {
-      let token = '';
-      let user = null;
-      try {
-        const res = await apex.auth.register(email, password, { name });
-        token = res?.token;
-        user = res?.user;
-      } catch (err: any) {
-        // Fallback demo account creation
-        token = `demo_token_${Date.now()}`;
-        user = {
-          id: `usr_${Date.now()}`,
-          email: email,
-          name: name || 'New Developer',
-          role: 'developer'
-        };
-      }
-
-      if (token) {
-        apex.setToken(token);
-        await loginAction(token);
+      const res = await apex.auth.register(email, password, { name });
+      
+      if (res?.token) {
+        apex.setToken(res.token);
+        await loginAction(res.token);
         setSuccessMsg("Account created successfully! Logging you in...");
         setTimeout(() => {
           router.push('/profile');
@@ -51,6 +36,11 @@ export function RegisterView() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGithubLogin = () => {
+    // Redirect to GitHub OAuth, returning to the profile page
+    apex.auth.loginWithGithub(`${window.location.origin}/profile`);
   };
 
   return (
@@ -154,6 +144,20 @@ export function RegisterView() {
               )}
             </button>
           </form>
+
+          <div className="relative my-6 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border"></div></div>
+            <div className="relative bg-surface px-4 text-xs font-semibold text-muted uppercase tracking-wider">Or</div>
+          </div>
+
+          <button 
+            type="button" 
+            onClick={handleGithubLogin}
+            className="w-full py-3 bg-[#24292f] hover:bg-[#1b1f23] text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md"
+          >
+            <Github size={18} />
+            <span>Sign up with GitHub</span>
+          </button>
         </div>
 
         {/* Footer Link */}

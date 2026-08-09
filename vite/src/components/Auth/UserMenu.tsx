@@ -5,7 +5,13 @@ import { getToken, logoutAction } from '@/app/actions';
 import { APEX_HUB_TOKEN } from '@/lib/constants';
 import { Link } from '@/lib/navigation';
 
-export function UserMenu({ mobile = false }: { mobile?: boolean }) {
+export function UserMenu({ 
+  mobile = false, 
+  onItemClick 
+}: { 
+  mobile?: boolean; 
+  onItemClick?: () => void; 
+}) {
     const [user, setUser] = useState<any>(null);
 
     const checkAuth = useCallback(async () => {
@@ -33,6 +39,7 @@ export function UserMenu({ mobile = false }: { mobile?: boolean }) {
     }, [checkAuth]);
 
     const handleLogout = async () => {
+        if (onItemClick) onItemClick();
         await logoutAction();
         apex.setToken('');
         if (typeof window !== 'undefined') localStorage.removeItem(APEX_HUB_TOKEN);
@@ -43,10 +50,17 @@ export function UserMenu({ mobile = false }: { mobile?: boolean }) {
         if (mobile) {
             return (
                 <>
-                    <Link href="/profile" className="w-full flex items-center gap-4 text-lg font-medium text-foreground py-4 border-b border-border/50">
+                    <Link 
+                        href="/profile" 
+                        onClick={onItemClick} 
+                        className="w-full flex items-center gap-4 text-lg font-medium text-foreground py-4 border-b border-border/50"
+                    >
                         <User size={20} className="text-primary" /> Profile
                     </Link>
-                    <button onClick={handleLogout} className="w-full flex items-center gap-4 text-lg font-bold text-red-500 py-4 border-b border-border/50">
+                    <button 
+                        onClick={handleLogout} 
+                        className="w-full flex items-center gap-4 text-lg font-bold text-red-500 py-4 border-b border-border/50 cursor-pointer"
+                    >
                         <LogOut size={20} /> Sign Out
                     </button>
                 </>
@@ -60,7 +74,7 @@ export function UserMenu({ mobile = false }: { mobile?: boolean }) {
                     </div>
                     Profile
                 </Link>
-                <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted hover:text-red-500 hover:bg-red-500/10 transition-colors w-full text-left">
+                <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted hover:text-red-500 hover:bg-red-500/10 transition-colors w-full text-left cursor-pointer">
                     <LogOut size={16} /> Sign Out
                 </button>
             </div>
@@ -69,7 +83,11 @@ export function UserMenu({ mobile = false }: { mobile?: boolean }) {
 
     if (mobile) {
         return (
-            <Link href="/login" className="w-full flex items-center gap-4 text-lg font-bold text-primary py-4 border-b border-border/50 mt-4">
+            <Link 
+                href="/login" 
+                onClick={onItemClick} 
+                className="w-full flex items-center gap-4 text-lg font-bold text-primary py-4 border-b border-border/50 mt-4"
+            >
                 <LogIn size={20} /> Sign In
             </Link>
         );

@@ -13,9 +13,13 @@ export function TenancyList({ initialItems }: { initialItems: any[] }) {
     const [region, setRegion] = useState("");
     const [specs, setSpecs] = useState("");
     const [desc, setDesc] = useState("");
+    const [slots, setSlots] = useState(10);
+    const [status, setStatus] = useState("available");
 
     const filteredItems = items.filter(o =>
-        o.data?.provider_name?.toLowerCase().includes(search.toLowerCase())
+        o.data?.provider_name?.toLowerCase().includes(search.toLowerCase()) ||
+        o.data?.region?.toLowerCase().includes(search.toLowerCase()) ||
+        o.data?.specs?.toLowerCase().includes(search.toLowerCase())
     );
 
     const handleCreate = async (e: React.FormEvent) => {
@@ -27,34 +31,38 @@ export function TenancyList({ initialItems }: { initialItems: any[] }) {
                 region,
                 specs,
                 description: desc,
-                status: 'available',
-                available_slots: 10
+                available_slots: Number(slots) || 0,
+                status
             });
             setItems([res, ...items]);
             setIsCreateOpen(false);
             setName(""); setRegion(""); setSpecs(""); setDesc("");
-        } catch (err) { console.error(err); }
-        finally { setIsSubmitting(false); }
+        } catch (err: any) { 
+            console.error(err);
+            alert(err.message || "Failed to list tenancy offer. Make sure you are signed in.");
+        } finally { 
+            setIsSubmitting(false); 
+        }
     };
 
     return (
         <div>
             <div className="flex flex-col sm:flex-row gap-4 justify-between mb-6 animate-in fade-in">
                 <div className="relative flex-1 sm:max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={16} />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" size={16} />
                     <input
                         type="text"
-                        placeholder="Search providers..."
-                        className="w-full pl-9 pr-4 py-2 bg-surface border border-border rounded-lg text-sm text-foreground focus:ring-1 focus:ring-primary outline-none"
+                        placeholder="Search tenancy providers, regions, specs..."
+                        className="w-full pl-10 pr-4 py-2.5 bg-surface border border-border rounded-xl text-sm text-foreground focus:ring-2 focus:ring-primary/40 outline-none"
                         value={search}
                         onChange={e => setSearch(e.target.value)}
                     />
                 </div>
                 <div className="flex gap-2">
-                    <Link href="/ecosystem/tenancy/request-apexkit-official-tenancy" className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary-hover flex items-center gap-2 whitespace-nowrap shadow-sm transition-colors">
+                    <Link href="/ecosystem/tenancy/request-apexkit-official-tenancy" className="px-5 py-2.5 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-hover flex items-center gap-2 whitespace-nowrap shadow-md shadow-primary/20 transition-all cursor-pointer">
                         <Zap size={16} /> Official Host
                     </Link>
-                    <button type="button" onClick={() => setIsCreateOpen(true)} className="px-4 py-2 bg-surface border border-border text-foreground hover:bg-background text-sm font-bold rounded-lg flex items-center gap-2 whitespace-nowrap transition-colors">
+                    <button type="button" onClick={() => setIsCreateOpen(true)} className="px-5 py-2.5 bg-surface border border-border text-foreground hover:bg-background text-sm font-bold rounded-xl flex items-center gap-2 whitespace-nowrap transition-colors cursor-pointer">
                         <Plus size={16} /> Offer Instance
                     </button>
                 </div>
@@ -62,10 +70,10 @@ export function TenancyList({ initialItems }: { initialItems: any[] }) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredItems.map(offer => (
-                    <div key={offer.id} className="bg-surface border border-border rounded-xl p-6 hover:border-primary/50 transition-all flex flex-col h-full relative overflow-hidden group">
+                    <div key={offer.id} className="bg-surface border border-border rounded-2xl p-6 hover:border-primary/50 transition-all flex flex-col h-full relative overflow-hidden group">
                         <div className={`absolute top-0 right-0 px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-bl-xl ${
-                            offer.data?.status === 'available' ? 'bg-green-500 text-white' :
-                            offer.data?.status === 'waitlist' ? 'bg-yellow-500 text-black' :
+                            offer.data?.status === 'available' ? 'bg-emerald-500 text-white' :
+                            offer.data?.status === 'waitlist' ? 'bg-amber-500 text-black' :
                             'bg-zinc-700 text-zinc-300'
                         }`}>
                             {offer.data?.status}
@@ -79,7 +87,7 @@ export function TenancyList({ initialItems }: { initialItems: any[] }) {
                         </div>
 
                         <div className="flex-1">
-                            <div className="p-3 bg-background rounded-lg border border-border mb-4">
+                            <div className="p-3 bg-background rounded-xl border border-border mb-4">
                                 <div className="flex items-center gap-2 text-sm text-foreground font-mono">
                                     <Cpu size={14} className="text-primary" />
                                     {offer.data?.specs}
@@ -90,56 +98,74 @@ export function TenancyList({ initialItems }: { initialItems: any[] }) {
                             </p>
                         </div>
 
-                        <div className="mt-auto">
-                            <div className="flex items-center justify-between text-xs text-muted mb-3">
+                        <div className="mt-auto border-t border-border/60 pt-4">
+                            <div className="flex items-center justify-between text-xs text-muted mb-2">
                                 <span>Availability</span>
-                                <span className={(offer.data?.available_slots || 0) > 0 ? "text-green-500 font-bold" : "text-zinc-500"}>
+                                <span className={(offer.data?.available_slots || 0) > 0 ? "text-emerald-500 font-bold" : "text-zinc-500"}>
                                     {offer.data?.available_slots || 0} Slots left
                                 </span>
                             </div>
-                            <div className="w-full bg-background h-1.5 rounded-full overflow-hidden mb-4">
+                            <div className="w-full bg-background h-1.5 rounded-full overflow-hidden mb-4 border border-border/40">
                                 <div
-                                    className={`h-full ${(offer.data?.available_slots || 0) > 10 ? 'bg-green-500' : 'bg-yellow-500'}`}
-                                    style={{ width: `${Math.min(100, ((offer.data?.available_slots || 0) / 50) * 100)}%` }}
+                                    className={`h-full ${(offer.data?.available_slots || 0) > 5 ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                                    style={{ width: `${Math.min(100, ((offer.data?.available_slots || 0) / 20) * 100)}%` }}
                                 ></div>
                             </div>
                             <button
                                 type="button"
                                 disabled={offer.data?.status === 'full'}
-                                className="w-full py-2.5 rounded-lg border border-primary text-primary hover:bg-primary hover:text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-primary"
+                                className="w-full py-2.5 rounded-xl border border-primary text-primary hover:bg-primary hover:text-white font-bold text-xs transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-primary"
                             >
                                 {offer.data?.status === 'available' ? 'Request Access' : 'Join Waitlist'}
                             </button>
                         </div>
                     </div>
                 ))}
-                {filteredItems.length === 0 && <div className="col-span-full text-center py-20 text-muted border border-dashed border-border rounded-xl">No offers found.</div>}
+                {filteredItems.length === 0 && (
+                    <div className="col-span-full text-center py-20 text-muted border border-dashed border-border rounded-2xl bg-surface/30">
+                        No tenancy offers found in database.
+                    </div>
+                )}
             </div>
 
             {isCreateOpen && (
                 <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="bg-surface border border-border rounded-2xl p-8 max-w-md w-full shadow-2xl relative animate-in zoom-in-95">
-                        <button type="button" onClick={() => setIsCreateOpen(false)} className="absolute top-4 right-4 text-muted hover:text-foreground"><X /></button>
-                        <h2 className="text-xl font-bold mb-6">List a Server</h2>
+                        <button type="button" onClick={() => setIsCreateOpen(false)} className="absolute top-4 right-4 text-muted hover:text-foreground cursor-pointer"><X size={20} /></button>
+                        <h2 className="text-xl font-bold mb-6 text-foreground">List a Server Instance</h2>
                         <form onSubmit={handleCreate} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-muted mb-2">Provider Name</label>
-                                <input required value={name} onChange={e => setName(e.target.value)} className="w-full bg-background border border-border rounded-lg px-4 py-2" placeholder="e.g. Acme Cloud" />
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">Provider Name</label>
+                                <input required value={name} onChange={e => setName(e.target.value)} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/40 outline-none" placeholder="e.g. Acme Cloud" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">Region</label>
+                                    <input required value={region} onChange={e => setRegion(e.target.value)} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/40 outline-none" placeholder="US-East" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">Available Slots</label>
+                                    <input type="number" required value={slots} onChange={e => setSlots(Number(e.target.value))} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/40 outline-none" />
+                                </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-muted mb-2">Region</label>
-                                <input required value={region} onChange={e => setRegion(e.target.value)} className="w-full bg-background border border-border rounded-lg px-4 py-2" placeholder="e.g. US-East" />
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">Specs</label>
+                                <input required value={specs} onChange={e => setSpecs(e.target.value)} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/40 outline-none" placeholder="2 vCPU, 4GB RAM" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-muted mb-2">Specs</label>
-                                <input required value={specs} onChange={e => setSpecs(e.target.value)} className="w-full bg-background border border-border rounded-lg px-4 py-2" placeholder="e.g. 2 vCPU, 4GB RAM" />
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">Status</label>
+                                <select value={status} onChange={e => setStatus(e.target.value)} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/40 outline-none">
+                                    <option value="available">Available</option>
+                                    <option value="waitlist">Waitlist</option>
+                                    <option value="full">Full</option>
+                                </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-muted mb-2">Description</label>
-                                <textarea required rows={3} value={desc} onChange={e => setDesc(e.target.value)} className="w-full bg-background border border-border rounded-lg px-4 py-2 resize-none" placeholder="Availability details..." />
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">Description</label>
+                                <textarea required rows={3} value={desc} onChange={e => setDesc(e.target.value)} className="w-full bg-background border border-border rounded-xl p-4 text-sm resize-none focus:ring-2 focus:ring-primary/40 outline-none" placeholder="Detail server hardware, uptime guarantees, and hosting policies..." />
                             </div>
-                            <button type="submit" disabled={isSubmitting} className="w-full py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary-hover flex items-center justify-center gap-2">
-                                {isSubmitting ? <Loader2 className="animate-spin" /> : 'List Offer'}
+                            <button type="submit" disabled={isSubmitting} className="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-hover flex items-center justify-center gap-2 shadow-lg shadow-primary/20 transition-all cursor-pointer">
+                                {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : 'List Tenancy Offer'}
                             </button>
                         </form>
                     </div>

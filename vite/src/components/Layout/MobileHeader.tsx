@@ -60,7 +60,8 @@ export function MobileHeader() {
               );
             })}
 
-            <UserMenu mobile />
+            {/* Passes the close handler down to collapse the mobile header */}
+            <UserMenu mobile onItemClick={() => setIsOpen(false)} />
           </nav>
         </div>
       )}

@@ -1,18 +1,15 @@
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react'
+import react from '@vitejs/plugin-react';
 import viteCompression from 'vite-plugin-compression';
 import path from 'path';
 import tailwindcss from '@tailwindcss/vite';
 
 // https://vite.dev/config/
-export default defineConfig((_) => {
-  // const env = loadEnv(mode, '.', '');
+export default defineConfig(() => {
   return {
     plugins: [
       react(),
       tailwindcss(),
-      // babel({ presets: [reactCompilerPreset()] }),
-      // Generates gzip-compressed files during npm run build
       ((viteCompression as any).default || viteCompression)({
         algorithm: 'gzip',
         ext: '.gz',
@@ -24,13 +21,33 @@ export default defineConfig((_) => {
       },
     },
     server: {
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
       host: '0.0.0.0',
-      // ✅ Set to true to automatically allow ALL hostnames in development
       allowedHosts: true
     },
+    build: {
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('react') || id.includes('react-dom') || id.includes('zustand')) {
+                return 'react-vendor';
+              }
+              if (id.includes('lucide-react')) {
+                return 'icons-vendor';
+              }
+              if (id.includes('highlight.js') || id.includes('marked') || id.includes('dompurify')) {
+                return 'markdown-vendor';
+              }
+              if (id.includes('@apexkit/sdk')) {
+                return 'apexkit-sdk';
+              }
+              return 'vendor';
+            }
+          }
+        }
+      }
+    }
   };
 });
-

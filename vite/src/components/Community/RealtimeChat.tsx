@@ -38,48 +38,56 @@ export function RealtimeChat({ parentId, parentData, initialComments, collection
         
         wsClient.connect();
 
-        setTimeout(() => {
+        const timer = setTimeout(() => {
             wsClient.subscribe({
                 eventType: 'Insert',
-                dataFilter: { [parentField]: parentId }
+                dataFilter: { [parentField]: Number(parentId) || parentId }
             });
 
             wsClient.subscribe({ channel: channel });
         }, 500);
 
         const unsubscribe = wsClient.onEvent((msg: any) => {
-            if (msg.type === 'Insert') {
-                const newRecord = msg.payload.data;
-                setComments(prev => {
-                    if (prev.find(c => c.id === msg.payload.record_id)) return prev;
-                    return [...prev, { 
-                        id: msg.payload.record_id, 
-                        data: newRecord, 
-                        created: new Date().toISOString(),
-                        expand: { author_id: { email: 'New Message' } } 
-                    }];
-                });
+            if (msg.type === 'Insert' || msg.event === 'Insert') {
+                const newRecord = msg.payload?.data || msg.data;
+                const recId = msg.payload?.record_id || msg.record_id || newRecord?.id;
+                
+                if (newRecord) {
+                    setComments(prev => {
+                        if (recId && prev.find(c => c.id === recId)) return prev;
+                        return [...prev, { 
+                            id: recId || Date.now(), 
+                            data: newRecord, 
+                            created: new Date().toISOString(),
+                            expand: { author_id: { email: 'Community Member' } } 
+                        }];
+                    });
+                }
             }
             
-            if (msg.type === 'Custom' && msg.payload.event === 'typing') {
-                const { text, senderId } = msg.payload.data;
-                if (senderId === myClientId.current) return;
+            if ((msg.type === 'Custom' || msg.event === 'Custom') && (msg.payload?.event === 'typing' || msg.event === 'typing')) {
+                const eventData = msg.payload?.data || msg.data;
+                if (eventData) {
+                    const { text, senderId } = eventData;
+                    if (senderId === myClientId.current) return;
 
-                const bubbleId = Math.random().toString(36).substring(7);
-                
-                setTypingBubbles(prev => [...prev, { 
-                    id: bubbleId, 
-                    text: text,
-                    leftOffset: Math.floor(Math.random() * 40)
-                }]);
+                    const bubbleId = Math.random().toString(36).substring(7);
+                    
+                    setTypingBubbles(prev => [...prev, { 
+                        id: bubbleId, 
+                        text: text,
+                        leftOffset: Math.floor(Math.random() * 40)
+                    }]);
 
-                setTimeout(() => {
-                    setTypingBubbles(prev => prev.filter(b => b.id !== bubbleId));
-                }, 2000);
+                    setTimeout(() => {
+                        setTypingBubbles(prev => prev.filter(b => b.id !== bubbleId));
+                    }, 2000);
+                }
             }
         });
 
         return () => {
+            clearTimeout(timer);
             unsubscribe();
             wsClient.disconnect();
         };
@@ -105,19 +113,30 @@ export function RealtimeChat({ parentId, parentData, initialComments, collection
         e.preventDefault();
         if (!input.trim()) return;
 
+        if (!apex.getToken()) {
+            alert("Please sign in to post comments.");
+            return;
+        }
+
         setSending(true);
         try {
+            const numId = Number(parentId);
             await apex.collection(collectionName).create({
-                [parentField]: parentId,
+                [parentField]: !isNaN(numId) ? numId : parentId,
                 content: input,
             });
             setInput("");
-        } catch (e) {
-            console.error(e);
+        } catch (err: any) {
+            console.error("Error posting comment:", err);
+            alert(err.message || "Failed to post comment. Make sure you are signed in.");
         } finally {
             setSending(false);
         }
     };
+
+    const authorUser = parentData.expand?.posted_by_id || parentData.expand?.author_id;
+    const authorEmail = authorUser?.email?.split('@')[0] || 'Community Member';
+    const title = parentData.data?.title || parentData.data?.topic || 'Discussion Item';
 
     return (
         <div className="flex flex-col h-[calc(100vh-200px)] relative overflow-hidden">
@@ -134,12 +153,15 @@ export function RealtimeChat({ parentId, parentData, initialComments, collection
             `}</style>
 
             <div className="mb-6 border-b border-border pb-6 flex-shrink-0">
-                <Link href={`/ecosystem/${collectionName.includes('issue') ? 'issues' : 'discussions'}`} className="text-xs text-muted hover:text-primary flex items-center gap-1 mb-2">
-                    <ArrowLeft size={12} /> Back to list
+                <Link 
+                    href={collectionName.includes('issue') ? '/ecosystem?tab=issues' : '/ecosystem?tab=discussions'} 
+                    className="text-xs text-muted hover:text-primary flex items-center gap-1 mb-2 font-medium transition-colors"
+                >
+                    <ArrowLeft size={14} /> Back to list
                 </Link>
-                <h1 className="text-2xl font-bold text-foreground">{parentData.data?.title || parentData.data?.topic}</h1>
-                <div className="flex items-center gap-2 text-sm text-muted mt-2">
-                    <span>Started by {parentData.expand?.author_id?.email?.split('@')[0] || 'User'}</span>
+                <h1 className="text-2xl font-bold text-foreground">{title}</h1>
+                <div className="flex items-center gap-2 text-xs text-muted mt-2">
+                    <span>Started by <strong className="text-foreground">{authorEmail}</strong></span>
                     <span>•</span>
                     <span>{new Date(parentData.created).toLocaleDateString()}</span>
                 </div>
@@ -147,32 +169,33 @@ export function RealtimeChat({ parentId, parentData, initialComments, collection
 
             <div className="flex-1 overflow-y-auto space-y-6 pr-2 mb-4 custom-scrollbar relative">
                 {parentData.data?.description && (
-                     <div className="bg-surface/30 p-4 rounded-lg border border-border text-foreground/90 leading-relaxed">
+                     <div className="bg-surface/50 p-4 rounded-2xl border border-border text-foreground/90 leading-relaxed text-sm">
                          {parentData.data.description}
                      </div>
                 )}
 
                 {comments.map((comment) => {
-                    const author = comment.expand?.author_id;
+                    const author = comment.expand?.author_id || comment.expand?.posted_by_id;
                     const avatar = author?.metadata?.avatar ? getFileUrl(author.metadata.avatar) : null;
+                    const name = author?.email?.split('@')[0] || 'Community Member';
 
                     return (
-                        <div key={comment.id} className="flex gap-4">
+                        <div key={comment.id} className="flex gap-3 items-start">
                             <div className="shrink-0">
                                 {avatar ? (
-                                    <img src={avatar} className="w-8 h-8 rounded-full object-cover" alt="" />
+                                    <img src={avatar} className="w-8 h-8 rounded-full object-cover border border-border" alt="" />
                                 ) : (
-                                    <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center border border-border">
-                                        <User size={14} className="text-muted" />
+                                    <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center border border-primary/20 text-xs font-bold">
+                                        {name[0]?.toUpperCase()}
                                     </div>
                                 )}
                             </div>
                             <div className="flex flex-col max-w-[80%]">
                                 <div className="flex items-baseline gap-2 mb-1">
-                                    <span className="text-xs font-bold text-foreground">{author?.email?.split('@')[0] || 'User'}</span>
+                                    <span className="text-xs font-bold text-foreground">{name}</span>
                                     <span className="text-[10px] text-muted">{new Date(comment.created).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                                 </div>
-                                <div className="bg-surface border border-border p-3 rounded-xl text-sm text-zinc-300">
+                                <div className="bg-surface border border-border px-4 py-3 rounded-2xl text-sm text-foreground/90 leading-relaxed">
                                     {comment.data?.content}
                                 </div>
                             </div>
@@ -186,7 +209,7 @@ export function RealtimeChat({ parentId, parentData, initialComments, collection
                 {typingBubbles.map(bubble => (
                     <div 
                         key={bubble.id}
-                        className="absolute bottom-0 animate-float bg-primary/90 text-white px-3 py-1.5 rounded-full text-xs shadow-lg backdrop-blur-sm flex items-center gap-2 max-w-[300px] truncate border border-primary/50"
+                        className="absolute bottom-0 animate-float bg-primary/90 text-white px-3 py-1.5 rounded-full text-xs shadow-lg backdrop-blur-sm flex items-center gap-2 max-w-[300px] truncate border border-primary/50 font-sans"
                         style={{ left: `${bubble.leftOffset}px` }}
                     >
                         <MessageSquareDashed size={12} className="shrink-0" />
@@ -197,7 +220,7 @@ export function RealtimeChat({ parentId, parentData, initialComments, collection
 
             <form onSubmit={handleSend} className="relative flex-shrink-0 bg-background pt-2">
                 <input 
-                    className="w-full bg-background border border-border rounded-xl pl-4 pr-12 py-4 text-foreground focus:ring-2 focus:ring-primary focus:outline-none transition-all placeholder:text-muted/50"
+                    className="w-full bg-surface border border-border rounded-2xl pl-4 pr-12 py-3.5 text-sm text-foreground focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none transition-all placeholder:text-muted/50"
                     placeholder="Write a comment..."
                     value={input}
                     onChange={handleInputChange}
@@ -206,9 +229,9 @@ export function RealtimeChat({ parentId, parentData, initialComments, collection
                 <button 
                     type="submit" 
                     disabled={sending || !input.trim()}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 mt-1 p-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors disabled:opacity-50"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 mt-1 p-2 bg-primary text-white rounded-xl hover:bg-primary-hover transition-colors disabled:opacity-50 cursor-pointer"
                 >
-                    {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+                    {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                 </button>
             </form>
         </div>
