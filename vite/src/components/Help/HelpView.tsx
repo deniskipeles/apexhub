@@ -195,6 +195,8 @@ function EmptyState({ onNew }: { onNew: () => void }) {
 function CreateSandboxView({ onSuccess, onBack }: { onSuccess: (id: string) => void; onBack: () => void }) {
     const [issueTitle, setIssueTitle] = useState("");
     const [description, setDescription] = useState("");
+    const [customEmail, setCustomEmail] = useState("");
+    const [customPassword, setCustomPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -205,7 +207,9 @@ function CreateSandboxView({ onSuccess, onBack }: { onSuccess: (id: string) => v
 
         try {
             const result = await apex.scripts.run('provision-sandbox', {
-                name: `Help: ${issueTitle}`
+                name: `Help: ${issueTitle}`,
+                admin_email: customEmail.trim() || undefined,
+                admin_password: customPassword.trim() || undefined
             });
 
             if (!result || !result.sandbox_id) {
@@ -280,12 +284,40 @@ function CreateSandboxView({ onSuccess, onBack }: { onSuccess: (id: string) => v
                         </label>
                         <textarea 
                             required
-                            rows={5}
+                            rows={4}
                             className="w-full bg-background border border-border rounded-xl p-4 text-sm text-foreground focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none resize-none font-sans"
                             placeholder="Describe steps to reproduce, query inputs, or expected behavior..."
                             value={description}
                             onChange={e => setDescription(e.target.value)}
                         />
+                    </div>
+
+                    {/* Custom Admin User Credentials */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-2">
+                                Custom Admin Email (Optional)
+                            </label>
+                            <input 
+                                type="email"
+                                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none transition-all"
+                                placeholder="my-admin@company.com"
+                                value={customEmail}
+                                onChange={e => setCustomEmail(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-2">
+                                Custom Admin Password (Optional)
+                            </label>
+                            <input 
+                                type="password"
+                                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none transition-all"
+                                placeholder="customSecret123!"
+                                value={customPassword}
+                                onChange={e => setCustomPassword(e.target.value)}
+                            />
+                        </div>
                     </div>
 
                     <div className="pt-4 border-t border-border/80">
