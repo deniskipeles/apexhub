@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { apex, getFileUrl } from '@/lib/apexkit';
+import { apex } from '@/lib/apexkit';
 import { useRouter, useSearchParams, usePathname } from '@/lib/navigation';
 import { 
   Zap, Search, Plus, ThumbsUp, ThumbsDown, MessageSquare, 
@@ -37,12 +37,12 @@ export function OptimizationsView() {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  // 1. Load Optimization List or Detail
+  // 1. Fetch Optimization Data (List / Search / Detail)
   useEffect(() => {
     setLoading(true);
 
     if (selectedId) {
-      // Fetch Single Detail View
+      // Single Item Detail View
       Promise.all([
         apex.collection('optimizations').get(selectedId, { expand: 'author_id' }).catch(() => null),
         apex.collection('optimizations_conversations').list({
@@ -63,40 +63,38 @@ export function OptimizationsView() {
       }).finally(() => setLoading(false));
 
     } else if (queryParam) {
-      // Search via OSE (Instant Search)
-      apex.collection('optimizations').searchRecordsInstantlyWithOSE(queryParam)
-        .then((hits: any[]) => {
-          const items = (hits || []).map((h: any) => ({
-            id: h.id,
-            data: {
-              title: h.snippet?.title || h.title || 'Optimization Strategy',
-              content: h.snippet?.content || h.content || '',
-              tags: h.snippet?.tags || [],
-              upvotes: h.snippet?.upvotes || 0,
-              downvotes: h.snippet?.downvotes || 0
-            },
-            created: new Date().toISOString()
-          }));
-          setOptimizations(items);
-          setTotalItems(items.length);
-          setTotalPages(Math.ceil(items.length / 20));
-        })
-        .catch(() => { setOptimizations([]); setTotalItems(0); })
-        .finally(() => setLoading(false));
+      // Search via OSE (On-disk Search Engine) with relation expansion
+      apex.collection('optimizations').searchRecordsWithOSE(queryParam, {
+        page: pageParam,
+        per_page: 20,
+        expand: 'author_id'
+      }).then((res: any) => {
+        const items = res.items || [];
+        setOptimizations(items);
+        setTotalItems(res.total || items.length);
+        setTotalPages(Math.ceil((res.total || items.length) / 20));
+      }).catch(() => {
+        setOptimizations([]);
+        setTotalItems(0);
+        setTotalPages(0);
+      }).finally(() => setLoading(false));
 
     } else {
-      // Load via get-optimizations-data Webhook or Direct Collection fallback
-      apex.scripts.run(`get-optimizations-data?page=${pageParam}`, {__method__:"GET"})
+      // Standard Paginated List via Webhook
+      apex.scripts.run(`get-optimizations-data?page=${pageParam}`, { __method__: 'GET' })
         .then((res: any) => {
           if (res && res.success) {
             setTags(res.tags || []);
             let list = res.items || [];
+            
+            // Client-side tag filtering if active
             if (tagParam) {
               list = list.filter((i: any) => {
                 const t = i.data?.tags;
                 return Array.isArray(t) && t.includes(tagParam);
               });
             }
+
             setOptimizations(list);
             setTotalItems(res.total || list.length);
             setTotalPages(Math.ceil((res.total || list.length) / 20));
@@ -142,6 +140,7 @@ export function OptimizationsView() {
       });
 
       if (res && res.success) {
+        // Update item in list
         setOptimizations(prev => prev.map(item => {
           if (item.id === optId) {
             return {
@@ -149,20 +148,23 @@ export function OptimizationsView() {
               data: {
                 ...item.data,
                 upvotes: res.upvotes,
-                downvotes: res.downvotes
+                downvotes: res.downvotes,
+                user_vote: res.user_vote
               }
             };
           }
           return item;
         }));
 
+        // Update selected strategy in detail view
         if (selectedStrategy && selectedStrategy.id === optId) {
           setSelectedStrategy({
             ...selectedStrategy,
             data: {
               ...selectedStrategy.data,
               upvotes: res.upvotes,
-              downvotes: res.downvotes
+              downvotes: res.downvotes,
+              user_vote: res.user_vote
             }
           });
         }
@@ -268,7 +270,7 @@ export function OptimizationsView() {
             </h2>
 
             <div className="prose prose-invert max-w-none text-sm md:text-base text-foreground/90 leading-relaxed mb-8 font-sans whitespace-pre-wrap">
-              {selectedStrategy.data?.full_content || selectedStrategy.data?.content}
+              {selectedStrategy.data?.content}
             </div>
 
             {/* Voting & Actions */}
@@ -277,14 +279,22 @@ export function OptimizationsView() {
                 <button 
                   type="button"
                   onClick={() => handleVote(selectedStrategy.id, 'up')}
-                  className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/20 rounded-xl font-bold text-xs transition-colors cursor-pointer"
+                  className={`flex items-center gap-2 px-4 py-2 border rounded-xl font-bold text-xs transition-colors cursor-pointer ${
+                    selectedStrategy.data?.user_vote === 'up'
+                      ? 'bg-emerald-500 text-white border-emerald-600 shadow-md shadow-emerald-500/20'
+                      : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border-emerald-500/20'
+                  }`}
                 >
                   <ThumbsUp size={14} /> {selectedStrategy.data?.upvotes || 0} Upvotes
                 </button>
                 <button 
                   type="button"
                   onClick={() => handleVote(selectedStrategy.id, 'down')}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl font-bold text-xs transition-colors cursor-pointer"
+                  className={`flex items-center gap-2 px-4 py-2 border rounded-xl font-bold text-xs transition-colors cursor-pointer ${
+                    selectedStrategy.data?.user_vote === 'down'
+                      ? 'bg-red-500 text-white border-red-600 shadow-md shadow-red-500/20'
+                      : 'bg-red-500/10 hover:bg-red-500/20 text-red-500 border-red-500/20'
+                  }`}
                 >
                   <ThumbsDown size={14} /> {selectedStrategy.data?.downvotes || 0}
                 </button>
@@ -378,7 +388,7 @@ export function OptimizationsView() {
           {tags.length > 0 && (
             <div className="flex flex-wrap gap-2 items-center">
               <span className="text-xs font-bold uppercase tracking-wider text-muted mr-2 flex items-center gap-1">
-                <Tag size={12} /> Top 50 Tags:
+                <Tag size={12} /> Top Tags:
               </span>
               <button 
                 type="button"
@@ -426,6 +436,8 @@ export function OptimizationsView() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {optimizations.map((item) => {
                 const tagsList = Array.isArray(item.data?.tags) ? item.data.tags : [];
+                const authorName = item.expand?.author_id?.email?.split('@')[0] || 'Community Member';
+                const userVote = item.data?.user_vote;
 
                 return (
                   <div 
@@ -461,26 +473,37 @@ export function OptimizationsView() {
                         <button 
                           type="button"
                           onClick={() => handleVote(item.id, 'up')}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 rounded-lg font-bold transition-colors cursor-pointer"
+                          className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-lg font-bold transition-colors cursor-pointer ${
+                            userVote === 'up'
+                              ? 'bg-emerald-500 text-white border-emerald-600 shadow-sm shadow-emerald-500/20'
+                              : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border-emerald-500/20'
+                          }`}
                         >
                           <ThumbsUp size={13} /> {item.data?.upvotes || 0}
                         </button>
                         <button 
                           type="button"
                           onClick={() => handleVote(item.id, 'down')}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg font-bold transition-colors cursor-pointer"
+                          className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-lg font-bold transition-colors cursor-pointer ${
+                            userVote === 'down'
+                              ? 'bg-red-500 text-white border-red-600 shadow-sm shadow-red-500/20'
+                              : 'bg-red-500/10 hover:bg-red-500/20 text-red-500 border-red-500/20'
+                          }`}
                         >
                           <ThumbsDown size={13} /> {item.data?.downvotes || 0}
                         </button>
                       </div>
 
-                      <button 
-                        type="button"
-                        onClick={() => router.push(`${pathname}?id=${item.id}`)}
-                        className="flex items-center gap-1.5 text-primary hover:underline font-bold cursor-pointer"
-                      >
-                        <MessageSquare size={13} /> {item.expand?.comments_count || 0} Comments
-                      </button>
+                      <div className="flex items-center gap-3">
+                        <span className="text-muted text-[11px]">By {authorName}</span>
+                        <button 
+                          type="button"
+                          onClick={() => router.push(`${pathname}?id=${item.id}`)}
+                          className="flex items-center gap-1.5 text-primary hover:underline font-bold cursor-pointer"
+                        >
+                          <MessageSquare size={13} /> {item.expand?.comments_count || 0}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
