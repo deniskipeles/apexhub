@@ -1,0 +1,11 @@
+{
+  "action": {
+    "id": 2,
+    "slug": "content-editor",
+    "name": "Content Editor",
+    "model": "gemini-2.5-flash-lite",
+    "system_prompt": "You are an expert content editor. Use Google Search to ensure information is accurate. Respond in Markdown.",
+    "template": "User Request: {{prompt}}\n\nOriginal Text:\n{{originalText}}",
+    "config": {}
+  }
+}

@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { apex, getFileUrl } from '@/lib/apexkit';
 import { 
-    Package, Layout, Terminal, Heart, Eye, Download, 
-    Search, Plus, Layers, Loader2, X, MessageCircle, Bug, Server, Sparkles, Star, ExternalLink 
+    Package, Layout, Terminal, Star, Download, Eye,
+    Search, Plus, Layers, Loader2, X, MessageCircle, Bug, Server, Sparkles, ExternalLink 
 } from 'lucide-react';
 import { useRouter, useSearchParams } from '@/lib/navigation';
-import { DiscussionList } from '../Community/DiscussionList';
-import { IssueList } from '../Community/IssueList';
+import { ThreadList } from '../Community/ThreadList';
 import { TenancyList } from '../Community/TenancyList';
 import { FileExplorerModal } from './FileExplorerModal';
 
@@ -20,89 +19,38 @@ export function EcosystemView({ defaultTab = 'marketplace' }: EcosystemViewProps
 
     const activeTab = searchParams.get('tab') || defaultTab;
     const [search, setSearch] = useState("");
-    const [items, setItems] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    const [discussions, setDiscussions] = useState<any[]>([]);
-    const [issues, setIssues] = useState<any[]>([]);
+    
+    // Unified Data States
+    const [ecosystemItems, setEcosystemItems] = useState<any[]>([]);
+    const [communityThreads, setCommunityThreads] = useState<any[]>([]);
     const [tenancyOffers, setTenancyOffers] = useState<any[]>([]);
-
+    
+    const [loading, setLoading] = useState(true);
     const [previewItem, setPreviewItem] = useState<any | null>(null);
 
+    // Upload Modal States
     const [isUploadOpen, setIsUploadOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
-    const [title, setTitle] = useState("");
-    const [desc, setDesc] = useState("");
-    const [type, setType] = useState("script");
-    const [tagsInput, setTagsInput] = useState("");
+    const [formData, setFormData] = useState({ title: '', desc: '', type: 'script', url: '', tagsInput: '' });
     const [file, setFile] = useState<File | null>(null);
 
     const fetchEcosystemData = async () => {
         setLoading(true);
         try {
             if (['marketplace', 'starters', 'scripts', 'modules', 'showcase'].includes(activeTab)) {
-                const [ecoRes, startersRes, showcaseRes] = await Promise.all([
-                    apex.collection('ecosystem_items').list({ sort: '-created', expand: 'author_id', per_page: 100 }).catch(() => ({ items: [] })),
-                    apex.collection('starters').list({ sort: '-created', per_page: 50 }).catch(() => ({ items: [] })),
-                    apex.collection('showcase').list({ sort: '-created', expand: 'author_id', per_page: 50 }).catch(() => ({ items: [] }))
-                ]);
-
-                const normalizedEco = (ecoRes.items || []).map((item: any) => {
-                    let tags: string[] = [];
-                    if (Array.isArray(item.data?.tags)) {
-                        tags = item.data.tags;
-                    } else if (typeof item.data?.tags === 'string') {
-                        try { tags = JSON.parse(item.data.tags); } catch { tags = []; }
-                    }
-                    return {
-                        id: item.id,
-                        title: item.data?.title || 'Untitled',
-                        type: item.data?.type || 'script',
-                        description: item.data?.description || '',
-                        file: item.data?.file,
-                        tags,
-                        author: item.expand?.author_id?.email?.split('@')[0] || 'Community',
-                        created: item.created,
-                        raw: item
-                    };
+                const res = await apex.collection('ecosystem_items').list({ sort: '-created', expand: 'author_id', per_page: 100 });
+                setEcosystemItems(res.items || []);
+            } else if (['discussions', 'issues'].includes(activeTab)) {
+                const typeFilter = activeTab === 'issues' ? 'issue' : 'discussion';
+                const res = await apex.collection('community_threads').list({ 
+                    filter: JSON.stringify({ type: typeFilter }),
+                    sort: '-created', 
+                    expand: 'author_id', 
+                    per_page: 50 
                 });
-
-                const normalizedStarters = (startersRes.items || []).map((item: any) => ({
-                    id: item.id,
-                    title: item.data?.framework ? `${item.data.framework} Starter` : 'Starter Kit',
-                    type: 'site',
-                    description: item.data?.description || '',
-                    file: item.data?.icon,
-                    repoUrl: item.data?.repo_url,
-                    installCommand: item.data?.install_command,
-                    tags: [item.data?.framework, 'Starter'].filter(Boolean),
-                    author: 'ApexKit Core',
-                    created: item.created,
-                    raw: item
-                }));
-
-                const normalizedShowcase = (showcaseRes.items || []).map((item: any) => ({
-                    id: item.id,
-                    title: item.data?.title || 'Showcase Project',
-                    type: 'showcase',
-                    description: item.data?.description || '',
-                    file: item.data?.thumbnail,
-                    url: item.data?.url,
-                    tags: ['Showcase'],
-                    author: item.expand?.author_id?.email?.split('@')[0] || 'Community',
-                    created: item.created,
-                    raw: item
-                }));
-
-                setItems([...normalizedEco, ...normalizedStarters, ...normalizedShowcase]);
-            } else if (activeTab === 'discussions') {
-                const res = await apex.collection('discussions').list({ sort: '-created', expand: 'posted_by_id', per_page: 50 }).catch(() => ({ items: [] }));
-                setDiscussions(res.items || []);
-            } else if (activeTab === 'issues') {
-                const res = await apex.collection('issues').list({ sort: '-created', expand: 'posted_by_id', per_page: 50 }).catch(() => ({ items: [] }));
-                setIssues(res.items || []);
+                setCommunityThreads(res.items || []);
             } else if (activeTab === 'tenancy') {
-                const res = await apex.collection('tenancy_offers').list({ sort: '-created', expand: 'provider_id', per_page: 50 }).catch(() => ({ items: [] }));
+                const res = await apex.collection('tenancy_offers').list({ sort: '-created', expand: 'author_id', per_page: 50 });
                 setTenancyOffers(res.items || []);
             }
         } catch (err) {
@@ -118,92 +66,81 @@ export function EcosystemView({ defaultTab = 'marketplace' }: EcosystemViewProps
 
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!file) {
-            alert("Please select a file to upload.");
-            return;
-        }
-
         setIsUploading(true);
         try {
-            // 1. Upload file
-            const uploadedFile = await apex.files.upload(file);
-            
-            // 2. Parse tags
-            const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(Boolean) : [];
+            let filename = null;
+            if (file) {
+                const uploadedFile = await apex.files.upload(file);
+                filename = uploadedFile.filename;
+            }
 
-            // 3. Create database record matching ecosystem_items schema
+            const tags = formData.tagsInput ? formData.tagsInput.split(',').map(t => t.trim()).filter(Boolean) : [];
+
             await apex.collection('ecosystem_items').create({
-                title,
-                type,
-                description: desc,
-                file: uploadedFile.filename,
+                title: formData.title,
+                type: formData.type,
+                description: formData.desc,
+                url: formData.url || null,
+                file: filename,
                 tags
             });
 
             setIsUploadOpen(false);
-            setTitle(""); setDesc(""); setFile(null); setTagsInput("");
+            setFormData({ title: '', desc: '', type: 'script', url: '', tagsInput: '' });
+            setFile(null);
             await fetchEcosystemData();
         } catch (err: any) {
-            console.error("Upload error:", err);
-            alert(err.message || "Upload failed. Please make sure you are signed in.");
+            alert(err.message || "Upload failed. Make sure you are signed in and have a Profile.");
         } finally {
             setIsUploading(false);
         }
     };
 
-    const setTab = (t: string) => {
-        router.replace(`/ecosystem?tab=${t}`);
-    };
-
     const getFilteredItems = () => {
-        let base = items;
-        if (activeTab === 'starters') {
-            base = items.filter(i => i.type === 'site' || i.type === 'starter');
-        } else if (activeTab === 'scripts') {
-            base = items.filter(i => i.type === 'script');
-        } else if (activeTab === 'modules') {
-            base = items.filter(i => i.type === 'module' || i.type === 'i_action' || i.type === 'schema' || i.type === 'template');
-        } else if (activeTab === 'showcase') {
-            base = items.filter(i => i.type === 'showcase');
-        }
+        let base = ecosystemItems;
+        if (activeTab === 'starters') base = ecosystemItems.filter(i => i.data?.type === 'starter');
+        else if (activeTab === 'scripts') base = ecosystemItems.filter(i => i.data?.type === 'script');
+        else if (activeTab === 'modules') base = ecosystemItems.filter(i => ['module', 'schema', 'template'].includes(i.data?.type));
+        else if (activeTab === 'showcase') base = ecosystemItems.filter(i => i.data?.type === 'showcase');
 
         if (!search.trim()) return base;
-
         return base.filter(i => 
-            i.title?.toLowerCase().includes(search.toLowerCase()) ||
-            i.description?.toLowerCase().includes(search.toLowerCase()) ||
-            i.tags?.some((t: string) => t.toLowerCase().includes(search.toLowerCase()))
+            i.data?.title?.toLowerCase().includes(search.toLowerCase()) ||
+            i.data?.description?.toLowerCase().includes(search.toLowerCase())
         );
     };
 
-    const filteredMarketplace = getFilteredItems();
     const isItemTab = ['marketplace', 'starters', 'scripts', 'modules', 'showcase'].includes(activeTab);
 
     return (
         <div className="p-6 md:p-12 max-w-7xl mx-auto min-h-screen">
             <div className="text-center mb-10 max-w-3xl mx-auto">
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold tracking-wide uppercase mb-6 shadow-sm">
-                    <Sparkles size={14} className="text-amber-500" /> Community Ecosystem & Plugins
+                    <Sparkles size={14} className="text-amber-500" /> Community Ecosystem
                 </div>
                 <h1 className="text-4xl md:text-5xl font-extrabold text-foreground mb-4 tracking-tight">
                     Plugins, Starters & Community
                 </h1>
                 <p className="text-lg text-muted leading-relaxed">
-                    Extend your ApexKit instance with community scripts, starter templates, core modules, discussions, and multi-tenant hosting.
+                    Extend your ApexKit instance with community webhooks, starter templates, core modules, discussions, and multi-tenant hosting.
                 </p>
             </div>
 
             {/* TAB NAVIGATION BAR */}
             <div className="flex justify-center mb-10 overflow-x-auto pb-2">
                 <div className="bg-surface/80 p-1.5 rounded-2xl border border-border inline-flex gap-1.5 shadow-sm max-w-full overflow-x-auto no-scrollbar">
-                    <TabBtn active={activeTab === 'marketplace'} onClick={() => setTab('marketplace')} icon={<Package size={16} />} label="All Items" />
-                    <TabBtn active={activeTab === 'starters'} onClick={() => setTab('starters')} icon={<Layout size={16} />} label="Starters" />
-                    <TabBtn active={activeTab === 'scripts'} onClick={() => setTab('scripts')} icon={<Terminal size={16} />} label="Boa Scripts" />
-                    <TabBtn active={activeTab === 'modules'} onClick={() => setTab('modules')} icon={<Layers size={16} />} label="Modules" />
-                    <TabBtn active={activeTab === 'showcase'} onClick={() => setTab('showcase')} icon={<Star size={16} />} label="Showcase" />
-                    <TabBtn active={activeTab === 'discussions'} onClick={() => setTab('discussions')} icon={<MessageCircle size={16} />} label="Discussions" />
-                    <TabBtn active={activeTab === 'issues'} onClick={() => setTab('issues')} icon={<Bug size={16} />} label="Issues" />
-                    <TabBtn active={activeTab === 'tenancy'} onClick={() => setTab('tenancy')} icon={<Server size={16} />} label="Tenancy Market" />
+                    <TabBtn active={activeTab === 'marketplace'} onClick={() => router.replace('/ecosystem?tab=marketplace')} icon={<Package size={16} />} label="All Items" />
+                    <TabBtn active={activeTab === 'starters'} onClick={() => router.replace('/ecosystem?tab=starters')} icon={<Layout size={16} />} label="Starters" />
+                    
+                    {/* CHANGED: Boa Scripts -> Webhooks */}
+                    <TabBtn active={activeTab === 'scripts'} onClick={() => router.replace('/ecosystem?tab=scripts')} icon={<Terminal size={16} />} label="Webhooks" />
+                    
+                    <TabBtn active={activeTab === 'modules'} onClick={() => router.replace('/ecosystem?tab=modules')} icon={<Layers size={16} />} label="Modules" />
+                    <TabBtn active={activeTab === 'showcase'} onClick={() => router.replace('/ecosystem?tab=showcase')} icon={<Star size={16} />} label="Showcase" />
+                    <div className="w-px h-6 bg-border my-auto mx-1"></div>
+                    <TabBtn active={activeTab === 'discussions'} onClick={() => router.replace('/ecosystem?tab=discussions')} icon={<MessageCircle size={16} />} label="Discussions" />
+                    <TabBtn active={activeTab === 'issues'} onClick={() => router.replace('/ecosystem?tab=issues')} icon={<Bug size={16} />} label="Issues" />
+                    <TabBtn active={activeTab === 'tenancy'} onClick={() => router.replace('/ecosystem?tab=tenancy')} icon={<Server size={16} />} label="Tenancy Market" />
                 </div>
             </div>
 
@@ -218,34 +155,30 @@ export function EcosystemView({ defaultTab = 'marketplace' }: EcosystemViewProps
                                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" size={16} />
                                     <input 
                                         type="text" 
-                                        placeholder="Search starters, scripts, modules, showcase..." 
+                                        placeholder="Search starters, webhooks, modules, showcase..." 
                                         className="w-full pl-10 pr-4 py-2.5 bg-surface border border-border rounded-xl text-sm text-foreground focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none transition-all"
                                         value={search}
                                         onChange={e => setSearch(e.target.value)}
                                     />
                                 </div>
-                                <button 
-                                    type="button" 
-                                    onClick={() => setIsUploadOpen(true)} 
-                                    className="px-5 py-2.5 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-hover flex items-center justify-center gap-2 shadow-md shadow-primary/20 transition-all cursor-pointer"
-                                >
+                                <button onClick={() => setIsUploadOpen(true)} className="px-5 py-2.5 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-hover flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer">
                                     <Plus size={16} /> Submit Item
                                 </button>
                             </div>
 
-                            {filteredMarketplace.length === 0 ? (
+                            {getFilteredItems().length === 0 ? (
                                 <div className="text-center py-20 bg-surface/30 border border-border rounded-2xl p-8">
                                     <Package className="mx-auto text-muted mb-3 h-10 w-10 opacity-50" />
                                     <h3 className="text-lg font-bold text-foreground mb-1">No ecosystem items in database</h3>
-                                    <p className="text-sm text-muted mb-4">Be the first to publish a script, module, or starter template to the ApexKit database.</p>
+                                    <p className="text-sm text-muted mb-4">Be the first to publish a webhook, module, or starter template to the ApexKit database.</p>
                                     <button onClick={() => setIsUploadOpen(true)} className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl shadow-md cursor-pointer">
                                         Submit First Item
                                     </button>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {filteredMarketplace.map(item => {
-                                        const itemType = item.type || 'script';
+                                    {getFilteredItems().map(item => {
+                                        const itemType = item.data?.type || 'script';
                                         return (
                                             <div key={item.id} className="bg-surface border border-border rounded-2xl p-6 hover:border-primary/50 transition-all flex flex-col justify-between group hover:shadow-xl relative overflow-hidden">
                                                 <div>
@@ -262,22 +195,22 @@ export function EcosystemView({ defaultTab = 'marketplace' }: EcosystemViewProps
                                                     </div>
 
                                                     <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors leading-snug">
-                                                        {item.title}
+                                                        {item.data?.title}
                                                     </h3>
                                                     <p className="text-sm text-muted line-clamp-3 leading-relaxed mb-4">
-                                                        {item.description}
+                                                        {item.data?.description}
                                                     </p>
 
-                                                    {item.installCommand && (
+                                                    {item.data?.installCommand && (
                                                         <div className="bg-background border border-border p-2.5 rounded-xl font-mono text-xs text-emerald-400 mb-4 truncate flex items-center gap-2">
                                                             <Terminal size={12} className="shrink-0 text-muted" />
-                                                            <span className="truncate">{item.installCommand}</span>
+                                                            <span className="truncate">{item.data.installCommand}</span>
                                                         </div>
                                                     )}
 
-                                                    {item.tags && item.tags.length > 0 && (
+                                                    {item.data?.tags && item.data.tags.length > 0 && (
                                                         <div className="flex flex-wrap gap-1.5 mb-6">
-                                                            {item.tags.map((tag: string, idx: number) => (
+                                                            {item.data.tags.map((tag: string, idx: number) => (
                                                                 <span key={idx} className="px-2 py-0.5 rounded bg-foreground/5 text-muted text-[10px] font-medium border border-border">
                                                                     #{tag}
                                                                 </span>
@@ -287,7 +220,7 @@ export function EcosystemView({ defaultTab = 'marketplace' }: EcosystemViewProps
                                                 </div>
 
                                                 <div className="flex gap-2 border-t border-border/60 pt-4 mt-auto">
-                                                    {item.file ? (
+                                                    {item.data?.file ? (
                                                         <>
                                                             <button 
                                                                 type="button"
@@ -297,7 +230,7 @@ export function EcosystemView({ defaultTab = 'marketplace' }: EcosystemViewProps
                                                                 <Eye size={14} /> Inspect
                                                             </button>
                                                             <a 
-                                                                href={getFileUrl(item.file)} 
+                                                                href={getFileUrl(item.data.file)} 
                                                                 download 
                                                                 className="p-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors flex items-center justify-center"
                                                                 title="Download asset"
@@ -305,9 +238,9 @@ export function EcosystemView({ defaultTab = 'marketplace' }: EcosystemViewProps
                                                                 <Download size={16} />
                                                             </a>
                                                         </>
-                                                    ) : item.repoUrl || item.url ? (
+                                                    ) : item.data?.repoUrl || item.data?.url ? (
                                                         <a 
-                                                            href={item.repoUrl || item.url} 
+                                                            href={item.data.repoUrl || item.data.url} 
                                                             target="_blank" 
                                                             rel="noreferrer"
                                                             className="flex-1 py-2 bg-primary/10 hover:bg-primary/20 text-primary font-semibold rounded-lg text-xs flex items-center justify-center gap-2 transition-colors"
@@ -324,8 +257,9 @@ export function EcosystemView({ defaultTab = 'marketplace' }: EcosystemViewProps
                         </div>
                     )}
 
-                    {activeTab === 'discussions' && <DiscussionList initialItems={discussions} />}
-                    {activeTab === 'issues' && <IssueList initialItems={issues} />}
+                    {['discussions', 'issues'].includes(activeTab) && (
+                        <ThreadList initialItems={communityThreads} threadType={activeTab === 'issues' ? 'issue' : 'discussion'} />
+                    )}
                     {activeTab === 'tenancy' && <TenancyList initialItems={tenancyOffers} />}
                 </>
             )}
@@ -345,36 +279,42 @@ export function EcosystemView({ defaultTab = 'marketplace' }: EcosystemViewProps
                         <form onSubmit={handleUpload} className="space-y-4">
                             <div>
                                 <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">Title</label>
-                                <input required value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/40 outline-none" placeholder="e.g. Stripe Webhook Handler" />
+                                <input required value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/40" placeholder="e.g. Stripe Webhook Handler" />
                             </div>
                             
                             <div>
                                 <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">Asset Type</label>
-                                <select value={type} onChange={e => setType(e.target.value)} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/40 outline-none">
-                                    <option value="script">Boa JS Script (.js)</option>
-                                    <option value="i_action">AI Action Prompt</option>
-                                    <option value="schema">Collection Schema (.json)</option>
-                                    <option value="template">Tera Template (.html)</option>
-                                    <option value="site">Starter Template (.zip)</option>
+                                <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/40">
+                                    <option value="script">Webhook Script (.js)</option>
+                                    <option value="starter">Starter Template (.zip)</option>
+                                    <option value="module">Custom Module</option>
+                                    <option value="showcase">Showcase Link</option>
                                 </select>
                             </div>
 
                             <div>
                                 <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">Description</label>
-                                <textarea required rows={3} value={desc} onChange={e => setDesc(e.target.value)} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm resize-none focus:ring-2 focus:ring-primary/40 outline-none" placeholder="Describe functionality, dependencies, and integration steps..." />
+                                <textarea required rows={3} value={formData.desc} onChange={e => setFormData({ ...formData, desc: e.target.value })} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm resize-none outline-none focus:ring-2 focus:ring-primary/40" placeholder="Describe functionality, dependencies, and integration steps..." />
                             </div>
 
                             <div>
                                 <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">Tags (comma separated)</label>
-                                <input value={tagsInput} onChange={e => setTagsInput(e.target.value)} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/40 outline-none" placeholder="Stripe, Auth, React" />
+                                <input value={formData.tagsInput} onChange={e => setFormData({ ...formData, tagsInput: e.target.value })} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/40" placeholder="Stripe, Auth, React" />
                             </div>
 
-                            <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">Asset File (.js, .zip, .json, .html)</label>
-                                <input type="file" required onChange={e => setFile(e.target.files?.[0] || null)} className="w-full text-sm text-muted file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer" />
-                            </div>
-
-                            <button type="submit" disabled={isUploading} className="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-hover flex items-center justify-center gap-2 shadow-lg shadow-primary/20 transition-all cursor-pointer">
+                            {formData.type === 'showcase' ? (
+                                <div>
+                                    <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">Showcase URL</label>
+                                    <input required value={formData.url} onChange={e => setFormData({ ...formData, url: e.target.value })} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/40" placeholder="https://..." />
+                                </div>
+                            ) : (
+                                <div>
+                                    <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">Asset File (.js, .zip, .json, .html)</label>
+                                    <input type="file" required onChange={e => setFile(e.target.files?.[0] || null)} className="w-full text-sm text-muted file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer" />
+                                </div>
+                            )}
+                            
+                            <button type="submit" disabled={isUploading} className="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-hover flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer">
                                 {isUploading ? <Loader2 className="animate-spin" size={18} /> : 'Upload Asset'}
                             </button>
                         </form>
@@ -387,15 +327,7 @@ export function EcosystemView({ defaultTab = 'marketplace' }: EcosystemViewProps
 
 function TabBtn({ active, onClick, icon, label }: any) {
     return (
-        <button 
-            type="button"
-            onClick={onClick}
-            className={`px-4 py-2 rounded-xl font-bold text-xs md:text-sm flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
-                active 
-                    ? 'bg-primary text-white shadow-md shadow-primary/20' 
-                    : 'text-muted hover:text-foreground hover:bg-foreground/5'
-            }`}
-        >
+        <button onClick={onClick} className={`px-4 py-2 rounded-xl font-bold text-xs md:text-sm flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${active ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-muted hover:text-foreground hover:bg-foreground/5'}`}>
             {icon} {label}
         </button>
     );

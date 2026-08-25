@@ -59,7 +59,7 @@ export function RealtimeChat({ parentId, parentData, initialComments, collection
                             id: recId || Date.now(), 
                             data: newRecord, 
                             created: new Date().toISOString(),
-                            expand: { author_id: { email: 'Community Member' } } 
+                            expand: { author_id: { data: { username: 'Community Member' } } } 
                         }];
                     });
                 }
@@ -134,8 +134,9 @@ export function RealtimeChat({ parentId, parentData, initialComments, collection
         }
     };
 
-    const authorUser = parentData.expand?.posted_by_id || parentData.expand?.author_id;
-    const authorEmail = authorUser?.email?.split('@')[0] || 'Community Member';
+    // Extract username from Profile record
+    const authorProfile = parentData.expand?.author_id;
+    const authorUsername = authorProfile?.data?.username || 'Community Member';
     const title = parentData.data?.title || parentData.data?.topic || 'Discussion Item';
 
     return (
@@ -154,30 +155,30 @@ export function RealtimeChat({ parentId, parentData, initialComments, collection
 
             <div className="mb-6 border-b border-border pb-6 flex-shrink-0">
                 <Link 
-                    href={collectionName.includes('issue') ? '/ecosystem?tab=issues' : '/ecosystem?tab=discussions'} 
+                    href={parentData.data?.type === 'issue' ? '/ecosystem?tab=issues' : '/ecosystem?tab=discussions'} 
                     className="text-xs text-muted hover:text-primary flex items-center gap-1 mb-2 font-medium transition-colors"
                 >
                     <ArrowLeft size={14} /> Back to list
                 </Link>
                 <h1 className="text-2xl font-bold text-foreground">{title}</h1>
                 <div className="flex items-center gap-2 text-xs text-muted mt-2">
-                    <span>Started by <strong className="text-foreground">{authorEmail}</strong></span>
+                    <span>Started by <strong className="text-foreground">{authorUsername}</strong></span>
                     <span>•</span>
                     <span>{new Date(parentData.created).toLocaleDateString()}</span>
                 </div>
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-6 pr-2 mb-4 custom-scrollbar relative">
-                {parentData.data?.description && (
-                     <div className="bg-surface/50 p-4 rounded-2xl border border-border text-foreground/90 leading-relaxed text-sm">
-                         {parentData.data.description}
+                {parentData.data?.content && (
+                     <div className="bg-surface/50 p-4 rounded-2xl border border-border text-foreground/90 leading-relaxed text-sm whitespace-pre-wrap">
+                         {parentData.data.content}
                      </div>
                 )}
 
                 {comments.map((comment) => {
-                    const author = comment.expand?.author_id || comment.expand?.posted_by_id;
-                    const avatar = author?.metadata?.avatar ? getFileUrl(author.metadata.avatar) : null;
-                    const name = author?.email?.split('@')[0] || 'Community Member';
+                    const author = comment.expand?.author_id;
+                    const avatar = author?.data?.avatar ? getFileUrl(author.data.avatar) : null;
+                    const name = author?.data?.username || 'Community Member';
 
                     return (
                         <div key={comment.id} className="flex gap-3 items-start">
@@ -195,7 +196,7 @@ export function RealtimeChat({ parentId, parentData, initialComments, collection
                                     <span className="text-xs font-bold text-foreground">{name}</span>
                                     <span className="text-[10px] text-muted">{new Date(comment.created).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                                 </div>
-                                <div className="bg-surface border border-border px-4 py-3 rounded-2xl text-sm text-foreground/90 leading-relaxed">
+                                <div className="bg-surface border border-border px-4 py-3 rounded-2xl text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">
                                     {comment.data?.content}
                                 </div>
                             </div>

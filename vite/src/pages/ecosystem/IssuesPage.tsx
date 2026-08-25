@@ -15,9 +15,11 @@ export function IssuesPage() {
     if (currentRoute === 'issue-detail' && routeParams.id) {
       setLoading(true);
       Promise.all([
-        apex.collection('issues').get(routeParams.id, { expand: 'posted_by_id' }).catch(() => null),
-        apex.collection('issues_conversations').list({
-          filter: { issue_id: Number(routeParams.id) || routeParams.id },
+        // Use unified 'community_threads' and expand the 'author_id' (Profile)
+        apex.collection('community_threads').get(routeParams.id, { expand: 'author_id' }).catch(() => null),
+        // Use unified 'thread_comments'
+        apex.collection('thread_comments').list({
+          filter: { thread_id: Number(routeParams.id) || routeParams.id },
           sort: 'created',
           expand: 'author_id',
           per_page: 100
@@ -50,9 +52,9 @@ export function IssuesPage() {
           parentId={routeParams.id}
           parentData={parentData}
           initialComments={comments}
-          collectionName="issues_conversations"
-          parentField="issue_id"
-          channel={`issue_${routeParams.id}`}
+          collectionName="thread_comments"
+          parentField="thread_id"
+          channel={`thread_${routeParams.id}`}
         />
       </div>
     );
