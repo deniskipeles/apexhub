@@ -1,0 +1,11 @@
+{
+  "action": {
+    "id": 3,
+    "slug": "edit-image",
+    "name": "Edit Image",
+    "model": "gemini-2.5-flash-image",
+    "system_prompt": "You are an expert image editor.",
+    "template": "Edit the attached image based on this instruction: {{prompt}}",
+    "config": {}
+  }
+}
