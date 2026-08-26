@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { apex } from '@/lib/apexkit';
+import { apex, getFileUrl } from '@/lib/apexkit';
 import { useRouter, useSearchParams, usePathname } from '@/lib/navigation';
 import { 
   Zap, Search, Plus, ThumbsUp, ThumbsDown, MessageSquare, 
@@ -37,85 +37,42 @@ export function OptimizationsView() {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  // 1. Fetch Optimization Data (List / Search / Detail)
+  // 1. Fetch Optimization Data mapped through api-community router
   useEffect(() => {
     setLoading(true);
 
     if (selectedId) {
       // Single Item Detail View
-      Promise.all([
-        apex.collection('optimizations').get(selectedId, { expand: 'author_id' }).catch(() => null),
-        apex.collection('optimizations_conversations').list({
-          filter: JSON.stringify({ optimization_id: Number(selectedId) || selectedId }),
-          sort: 'created',
-          expand: 'author_id',
-          per_page: 100
-        }).catch(() => ({ items: [] }))
-      ]).then(([opt, commentsRes]) => {
-        if (opt) {
-          setSelectedStrategy({
-            ...opt,
-            comments: commentsRes.items || []
-          });
-        } else {
-          setSelectedStrategy(null);
+      apex.webhook('api-community').get(`/optimizations/${selectedId}`)
+        .then((res: any) => {
+          if (res && res.success) {
+            setSelectedStrategy(res.item);
+          } else {
+            setSelectedStrategy(null);
+          }
+        })
+        .finally(() => setLoading(false));
+    } else {
+      // Standard Paginated List & Search
+      apex.webhook('api-community').get('/optimizations', { 
+        page: pageParam, 
+        q: queryParam || undefined, 
+        tag: tagParam || undefined 
+      })
+      .then((res: any) => {
+        if (res && res.success) {
+          setTags(res.tags || []);
+          setOptimizations(res.items || []);
+          setTotalItems(res.total || 0);
+          setTotalPages(Math.ceil((res.total || 0) / 20));
         }
-      }).finally(() => setLoading(false));
-
-    } else if (queryParam) {
-      // Search via OSE (On-disk Search Engine) with relation expansion
-      apex.collection('optimizations').searchRecordsWithOSE(queryParam, {
-        page: pageParam,
-        per_page: 20,
-        expand: 'author_id'
-      }).then((res: any) => {
-        const items = res.items || [];
-        setOptimizations(items);
-        setTotalItems(res.total || items.length);
-        setTotalPages(Math.ceil((res.total || items.length) / 20));
-      }).catch(() => {
+      })
+      .catch(() => {
         setOptimizations([]);
         setTotalItems(0);
         setTotalPages(0);
-      }).finally(() => setLoading(false));
-
-    } else {
-      // Standard Paginated List via Webhook
-      apex.scripts.run(`get-optimizations-data?page=${pageParam}`, { __method__: 'GET' })
-        .then((res: any) => {
-          if (res && res.success) {
-            setTags(res.tags || []);
-            let list = res.items || [];
-            
-            // Client-side tag filtering if active
-            if (tagParam) {
-              list = list.filter((i: any) => {
-                const t = i.data?.tags;
-                return Array.isArray(t) && t.includes(tagParam);
-              });
-            }
-
-            setOptimizations(list);
-            setTotalItems(res.total || list.length);
-            setTotalPages(Math.ceil((res.total || list.length) / 20));
-          } else {
-            throw new Error("Fallback to direct list");
-          }
-        })
-        .catch(() => {
-          // Direct Collection Fallback
-          apex.collection('optimizations').list({
-            page: pageParam,
-            per_page: 20,
-            sort: '-created',
-            expand: 'author_id'
-          }).then((res: any) => {
-            setOptimizations(res.items || []);
-            setTotalItems(res.total || 0);
-            setTotalPages(Math.ceil((res.total || 0) / 20));
-          });
-        })
-        .finally(() => setLoading(false));
+      })
+      .finally(() => setLoading(false));
     }
   }, [selectedId, queryParam, pageParam, tagParam]);
 
@@ -134,7 +91,7 @@ export function OptimizationsView() {
 
   const handleVote = async (optId: string | number, type: 'up' | 'down') => {
     try {
-      const res = await apex.scripts.run('vote-optimization-strategy', {
+      const res = await apex.webhook('api-community').post('/optimizations/vote', {
         optimization_id: optId,
         type: type
       });
@@ -182,15 +139,17 @@ export function OptimizationsView() {
     try {
       const tagsArray = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(Boolean) : ['Performance'];
       
-      await apex.scripts.run('create-optimization-strategy', {
+      const res = await apex.webhook('api-community').post('/optimizations', {
         title,
         content,
         tags: tagsArray
       });
 
-      setIsSubmitOpen(false);
-      setTitle(''); setContent(''); setTagsInput('');
-      router.push(`${pathname}?page=1`);
+      if (res && res.success) {
+        setIsSubmitOpen(false);
+        setTitle(''); setContent(''); setTagsInput('');
+        router.push(`${pathname}?page=1`);
+      }
     } catch (err: any) {
       alert(err.message || "Failed to submit strategy. Make sure you are signed in.");
     } finally {
@@ -204,15 +163,14 @@ export function OptimizationsView() {
 
     setIsSubmittingComment(true);
     try {
-      const newCommentRec = await apex.collection('optimizations_conversations').create({
-        optimization_id: Number(optId) || optId,
+      const res = await apex.webhook('api-community').post(`/optimizations/${optId}/comments`, {
         content: newComment
       });
 
-      if (selectedStrategy) {
+      if (res && res.success && selectedStrategy) {
         setSelectedStrategy({
           ...selectedStrategy,
-          comments: [...(selectedStrategy.comments || []), newCommentRec]
+          comments: [...(selectedStrategy.comments || []), res.comment]
         });
       }
       setNewComment('');
@@ -221,6 +179,13 @@ export function OptimizationsView() {
     } finally {
       setIsSubmittingComment(false);
     }
+  };
+
+  const getProfileMeta = (authorObj: any) => {
+    return {
+        username: authorObj?.data?.username || 'Community Member',
+        avatar: authorObj?.data?.avatar ? getFileUrl(authorObj.data.avatar) : null
+    };
   };
 
   return (
@@ -260,8 +225,16 @@ export function OptimizationsView() {
                   </span>
                 ))}
               </div>
-              <div className="text-xs text-muted font-medium">
-                Published {new Date(selectedStrategy.created).toLocaleDateString()} by <span className="text-foreground font-bold">{selectedStrategy.expand?.author_id?.email?.split('@')[0] || 'Community Member'}</span>
+              <div className="text-xs text-muted font-medium flex items-center gap-2">
+                <span>Published {new Date(selectedStrategy.created).toLocaleDateString()} by</span> 
+                <span className="text-foreground font-bold flex items-center gap-1.5">
+                    {getProfileMeta(selectedStrategy.expand?.author_id).avatar ? (
+                        <img src={getProfileMeta(selectedStrategy.expand?.author_id).avatar!} className="w-5 h-5 rounded-full object-cover border border-border" alt="" />
+                    ) : (
+                        <User size={14} className="text-primary" />
+                    )}
+                    {getProfileMeta(selectedStrategy.expand?.author_id).username}
+                </span>
               </div>
             </div>
 
@@ -340,19 +313,27 @@ export function OptimizationsView() {
               </form>
 
               <div className="space-y-4 pt-4">
-                {(selectedStrategy.comments || []).map((comment: any) => (
-                  <div key={comment.id} className="p-4 bg-background border border-border/80 rounded-2xl space-y-2">
-                    <div className="flex items-center justify-between text-xs text-muted">
-                      <span className="font-bold text-foreground flex items-center gap-1.5">
-                        <User size={12} className="text-primary" /> {comment.expand?.author_id?.email?.split('@')[0] || 'Community Member'}
-                      </span>
-                      <span>{new Date(comment.created).toLocaleDateString()}</span>
-                    </div>
-                    <p className="text-sm text-foreground/90 leading-relaxed">
-                      {comment.data?.content}
-                    </p>
-                  </div>
-                ))}
+                {(selectedStrategy.comments || []).map((comment: any) => {
+                    const cAuthor = getProfileMeta(comment.expand?.author_id);
+                    return (
+                        <div key={comment.id} className="p-4 bg-background border border-border/80 rounded-2xl space-y-2">
+                            <div className="flex items-center justify-between text-xs text-muted">
+                            <span className="font-bold text-foreground flex items-center gap-1.5">
+                                {cAuthor.avatar ? (
+                                    <img src={cAuthor.avatar} className="w-4 h-4 rounded-full object-cover border border-border" alt="" />
+                                ) : (
+                                    <User size={12} className="text-primary" />
+                                )}
+                                {cAuthor.username}
+                            </span>
+                            <span>{new Date(comment.created).toLocaleDateString()}</span>
+                            </div>
+                            <p className="text-sm text-foreground/90 leading-relaxed">
+                            {comment.data?.content}
+                            </p>
+                        </div>
+                    );
+                })}
               </div>
             </div>
           </div>
@@ -366,7 +347,7 @@ export function OptimizationsView() {
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" size={16} />
               <input 
                 type="text" 
-                placeholder="Search tuning strategies, WAL formulas, Tantivy indexes..." 
+                placeholder="Search tuning strategies, formulas, indexes..." 
                 className="w-full pl-10 pr-4 py-2.5 bg-surface border border-border rounded-xl text-sm text-foreground focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none transition-all"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
@@ -436,7 +417,7 @@ export function OptimizationsView() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {optimizations.map((item) => {
                 const tagsList = Array.isArray(item.data?.tags) ? item.data.tags : [];
-                const authorName = item.expand?.author_id?.email?.split('@')[0] || 'Community Member';
+                const author = getProfileMeta(item.expand?.author_id);
                 const userVote = item.data?.user_vote;
 
                 return (
@@ -495,7 +476,10 @@ export function OptimizationsView() {
                       </div>
 
                       <div className="flex items-center gap-3">
-                        <span className="text-muted text-[11px]">By {authorName}</span>
+                        <span className="text-muted text-[11px] flex items-center gap-1">
+                            By {author.avatar && <img src={author.avatar} className="w-3 h-3 rounded-full object-cover border border-border" alt="" />}
+                            {author.username}
+                        </span>
                         <button 
                           type="button"
                           onClick={() => router.push(`${pathname}?id=${item.id}`)}

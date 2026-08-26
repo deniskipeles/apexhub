@@ -206,14 +206,15 @@ function CreateSandboxView({ onSuccess, onBack }: { onSuccess: (id: string) => v
         setError(null);
 
         try {
-            const result = await apex.scripts.run('provision-sandbox', {
+            // Calling unified api-scope-util router
+            const result = await apex.webhook('api-scope-util').post('/sandbox', {
                 name: `Help: ${issueTitle}`,
                 admin_email: customEmail.trim() || undefined,
                 admin_password: customPassword.trim() || undefined
             });
 
             if (!result || !result.sandbox_id) {
-                throw new Error("Script did not return a sandbox ID");
+                throw new Error(result?.error || "Failed to provision sandbox session");
             }
 
             const sandboxId = result.sandbox_id;

@@ -19,13 +19,22 @@ export function RequestOfficialTenancyView() {
     const [error, setError] = useState<string | null>(null);
     const [successData, setSuccessData] = useState<any | null>(null);
 
+    // Live typing sanitizer: keeps hyphens intact as the user types
+    const sanitizeTenantIdInput = (text: string) => {
+        return text
+            .toLowerCase()
+            .replace(/[^a-z0-9-]/g, '') // Allows lowercase letters, numbers, and hyphens
+            .replace(/-+/g, '-');       // Replaces consecutive hyphens with a single one
+    };
+
+    // Full sanitizer for auto-generation from App Name
     const slugify = (text: string) => {
         return text
             .toLowerCase()
             .trim()
             .replace(/[^a-z0-9-]/g, '-')
             .replace(/-+/g, '-')
-            .replace(/^-|-$/g, '');
+            .replace(/^-+|-+$/g, '');
     };
 
     const handleAppNameChange = (val: string) => {
@@ -37,12 +46,18 @@ export function RequestOfficialTenancyView() {
 
     const handleTenantIdChange = (val: string) => {
         setIsCustomTenantId(true);
-        setTenantId(slugify(val));
+        setTenantId(sanitizeTenantIdInput(val));
     };
 
-    // Real-Time Availability Check using stringified JSON filter
+    const handleTenantIdBlur = () => {
+        // Trim leading and trailing hyphens only when the user finishes typing
+        setTenantId(prev => prev.replace(/^-+|-+$/g, ''));
+    };
+
+    // Real-Time Availability Check
     useEffect(() => {
-        if (!tenantId.trim() || tenantId.length < 3) {
+        const cleanId = tenantId.replace(/^-+|-+$/g, '');
+        if (!cleanId || cleanId.length < 3) {
             setAvailability(null);
             setCheckingAvailability(false);
             return;
@@ -52,8 +67,9 @@ export function RequestOfficialTenancyView() {
         const timer = setTimeout(async () => {
             try {
                 const res = await apex.collection('tenant_registry').list({
-                    filter: JSON.stringify({ tenant_id: tenantId })
-                }).catch(() => ({ total: 0 }));
+                    filter: JSON.stringify({ tenant_id: cleanId }),
+                    per_page: 2
+                })//.catch(() => ({ total: 0 }));
 
                 if (res && res.total > 0) {
                     setAvailability('taken');
@@ -72,7 +88,9 @@ export function RequestOfficialTenancyView() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!appName.trim() || !tenantId.trim()) return;
+        const cleanTenantId = tenantId.replace(/^-+|-+$/g, '');
+        
+        if (!appName.trim() || !cleanTenantId) return;
         if (availability === 'taken') {
             setError("The chosen Tenant ID is already taken. Please select another.");
             return;
@@ -82,9 +100,10 @@ export function RequestOfficialTenancyView() {
         setError(null);
 
         try {
-            const result = await apex.scripts.run('provision-tenant', {
+            // Calling unified api-scope-util webhook
+            const result = await apex.webhook('api-scope-util').post('/tenant', {
                 app_name: appName,
-                tenant_id: tenantId,
+                tenant_id: cleanTenantId,
                 tier: tier
             });
 
@@ -130,7 +149,7 @@ export function RequestOfficialTenancyView() {
                         href={successData.links?.dashboard || `/_dashboard/tenant/${successData.tenant_id}`} 
                         target="_blank"
                         rel="noreferrer"
-                        className="px-6 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-hover transition-all flex items-center gap-2 shadow-lg shadow-primary/20"
+                        className="px-6 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-hover transition-all flex items-center gap-2 shadow-lg shadow-primary/20 cursor-pointer"
                     >
                         Go to Dashboard <ExternalLink size={16} />
                     </a>
@@ -185,7 +204,7 @@ export function RequestOfficialTenancyView() {
                         />
                     </div>
 
-                    {/* Tenant ID with Real-Time Availability Indicator */}
+                    {/* Tenant ID allowing hyphens */}
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <label className="text-xs font-bold uppercase tracking-wider text-muted">Unique Tenant ID</label>
@@ -210,6 +229,7 @@ export function RequestOfficialTenancyView() {
                                 required
                                 value={tenantId}
                                 onChange={e => handleTenantIdChange(e.target.value)}
+                                onBlur={handleTenantIdBlur}
                                 placeholder="acme-e-commerce"
                                 className={`w-full bg-background border rounded-xl px-4 py-3 text-sm font-mono text-foreground focus:ring-2 outline-none transition-all ${
                                     availability === 'taken' 
@@ -221,7 +241,7 @@ export function RequestOfficialTenancyView() {
                             />
                         </div>
                         <p className="text-[11px] text-muted">
-                            Used in your database isolation paths (<code className="font-mono text-primary">/tenant/{tenantId || 'tenant-id'}</code>).
+                            Hyphens allowed. Used in database isolation paths (<code className="font-mono text-primary">/tenant/{tenantId || 'tenant-id'}</code>).
                         </p>
                     </div>
                     
@@ -268,7 +288,7 @@ export function RequestOfficialTenancyView() {
                     
                     <button 
                         type="submit" 
-                        disabled={isSubmitting || !appName.trim() || !tenantId.trim() || availability === 'taken'}
+                        disabled={isSubmitting || !appName.trim() || !tenantId.replace(/^-+|-+$/g, '') || availability === 'taken'}
                         className="w-full sm:w-auto px-8 py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20 cursor-pointer"
                     >
                         {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : <><Server size={18} /> Provision Now</>}

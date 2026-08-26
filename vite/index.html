@@ -3,11 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
+    <title>ApexKit Hub</title>
+
+    <link id="app-favicon" rel="icon" type="image/svg+xml" href="" />
+    <link id="app-apple-icon" rel="apple-touch-icon" href="" />
+
+    <!-- Dynamically resolve favicon from backend API scope -->
+    <script type="module">
+      const apiUrl = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000').replace(/\/$/, '');
+      const tenantId = import.meta.env.VITE_TENANT_ID || '';
+      
+      const baseUrl = tenantId ? `${apiUrl}/tenant/${tenantId}` : apiUrl;
+      const logoUrl = `${baseUrl}/logo`;
+
+      const favicon = document.getElementById('app-favicon');
+      const appleIcon = document.getElementById('app-apple-icon');
+
+      if (favicon) favicon.href = logoUrl;
+      if (appleIcon) appleIcon.href = logoUrl;
+    </script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-
