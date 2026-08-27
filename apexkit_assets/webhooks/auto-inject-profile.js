@@ -1,6 +1,6 @@
 /** @type {import("../apexkit").FileMetadata} */
 export const __fileMetadata__ = {
-  "id": 548,
+  "id": 5,
   "name": "auto-inject-profile",
   "extension": "js",
   "target_collection": null,

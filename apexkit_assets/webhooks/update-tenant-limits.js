@@ -1,6 +1,6 @@
 /** @type {import("../apexkit").FileMetadata} */
 export const __fileMetadata__ = {
-  "id": 28,
+  "id": 41,
   "name": "update-tenant-limits",
   "extension": "js",
   "target_collection": null,
@@ -10,9 +10,6 @@ export const __fileMetadata__ = {
   "active": true,
   "visibility": "private"
 };
-
-/** @type {import("../apexkit").FileMetadata} */
-
 
 export default async function (req) {
     // Only accept POST requests

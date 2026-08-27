@@ -1,6 +1,6 @@
 /** @type {import("../apexkit").FileMetadata} */
 export const __fileMetadata__ = {
-  "id": 7,
+  "id": 21,
   "name": "rate-limiter-after",
   "extension": "js",
   "target_collection": null,
@@ -10,9 +10,6 @@ export const __fileMetadata__ = {
   "active": false,
   "visibility": "private"
 };
-
-/** @type {import("../apexkit").FileMetadata} */
-
 
 export default async function (e) {
     const tenant = e.data.tenant_id;

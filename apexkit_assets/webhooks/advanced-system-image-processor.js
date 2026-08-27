@@ -1,6 +1,6 @@
 /** @type {import("../apexkit").FileMetadata} */
 export const __fileMetadata__ = {
-  "id": 24,
+  "id": 2,
   "name": "advanced-system-image-processor",
   "extension": "js",
   "target_collection": null,
@@ -10,9 +10,6 @@ export const __fileMetadata__ = {
   "active": true,
   "visibility": "public"
 };
-
-/** @type {import("../apexkit").FileMetadata} */
-
 
 /**
  * ApexKit Ultimate Image Processor v1.0

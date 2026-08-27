@@ -1,6 +1,6 @@
 /** @type {import("../apexkit").FileMetadata} */
 export const __fileMetadata__ = {
-  "id": 14,
+  "id": 16,
   "name": "inspect-archive",
   "extension": "js",
   "target_collection": null,
@@ -10,9 +10,6 @@ export const __fileMetadata__ = {
   "active": true,
   "visibility": "private"
 };
-
-/** @type {import("../apexkit").FileMetadata} */
-
 
 // Script Name: inspect-archive
 // Trigger Type: manual

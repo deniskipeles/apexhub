@@ -15,19 +15,12 @@ export function IssuesPage() {
     if (currentRoute === 'issue-detail' && routeParams.id) {
       setLoading(true);
       Promise.all([
-        // Use unified 'community_threads' and expand the 'author_id' (Profile)
-        apex.collection('community_threads').get(routeParams.id, { expand: 'author_id' }).catch(() => null),
-        // Use unified 'thread_comments'
-        apex.collection('thread_comments').list({
-          filter: { thread_id: Number(routeParams.id) || routeParams.id },
-          sort: 'created',
-          expand: 'author_id',
-          per_page: 100
-        }).catch(() => ({ items: [] }))
-      ]).then(([parent, commsRes]) => {
-        setParentData(parent);
-        setComments(commsRes.items || []);
-      }).finally(() => setLoading(false));
+        apex.webhook('api-community').get(`/ecosystem/threads/${routeParams.id}`),
+        apex.webhook('api-community').get(`/ecosystem/threads/${routeParams.id}/comments`)
+      ]).then(([parentRes, commsRes]) => {
+        if (parentRes && parentRes.success) setParentData(parentRes.item);
+        if (commsRes && commsRes.success) setComments(commsRes.items || []);
+      }).catch(console.error).finally(() => setLoading(false));
     }
   }, [currentRoute, routeParams.id]);
 
@@ -39,21 +32,14 @@ export function IssuesPage() {
         </div>
       );
     }
-    if (!parentData) {
-      return (
-        <div className="p-12 text-center text-muted">
-          Issue not found.
-        </div>
-      );
-    }
+    if (!parentData) return <div className="p-12 text-center text-muted">Issue not found.</div>;
     return (
       <div className="p-6 md:p-12 max-w-5xl mx-auto">
         <RealtimeChat
           parentId={routeParams.id}
           parentData={parentData}
           initialComments={comments}
-          collectionName="thread_comments"
-          parentField="thread_id"
+          webhookPath={`/ecosystem/threads/${routeParams.id}/comments`}
           channel={`thread_${routeParams.id}`}
         />
       </div>

@@ -13,21 +13,22 @@ export function ThreadList({ initialItems, threadType }: { initialItems: any[], 
   const [content, setContent] = useState("");
 
   const filteredItems = items.filter(d => 
-      d.data?.title?.toLowerCase().includes(search.toLowerCase()) ||
-      d.data?.content?.toLowerCase().includes(search.toLowerCase())
+      d.title?.toLowerCase().includes(search.toLowerCase()) ||
+      d.content?.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleCreate = async (e: React.FormEvent) => {
       e.preventDefault();
       setIsSubmitting(true);
       try {
-          const res = await apex.collection('community_threads').create({
+          const res = await apex.webhook('api-community').post('/ecosystem/threads', {
               title,
               content,
-              type: threadType,
-              status: 'open'
+              type: threadType
           });
-          setItems([res, ...items]);
+          if (res && res.success) {
+              setItems([res.item, ...items]);
+          }
           setIsCreateOpen(false);
           setTitle(""); setContent("");
       } catch (err: any) {
@@ -35,15 +36,6 @@ export function ThreadList({ initialItems, threadType }: { initialItems: any[], 
       } finally {
           setIsSubmitting(false);
       }
-  };
-
-  const getAvatar = (record: any) => {
-      const u = record.expand?.author_id;
-      return u?.data?.avatar ? getFileUrl(u.data.avatar) : null;
-  };
-  const getUserName = (record: any) => {
-      const u = record.expand?.author_id;
-      return u?.data?.username || 'Community Member';
   };
 
   const isIssue = threadType === 'issue';
@@ -75,24 +67,24 @@ export function ThreadList({ initialItems, threadType }: { initialItems: any[], 
                         </div>
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${d.data?.status === 'closed' ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
-                                    {d.data?.status || 'Open'}
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${d.status === 'closed' ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                                    {d.status || 'Open'}
                                 </span>
                                 <span className="text-xs text-muted flex items-center gap-1 font-mono">
                                     <Clock size={12} /> {new Date(d.created).toLocaleDateString()}
                                 </span>
                             </div>
                             <h3 className="text-lg font-bold text-foreground mb-1 group-hover:text-primary transition-colors truncate">
-                                {d.data?.title}
+                                {d.title}
                             </h3>
                             <p className="text-sm text-muted line-clamp-2 leading-relaxed mb-3">
-                                {d.data?.content}
+                                {d.content}
                             </p>
                             <div className="flex items-center gap-2">
                                 <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold border border-primary/20 text-primary overflow-hidden">
-                                    {getAvatar(d) ? <img src={getAvatar(d)!} className="w-full h-full object-cover" alt="" /> : getUserName(d)[0]?.toUpperCase()}
+                                    {d.author_avatar ? <img src={getFileUrl(d.author_avatar)} className="w-full h-full object-cover" alt="" /> : d.author_username[0]?.toUpperCase()}
                                 </div>
-                                <span className="text-xs text-muted">By <span className="text-foreground font-semibold">{getUserName(d)}</span></span>
+                                <span className="text-xs text-muted">By <span className="text-foreground font-semibold">{d.author_username}</span></span>
                             </div>
                         </div>
                     </div>

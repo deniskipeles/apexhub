@@ -1,6 +1,6 @@
 /** @type {import("../apexkit").FileMetadata} */
 export const __fileMetadata__ = {
-  "id": 11,
+  "id": 23,
   "name": "read-file",
   "extension": "js",
   "target_collection": null,
@@ -10,9 +10,6 @@ export const __fileMetadata__ = {
   "active": true,
   "visibility": "private"
 };
-
-/** @type {import("../apexkit").FileMetadata} */
-
 
 // Script Name: read-file
 // Trigger Type: manual

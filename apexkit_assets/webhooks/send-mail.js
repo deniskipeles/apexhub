@@ -1,6 +1,6 @@
 /** @type {import("../apexkit").FileMetadata} */
 export const __fileMetadata__ = {
-  "id": 27,
+  "id": 26,
   "name": "send-mail",
   "extension": "js",
   "target_collection": null,
@@ -10,9 +10,6 @@ export const __fileMetadata__ = {
   "active": true,
   "visibility": "public"
 };
-
-/** @type {import("../apexkit").FileMetadata} */
-
 
 /**
  * Sends a transactional email using the Brevo HTTP API.

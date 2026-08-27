@@ -38,20 +38,15 @@ export function EcosystemView({ defaultTab = 'marketplace' }: EcosystemViewProps
         setLoading(true);
         try {
             if (['marketplace', 'starters', 'scripts', 'modules', 'showcase'].includes(activeTab)) {
-                const res = await apex.collection('ecosystem_items').list({ sort: '-created', expand: 'author_id', per_page: 100 });
-                setEcosystemItems(res.items || []);
+                const res = await apex.webhook('api-community').get('/ecosystem/items', { tab: activeTab });
+                if (res.success) setEcosystemItems(res.items);
             } else if (['discussions', 'issues'].includes(activeTab)) {
                 const typeFilter = activeTab === 'issues' ? 'issue' : 'discussion';
-                const res = await apex.collection('community_threads').list({ 
-                    filter: JSON.stringify({ type: typeFilter }),
-                    sort: '-created', 
-                    expand: 'author_id', 
-                    per_page: 50 
-                });
-                setCommunityThreads(res.items || []);
+                const res = await apex.webhook('api-community').get('/ecosystem/threads', { type: typeFilter });
+                if (res.success) setCommunityThreads(res.items);
             } else if (activeTab === 'tenancy') {
-                const res = await apex.collection('tenancy_offers').list({ sort: '-created', expand: 'author_id', per_page: 50 });
-                setTenancyOffers(res.items || []);
+                const res = await apex.webhook('api-community').get('/ecosystem/tenancy');
+                if (res.success) setTenancyOffers(res.items);
             }
         } catch (err) {
             console.error("Failed to load ecosystem data", err);
@@ -76,7 +71,7 @@ export function EcosystemView({ defaultTab = 'marketplace' }: EcosystemViewProps
 
             const tags = formData.tagsInput ? formData.tagsInput.split(',').map(t => t.trim()).filter(Boolean) : [];
 
-            await apex.collection('ecosystem_items').create({
+            await apex.webhook('api-community').post('/ecosystem/items', {
                 title: formData.title,
                 type: formData.type,
                 description: formData.desc,
@@ -97,16 +92,10 @@ export function EcosystemView({ defaultTab = 'marketplace' }: EcosystemViewProps
     };
 
     const getFilteredItems = () => {
-        let base = ecosystemItems;
-        if (activeTab === 'starters') base = ecosystemItems.filter(i => i.data?.type === 'starter');
-        else if (activeTab === 'scripts') base = ecosystemItems.filter(i => i.data?.type === 'script');
-        else if (activeTab === 'modules') base = ecosystemItems.filter(i => ['module', 'schema', 'template'].includes(i.data?.type));
-        else if (activeTab === 'showcase') base = ecosystemItems.filter(i => i.data?.type === 'showcase');
-
-        if (!search.trim()) return base;
-        return base.filter(i => 
-            i.data?.title?.toLowerCase().includes(search.toLowerCase()) ||
-            i.data?.description?.toLowerCase().includes(search.toLowerCase())
+        if (!search.trim()) return ecosystemItems;
+        return ecosystemItems.filter(i => 
+            i.title?.toLowerCase().includes(search.toLowerCase()) ||
+            i.description?.toLowerCase().includes(search.toLowerCase())
         );
     };
 
@@ -121,20 +110,13 @@ export function EcosystemView({ defaultTab = 'marketplace' }: EcosystemViewProps
                 <h1 className="text-4xl md:text-5xl font-extrabold text-foreground mb-4 tracking-tight">
                     Plugins, Starters & Community
                 </h1>
-                <p className="text-lg text-muted leading-relaxed">
-                    Extend your ApexKit instance with community webhooks, starter templates, core modules, discussions, and multi-tenant hosting.
-                </p>
             </div>
 
-            {/* TAB NAVIGATION BAR */}
             <div className="flex justify-center mb-10 overflow-x-auto pb-2">
                 <div className="bg-surface/80 p-1.5 rounded-2xl border border-border inline-flex gap-1.5 shadow-sm max-w-full overflow-x-auto no-scrollbar">
                     <TabBtn active={activeTab === 'marketplace'} onClick={() => router.replace('/ecosystem?tab=marketplace')} icon={<Package size={16} />} label="All Items" />
                     <TabBtn active={activeTab === 'starters'} onClick={() => router.replace('/ecosystem?tab=starters')} icon={<Layout size={16} />} label="Starters" />
-                    
-                    {/* CHANGED: Boa Scripts -> Webhooks */}
                     <TabBtn active={activeTab === 'scripts'} onClick={() => router.replace('/ecosystem?tab=scripts')} icon={<Terminal size={16} />} label="Webhooks" />
-                    
                     <TabBtn active={activeTab === 'modules'} onClick={() => router.replace('/ecosystem?tab=modules')} icon={<Layers size={16} />} label="Modules" />
                     <TabBtn active={activeTab === 'showcase'} onClick={() => router.replace('/ecosystem?tab=showcase')} icon={<Star size={16} />} label="Showcase" />
                     <div className="w-px h-6 bg-border my-auto mx-1"></div>
@@ -155,7 +137,7 @@ export function EcosystemView({ defaultTab = 'marketplace' }: EcosystemViewProps
                                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" size={16} />
                                     <input 
                                         type="text" 
-                                        placeholder="Search starters, webhooks, modules, showcase..." 
+                                        placeholder="Search ecosystem..." 
                                         className="w-full pl-10 pr-4 py-2.5 bg-surface border border-border rounded-xl text-sm text-foreground focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none transition-all"
                                         value={search}
                                         onChange={e => setSearch(e.target.value)}
@@ -170,88 +152,75 @@ export function EcosystemView({ defaultTab = 'marketplace' }: EcosystemViewProps
                                 <div className="text-center py-20 bg-surface/30 border border-border rounded-2xl p-8">
                                     <Package className="mx-auto text-muted mb-3 h-10 w-10 opacity-50" />
                                     <h3 className="text-lg font-bold text-foreground mb-1">No ecosystem items in database</h3>
-                                    <p className="text-sm text-muted mb-4">Be the first to publish a webhook, module, or starter template to the ApexKit database.</p>
+                                    <p className="text-sm text-muted mb-4">Be the first to publish an asset to the ApexKit database.</p>
                                     <button onClick={() => setIsUploadOpen(true)} className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl shadow-md cursor-pointer">
                                         Submit First Item
                                     </button>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {getFilteredItems().map(item => {
-                                        const itemType = item.data?.type || 'script';
-                                        return (
-                                            <div key={item.id} className="bg-surface border border-border rounded-2xl p-6 hover:border-primary/50 transition-all flex flex-col justify-between group hover:shadow-xl relative overflow-hidden">
-                                                <div>
-                                                    <div className="flex items-center justify-between mb-4">
-                                                        <span className={`px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${
-                                                            itemType === 'script' ? 'bg-amber-500/15 text-amber-500 border border-amber-500/30' :
-                                                            itemType === 'site' || itemType === 'starter' ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30' :
-                                                            itemType === 'module' || itemType === 'i_action' ? 'bg-purple-500/15 text-purple-500 border border-purple-500/30' :
-                                                            'bg-cyan-500/15 text-cyan-500 border border-cyan-500/30'
-                                                        }`}>
-                                                            {itemType === 'i_action' ? 'ai_action' : itemType}
-                                                        </span>
-                                                        <span className="text-xs text-muted font-mono">{new Date(item.created).toLocaleDateString()}</span>
+                                    {getFilteredItems().map(item => (
+                                        <div key={item.id} className="bg-surface border border-border rounded-2xl p-6 hover:border-primary/50 transition-all flex flex-col justify-between group relative overflow-hidden">
+                                            <div>
+                                                <div className="flex items-center justify-between mb-4">
+                                                    <span className={`px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${
+                                                        item.type === 'script' ? 'bg-amber-500/15 text-amber-500 border border-amber-500/30' :
+                                                        item.type === 'site' || item.type === 'starter' ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30' :
+                                                        item.type === 'module' || item.type === 'i_action' ? 'bg-purple-500/15 text-purple-500 border border-purple-500/30' :
+                                                        'bg-cyan-500/15 text-cyan-500 border border-cyan-500/30'
+                                                    }`}>
+                                                        {item.type === 'i_action' ? 'ai_action' : item.type}
+                                                    </span>
+                                                    <span className="text-xs text-muted font-mono">{new Date(item.created).toLocaleDateString()}</span>
+                                                </div>
+                                                <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors">{item.title}</h3>
+                                                <p className="text-sm text-muted line-clamp-3 mb-4">{item.description}</p>
+                                                {item.installCommand && (
+                                                    <div className="bg-background border border-border p-2.5 rounded-xl font-mono text-xs text-emerald-400 mb-4 truncate flex items-center gap-2">
+                                                        <Terminal size={12} className="shrink-0 text-muted" />
+                                                        <span className="truncate">{item.installCommand}</span>
                                                     </div>
-
-                                                    <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors leading-snug">
-                                                        {item.data?.title}
-                                                    </h3>
-                                                    <p className="text-sm text-muted line-clamp-3 leading-relaxed mb-4">
-                                                        {item.data?.description}
-                                                    </p>
-
-                                                    {item.data?.installCommand && (
-                                                        <div className="bg-background border border-border p-2.5 rounded-xl font-mono text-xs text-emerald-400 mb-4 truncate flex items-center gap-2">
-                                                            <Terminal size={12} className="shrink-0 text-muted" />
-                                                            <span className="truncate">{item.data.installCommand}</span>
-                                                        </div>
-                                                    )}
-
-                                                    {item.data?.tags && item.data.tags.length > 0 && (
-                                                        <div className="flex flex-wrap gap-1.5 mb-6">
-                                                            {item.data.tags.map((tag: string, idx: number) => (
-                                                                <span key={idx} className="px-2 py-0.5 rounded bg-foreground/5 text-muted text-[10px] font-medium border border-border">
-                                                                    #{tag}
-                                                                </span>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                <div className="flex gap-2 border-t border-border/60 pt-4 mt-auto">
-                                                    {item.data?.file ? (
-                                                        <>
-                                                            <button 
-                                                                type="button"
-                                                                onClick={() => setPreviewItem(item)}
-                                                                className="flex-1 py-2 bg-background hover:bg-primary/10 border border-border hover:border-primary/30 text-foreground hover:text-primary font-semibold rounded-lg text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
-                                                            >
-                                                                <Eye size={14} /> Inspect
-                                                            </button>
-                                                            <a 
-                                                                href={getFileUrl(item.data.file)} 
-                                                                download 
-                                                                className="p-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors flex items-center justify-center"
-                                                                title="Download asset"
-                                                            >
-                                                                <Download size={16} />
-                                                            </a>
-                                                        </>
-                                                    ) : item.data?.repoUrl || item.data?.url ? (
-                                                        <a 
-                                                            href={item.data.repoUrl || item.data.url} 
-                                                            target="_blank" 
-                                                            rel="noreferrer"
-                                                            className="flex-1 py-2 bg-primary/10 hover:bg-primary/20 text-primary font-semibold rounded-lg text-xs flex items-center justify-center gap-2 transition-colors"
-                                                        >
-                                                            <ExternalLink size={14} /> Visit Link
-                                                        </a>
-                                                    ) : null}
-                                                </div>
+                                                )}
+                                                {item.tags && item.tags.length > 0 && (
+                                                    <div className="flex flex-wrap gap-1.5 mb-6">
+                                                        {item.tags.map((tag: string, idx: number) => (
+                                                            <span key={idx} className="px-2 py-0.5 rounded bg-foreground/5 text-muted text-[10px] font-medium border border-border">
+                                                                #{tag}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
-                                        );
-                                    })}
+                                            <div className="flex gap-2 border-t border-border/60 pt-4 mt-auto">
+                                                {item.file ? (
+                                                    <>
+                                                        <button 
+                                                            onClick={() => setPreviewItem(item.raw)}
+                                                            className="flex-1 py-2 bg-background hover:bg-primary/10 border border-border hover:border-primary/30 text-foreground hover:text-primary font-semibold rounded-lg text-xs flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                                                        >
+                                                            <Eye size={14} /> Inspect
+                                                        </button>
+                                                        <a 
+                                                            href={getFileUrl(item.file)} 
+                                                            download 
+                                                            className="p-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors flex items-center justify-center"
+                                                        >
+                                                            <Download size={16} />
+                                                        </a>
+                                                    </>
+                                                ) : item.url ? (
+                                                    <a 
+                                                        href={item.url} 
+                                                        target="_blank" 
+                                                        rel="noreferrer"
+                                                        className="flex-1 py-2 bg-primary/10 hover:bg-primary/20 text-primary font-semibold rounded-lg text-xs flex items-center justify-center gap-2 transition-colors"
+                                                    >
+                                                        <ExternalLink size={14} /> Visit Link
+                                                    </a>
+                                                ) : null}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             )}
                         </div>
@@ -264,9 +233,7 @@ export function EcosystemView({ defaultTab = 'marketplace' }: EcosystemViewProps
                 </>
             )}
 
-            {previewItem && (
-                <FileExplorerModal item={previewItem} onClose={() => setPreviewItem(null)} />
-            )}
+            {previewItem && <FileExplorerModal item={previewItem} onClose={() => setPreviewItem(null)} />}
 
             {isUploadOpen && (
                 <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -277,41 +244,19 @@ export function EcosystemView({ defaultTab = 'marketplace' }: EcosystemViewProps
                         </h2>
                         
                         <form onSubmit={handleUpload} className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">Title</label>
-                                <input required value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/40" placeholder="e.g. Stripe Webhook Handler" />
-                            </div>
+                            <input required value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none" placeholder="Asset Title" />
+                            <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none">
+                                <option value="script">Webhook Script (.js)</option>
+                                <option value="starter">Starter Template (.zip)</option>
+                                <option value="module">Custom Module</option>
+                                <option value="showcase">Showcase Link</option>
+                            </select>
+                            <textarea required rows={3} value={formData.desc} onChange={e => setFormData({ ...formData, desc: e.target.value })} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none resize-none" placeholder="Description..." />
                             
-                            <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">Asset Type</label>
-                                <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/40">
-                                    <option value="script">Webhook Script (.js)</option>
-                                    <option value="starter">Starter Template (.zip)</option>
-                                    <option value="module">Custom Module</option>
-                                    <option value="showcase">Showcase Link</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">Description</label>
-                                <textarea required rows={3} value={formData.desc} onChange={e => setFormData({ ...formData, desc: e.target.value })} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm resize-none outline-none focus:ring-2 focus:ring-primary/40" placeholder="Describe functionality, dependencies, and integration steps..." />
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">Tags (comma separated)</label>
-                                <input value={formData.tagsInput} onChange={e => setFormData({ ...formData, tagsInput: e.target.value })} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/40" placeholder="Stripe, Auth, React" />
-                            </div>
-
                             {formData.type === 'showcase' ? (
-                                <div>
-                                    <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">Showcase URL</label>
-                                    <input required value={formData.url} onChange={e => setFormData({ ...formData, url: e.target.value })} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/40" placeholder="https://..." />
-                                </div>
+                                <input required value={formData.url} onChange={e => setFormData({ ...formData, url: e.target.value })} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none" placeholder="https://..." />
                             ) : (
-                                <div>
-                                    <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">Asset File (.js, .zip, .json, .html)</label>
-                                    <input type="file" required onChange={e => setFile(e.target.files?.[0] || null)} className="w-full text-sm text-muted file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer" />
-                                </div>
+                                <input type="file" required onChange={e => setFile(e.target.files?.[0] || null)} className="w-full text-sm text-muted file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-primary/10 file:text-primary cursor-pointer" />
                             )}
                             
                             <button type="submit" disabled={isUploading} className="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-hover flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer">

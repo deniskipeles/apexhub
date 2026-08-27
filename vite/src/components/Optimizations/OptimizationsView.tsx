@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { apex, getFileUrl } from '@/lib/apexkit';
+import { ApexKitRealtimeWSClient } from '@apexkit/sdk';
 import { useRouter, useSearchParams, usePathname } from '@/lib/navigation';
 import { 
   Zap, Search, Plus, ThumbsUp, ThumbsDown, MessageSquare, 
-  ArrowLeft, Send, Tag, Share2, Check,
-  Loader2, X, User
+  ArrowLeft, Tag, Share2, Check, Loader2, X, User
 } from 'lucide-react';
 import { Pagination } from '../ui/Pagination';
+import { RealtimeChat } from '../Community/RealtimeChat';
 
 export function OptimizationsView() {
   const router = useRouter();
@@ -32,17 +33,13 @@ export function OptimizationsView() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [tagsInput, setTagsInput] = useState('');
-
-  const [newComment, setNewComment] = useState('');
-  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  // 1. Fetch Optimization Data mapped through api-community router
+  // Fetch Optimization Data
   useEffect(() => {
     setLoading(true);
 
     if (selectedId) {
-      // Single Item Detail View
       apex.webhook('api-community').get(`/optimizations/${selectedId}`)
         .then((res: any) => {
           if (res && res.success) {
@@ -53,7 +50,6 @@ export function OptimizationsView() {
         })
         .finally(() => setLoading(false));
     } else {
-      // Standard Paginated List & Search
       apex.webhook('api-community').get('/optimizations', { 
         page: pageParam, 
         q: queryParam || undefined, 
@@ -76,6 +72,46 @@ export function OptimizationsView() {
     }
   }, [selectedId, queryParam, pageParam, tagParam]);
 
+  // Real-time Vote Updates for Detail View
+  useEffect(() => {
+    if (!selectedId) return;
+    
+    const wsClient = new ApexKitRealtimeWSClient(apex.baseUrl, apex.getToken());
+    wsClient.connect();
+
+    const timer = setTimeout(() => {
+        wsClient.subscribe({ channel: `opt_${selectedId}` });
+    }, 500);
+
+    const unsubscribe = wsClient.onEvent((msg: any) => {
+        if (msg.type === 'Custom' || msg.event === 'Custom') {
+            const eventName = msg.payload?.event || msg.event;
+            const eventData = msg.payload?.data || msg.data;
+            
+            if (eventName === 'vote_update' && eventData) {
+                setSelectedStrategy((prev: any) => {
+                    if (!prev) return prev;
+                    return {
+                        ...prev,
+                        data: {
+                            ...prev.data,
+                            upvotes: eventData.upvotes,
+                            downvotes: eventData.downvotes
+                        }
+                    };
+                });
+            }
+        }
+    });
+
+    return () => {
+        clearTimeout(timer);
+        unsubscribe();
+        wsClient.disconnect();
+    };
+  }, [selectedId]);
+
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     router.push(`${pathname}?q=${encodeURIComponent(search)}&page=1`);
@@ -97,7 +133,7 @@ export function OptimizationsView() {
       });
 
       if (res && res.success) {
-        // Update item in list
+        // Optimistic UI updates
         setOptimizations(prev => prev.map(item => {
           if (item.id === optId) {
             return {
@@ -113,7 +149,6 @@ export function OptimizationsView() {
           return item;
         }));
 
-        // Update selected strategy in detail view
         if (selectedStrategy && selectedStrategy.id === optId) {
           setSelectedStrategy({
             ...selectedStrategy,
@@ -157,30 +192,6 @@ export function OptimizationsView() {
     }
   };
 
-  const handleAddComment = async (e: React.FormEvent, optId: string | number) => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
-
-    setIsSubmittingComment(true);
-    try {
-      const res = await apex.webhook('api-community').post(`/optimizations/${optId}/comments`, {
-        content: newComment
-      });
-
-      if (res && res.success && selectedStrategy) {
-        setSelectedStrategy({
-          ...selectedStrategy,
-          comments: [...(selectedStrategy.comments || []), res.comment]
-        });
-      }
-      setNewComment('');
-    } catch (err: any) {
-      alert(err.message || "Please sign in to comment.");
-    } finally {
-      setIsSubmittingComment(false);
-    }
-  };
-
   const getProfileMeta = (authorObj: any) => {
     return {
         username: authorObj?.data?.username || 'Community Member',
@@ -190,7 +201,6 @@ export function OptimizationsView() {
 
   return (
     <div className="p-6 md:p-12 max-w-7xl mx-auto min-h-screen">
-      {/* Header */}
       <div className="text-center mb-10 max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold tracking-wide uppercase mb-6 shadow-sm">
           <Zap size={14} className="text-amber-500" /> High-Performance Architecture
@@ -203,7 +213,6 @@ export function OptimizationsView() {
         </p>
       </div>
 
-      {/* DETAIL VIEW MODE */}
       {selectedId && selectedStrategy ? (
         <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-200">
           <button 
@@ -246,7 +255,6 @@ export function OptimizationsView() {
               {selectedStrategy.data?.content}
             </div>
 
-            {/* Voting & Actions */}
             <div className="flex items-center justify-between border-t border-b border-border/80 py-4 my-8">
               <div className="flex items-center gap-3">
                 <button 
@@ -287,67 +295,29 @@ export function OptimizationsView() {
               </button>
             </div>
 
-            {/* Comments Section */}
-            <div className="space-y-6">
-              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                <MessageSquare size={18} className="text-primary" /> Community Comments ({(selectedStrategy.comments || []).length})
-              </h3>
-
-              <form onSubmit={(e) => handleAddComment(e, selectedStrategy.id)} className="space-y-3">
-                <textarea 
-                  rows={3} 
-                  required
-                  value={newComment}
-                  onChange={e => setNewComment(e.target.value)}
-                  placeholder="Have you benchmarked this tuning parameter? Leave your feedback or query results..."
-                  className="w-full bg-background border border-border rounded-xl p-4 text-sm text-foreground focus:ring-2 focus:ring-primary/40 outline-none resize-none"
+            {/* Injected RealtimeChat for the Community Comments */}
+            <div className="mt-8">
+                <h3 className="text-lg font-bold text-foreground flex items-center gap-2 mb-6">
+                  <MessageSquare size={18} className="text-primary" /> Community Comments
+                </h3>
+                <RealtimeChat 
+                    parentId={selectedId}
+                    parentData={selectedStrategy}
+                    initialComments={selectedStrategy.comments || []}
+                    webhookPath={`/optimizations/${selectedId}/comments`}
+                    channel={`opt_${selectedId}`}
                 />
-                <button 
-                  type="submit" 
-                  disabled={isSubmittingComment}
-                  className="px-5 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-hover flex items-center gap-2 text-xs shadow-md shadow-primary/20 transition-all cursor-pointer ml-auto"
-                >
-                  {isSubmittingComment ? <Loader2 className="animate-spin" size={14} /> : <Send size={14} />}
-                  <span>Post Comment</span>
-                </button>
-              </form>
-
-              <div className="space-y-4 pt-4">
-                {(selectedStrategy.comments || []).map((comment: any) => {
-                    const cAuthor = getProfileMeta(comment.expand?.author_id);
-                    return (
-                        <div key={comment.id} className="p-4 bg-background border border-border/80 rounded-2xl space-y-2">
-                            <div className="flex items-center justify-between text-xs text-muted">
-                            <span className="font-bold text-foreground flex items-center gap-1.5">
-                                {cAuthor.avatar ? (
-                                    <img src={cAuthor.avatar} className="w-4 h-4 rounded-full object-cover border border-border" alt="" />
-                                ) : (
-                                    <User size={12} className="text-primary" />
-                                )}
-                                {cAuthor.username}
-                            </span>
-                            <span>{new Date(comment.created).toLocaleDateString()}</span>
-                            </div>
-                            <p className="text-sm text-foreground/90 leading-relaxed">
-                            {comment.data?.content}
-                            </p>
-                        </div>
-                    );
-                })}
-              </div>
             </div>
           </div>
         </div>
       ) : (
-        /* LIST VIEW MODE */
         <div className="space-y-8">
-          {/* Controls Bar */}
           <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="relative w-full md:max-w-md">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" size={16} />
               <input 
                 type="text" 
-                placeholder="Search tuning strategies, formulas, indexes..." 
+                placeholder="Search tuning strategies, WAL formulas, Tantivy indexes..." 
                 className="w-full pl-10 pr-4 py-2.5 bg-surface border border-border rounded-xl text-sm text-foreground focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none transition-all"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
@@ -365,7 +335,6 @@ export function OptimizationsView() {
             </div>
           </form>
 
-          {/* Tags Pills */}
           {tags.length > 0 && (
             <div className="flex flex-wrap gap-2 items-center">
               <span className="text-xs font-bold uppercase tracking-wider text-muted mr-2 flex items-center gap-1">
@@ -399,7 +368,6 @@ export function OptimizationsView() {
             </div>
           )}
 
-          {/* Grid */}
           {loading ? (
             <div className="flex justify-center p-20">
               <Loader2 className="animate-spin text-primary h-8 w-8" />
@@ -495,7 +463,6 @@ export function OptimizationsView() {
             </div>
           )}
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex justify-center pt-8 border-t border-border">
               <Pagination totalPages={totalPages} currentPage={pageParam} basePath={pathname} />
@@ -504,7 +471,6 @@ export function OptimizationsView() {
         </div>
       )}
 
-      {/* Submit Modal */}
       {isSubmitOpen && (
         <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-surface border border-border rounded-2xl p-8 max-w-lg w-full shadow-2xl relative animate-in zoom-in-95">

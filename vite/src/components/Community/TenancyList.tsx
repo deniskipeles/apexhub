@@ -17,16 +17,16 @@ export function TenancyList({ initialItems }: { initialItems: any[] }) {
     const [status, setStatus] = useState("available");
 
     const filteredItems = items.filter(o =>
-        o.data?.provider_name?.toLowerCase().includes(search.toLowerCase()) ||
-        o.data?.region?.toLowerCase().includes(search.toLowerCase()) ||
-        o.data?.specs?.toLowerCase().includes(search.toLowerCase())
+        o.provider_name?.toLowerCase().includes(search.toLowerCase()) ||
+        o.region?.toLowerCase().includes(search.toLowerCase()) ||
+        o.specs?.toLowerCase().includes(search.toLowerCase())
     );
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            const res = await apex.collection('tenancy_offers').create({
+            const res = await apex.webhook('api-community').post('/ecosystem/tenancy', {
                 provider_name: name,
                 region,
                 specs,
@@ -34,11 +34,12 @@ export function TenancyList({ initialItems }: { initialItems: any[] }) {
                 available_slots: Number(slots) || 0,
                 status
             });
-            setItems([res, ...items]);
+            if (res && res.success) {
+                setItems([res.item, ...items]);
+            }
             setIsCreateOpen(false);
             setName(""); setRegion(""); setSpecs(""); setDesc("");
         } catch (err: any) { 
-            console.error(err);
             alert(err.message || "Failed to list tenancy offer. Make sure you are signed in.");
         } finally { 
             setIsSubmitting(false); 
@@ -72,17 +73,17 @@ export function TenancyList({ initialItems }: { initialItems: any[] }) {
                 {filteredItems.map(offer => (
                     <div key={offer.id} className="bg-surface border border-border rounded-2xl p-6 hover:border-primary/50 transition-all flex flex-col h-full relative overflow-hidden group">
                         <div className={`absolute top-0 right-0 px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-bl-xl ${
-                            offer.data?.status === 'available' ? 'bg-emerald-500 text-white' :
-                            offer.data?.status === 'waitlist' ? 'bg-amber-500 text-black' :
+                            offer.status === 'available' ? 'bg-emerald-500 text-white' :
+                            offer.status === 'waitlist' ? 'bg-amber-500 text-black' :
                             'bg-zinc-700 text-zinc-300'
                         }`}>
-                            {offer.data?.status}
+                            {offer.status}
                         </div>
 
                         <div className="mb-4">
-                            <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">{offer.data?.provider_name}</h3>
+                            <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">{offer.provider_name}</h3>
                             <div className="flex items-center gap-1.5 text-xs text-muted mt-2">
-                                <MapPin size={12} /> {offer.data?.region}
+                                <MapPin size={12} /> {offer.region}
                             </div>
                         </div>
 
@@ -90,40 +91,40 @@ export function TenancyList({ initialItems }: { initialItems: any[] }) {
                             <div className="p-3 bg-background rounded-xl border border-border mb-4">
                                 <div className="flex items-center gap-2 text-sm text-foreground font-mono">
                                     <Cpu size={14} className="text-primary" />
-                                    {offer.data?.specs}
+                                    {offer.specs}
                                 </div>
                             </div>
                             <p className="text-sm text-muted leading-relaxed mb-6 line-clamp-3">
-                                {offer.data?.description}
+                                {offer.description}
                             </p>
                         </div>
 
                         <div className="mt-auto border-t border-border/60 pt-4">
                             <div className="flex items-center justify-between text-xs text-muted mb-2">
                                 <span>Availability</span>
-                                <span className={(offer.data?.available_slots || 0) > 0 ? "text-emerald-500 font-bold" : "text-zinc-500"}>
-                                    {offer.data?.available_slots || 0} Slots left
+                                <span className={(offer.available_slots || 0) > 0 ? "text-emerald-500 font-bold" : "text-zinc-500"}>
+                                    {offer.available_slots || 0} Slots left
                                 </span>
                             </div>
                             <div className="w-full bg-background h-1.5 rounded-full overflow-hidden mb-4 border border-border/40">
                                 <div
-                                    className={`h-full ${(offer.data?.available_slots || 0) > 5 ? 'bg-emerald-500' : 'bg-amber-500'}`}
-                                    style={{ width: `${Math.min(100, ((offer.data?.available_slots || 0) / 20) * 100)}%` }}
+                                    className={`h-full ${(offer.available_slots || 0) > 5 ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                                    style={{ width: `${Math.min(100, ((offer.available_slots || 0) / 20) * 100)}%` }}
                                 ></div>
                             </div>
                             <button
                                 type="button"
-                                disabled={offer.data?.status === 'full'}
+                                disabled={offer.status === 'full'}
                                 className="w-full py-2.5 rounded-xl border border-primary text-primary hover:bg-primary hover:text-white font-bold text-xs transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-primary"
                             >
-                                {offer.data?.status === 'available' ? 'Request Access' : 'Join Waitlist'}
+                                {offer.status === 'available' ? 'Request Access' : 'Join Waitlist'}
                             </button>
                         </div>
                     </div>
                 ))}
                 {filteredItems.length === 0 && (
                     <div className="col-span-full text-center py-20 text-muted border border-dashed border-border rounded-2xl bg-surface/30">
-                        No tenancy offers found in database.
+                        No tenancy offers found.
                     </div>
                 )}
             </div>

@@ -8,9 +8,8 @@ interface Props {
     parentId: string;
     parentData: any;
     initialComments: any[];
-    collectionName: string;
-    parentField: string;
-    channel: string;
+    webhookPath: string; // The endpoint to post new comments to (e.g., /ecosystem/threads/123/comments)
+    channel: string;     // The custom websocket channel (e.g., thread_123)
 }
 
 interface TypingBubble {
@@ -19,7 +18,7 @@ interface TypingBubble {
     leftOffset: number;
 }
 
-export function RealtimeChat({ parentId, parentData, initialComments, collectionName, parentField, channel }: Props) {
+export function RealtimeChat({ parentId, parentData, initialComments, webhookPath, channel }: Props) {
     const [comments, setComments] = useState(initialComments);
     const [input, setInput] = useState("");
     const [sending, setSending] = useState(false);
@@ -27,52 +26,44 @@ export function RealtimeChat({ parentId, parentData, initialComments, collection
     
     const scrollRef = useRef<HTMLDivElement>(null);
     const wsRef = useRef<ApexKitRealtimeWSClient | null>(null);
-    
     const myClientId = useRef(Math.random().toString(36).substring(7));
+
+    // Listen for comments arriving late or updating
+    useEffect(() => {
+        setComments(initialComments);
+    }, [initialComments]);
 
     useEffect(() => {
         const token = apex.getToken();
-        
         const wsClient = new ApexKitRealtimeWSClient(apex.baseUrl, token);
         wsRef.current = wsClient;
         
         wsClient.connect();
 
         const timer = setTimeout(() => {
-            wsClient.subscribe({
-                eventType: 'Insert',
-                dataFilter: { [parentField]: Number(parentId) || parentId }
-            });
-
+            // Subscribe ONLY to the custom channel to get Normalized Data broadcasts
             wsClient.subscribe({ channel: channel });
         }, 500);
 
         const unsubscribe = wsClient.onEvent((msg: any) => {
-            if (msg.type === 'Insert' || msg.event === 'Insert') {
-                const newRecord = msg.payload?.data || msg.data;
-                const recId = msg.payload?.record_id || msg.record_id || newRecord?.id;
+            // Listen specifically for our Custom Realtime Broadcasts
+            if (msg.type === 'Custom' || msg.event === 'Custom') {
+                const eventName = msg.payload?.event || msg.event;
+                const eventData = msg.payload?.data || msg.data;
                 
-                if (newRecord) {
+                if (eventName === 'new_comment' && eventData) {
                     setComments(prev => {
-                        if (recId && prev.find(c => c.id === recId)) return prev;
-                        return [...prev, { 
-                            id: recId || Date.now(), 
-                            data: newRecord, 
-                            created: new Date().toISOString(),
-                            expand: { author_id: { data: { username: 'Community Member' } } } 
-                        }];
+                        // Prevent duplicates
+                        if (prev.find(c => c.id === eventData.id)) return prev;
+                        return [...prev, eventData];
                     });
                 }
-            }
-            
-            if ((msg.type === 'Custom' || msg.event === 'Custom') && (msg.payload?.event === 'typing' || msg.event === 'typing')) {
-                const eventData = msg.payload?.data || msg.data;
-                if (eventData) {
+                
+                if (eventName === 'typing' && eventData) {
                     const { text, senderId } = eventData;
                     if (senderId === myClientId.current) return;
 
                     const bubbleId = Math.random().toString(36).substring(7);
-                    
                     setTypingBubbles(prev => [...prev, { 
                         id: bubbleId, 
                         text: text,
@@ -91,7 +82,7 @@ export function RealtimeChat({ parentId, parentData, initialComments, collection
             unsubscribe();
             wsClient.disconnect();
         };
-    }, [parentId, channel, parentField]);
+    }, [parentId, channel]);
 
     useEffect(() => {
         scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -102,10 +93,7 @@ export function RealtimeChat({ parentId, parentData, initialComments, collection
         setInput(val);
 
         if (val.length > 0 && val.length % 3 === 0) {
-            wsRef.current?.sendSignal(channel, 'typing', {
-                text: val,
-                senderId: myClientId.current
-            });
+            wsRef.current?.sendSignal(channel, 'typing', { text: val, senderId: myClientId.current });
         }
     };
 
@@ -120,24 +108,28 @@ export function RealtimeChat({ parentId, parentData, initialComments, collection
 
         setSending(true);
         try {
-            const numId = Number(parentId);
-            await apex.collection(collectionName).create({
-                [parentField]: !isNaN(numId) ? numId : parentId,
-                content: input,
+            // Post via Unified Edge Webhook
+            await apex.webhook('api-community').post(webhookPath, {
+                content: input
             });
             setInput("");
         } catch (err: any) {
             console.error("Error posting comment:", err);
-            alert(err.message || "Failed to post comment. Make sure you are signed in.");
+            alert(err.message || "Failed to post comment.");
         } finally {
             setSending(false);
         }
     };
 
-    // Extract username from Profile record
-    const authorProfile = parentData.expand?.author_id;
-    const authorUsername = authorProfile?.data?.username || 'Community Member';
-    const title = parentData.data?.title || parentData.data?.topic || 'Discussion Item';
+    // Generic display extraction based on normalized properties
+    const authorUsername = parentData.author_username || parentData.expand?.author_id?.data?.username || 'Community Member';
+    const title = parentData.title || parentData.topic || parentData.data?.title || 'Discussion Item';
+    const content = parentData.content || parentData.data?.content || '';
+
+    // Determine back link based on URL/Props (Optimizations vs Ecosystem)
+    const backLink = window.location.pathname.includes('optimizations') 
+        ? '/optimizations' 
+        : (parentData.type === 'issue' ? '/ecosystem?tab=issues' : '/ecosystem?tab=discussions');
 
     return (
         <div className="flex flex-col h-[calc(100vh-200px)] relative overflow-hidden">
@@ -155,7 +147,7 @@ export function RealtimeChat({ parentId, parentData, initialComments, collection
 
             <div className="mb-6 border-b border-border pb-6 flex-shrink-0">
                 <Link 
-                    href={parentData.data?.type === 'issue' ? '/ecosystem?tab=issues' : '/ecosystem?tab=discussions'} 
+                    href={backLink} 
                     className="text-xs text-muted hover:text-primary flex items-center gap-1 mb-2 font-medium transition-colors"
                 >
                     <ArrowLeft size={14} /> Back to list
@@ -169,16 +161,15 @@ export function RealtimeChat({ parentId, parentData, initialComments, collection
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-6 pr-2 mb-4 custom-scrollbar relative">
-                {parentData.data?.content && (
-                     <div className="bg-surface/50 p-4 rounded-2xl border border-border text-foreground/90 leading-relaxed text-sm whitespace-pre-wrap">
-                         {parentData.data.content}
+                {content && (
+                     <div className="bg-surface/50 p-4 rounded-2xl border border-border text-foreground/90 leading-relaxed text-sm whitespace-pre-wrap font-sans">
+                         {content}
                      </div>
                 )}
 
                 {comments.map((comment) => {
-                    const author = comment.expand?.author_id;
-                    const avatar = author?.data?.avatar ? getFileUrl(author.data.avatar) : null;
-                    const name = author?.data?.username || 'Community Member';
+                    const avatar = comment.author_avatar ? getFileUrl(comment.author_avatar) : null;
+                    const name = comment.author_username || 'Community Member';
 
                     return (
                         <div key={comment.id} className="flex gap-3 items-start">
@@ -197,7 +188,7 @@ export function RealtimeChat({ parentId, parentData, initialComments, collection
                                     <span className="text-[10px] text-muted">{new Date(comment.created).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                                 </div>
                                 <div className="bg-surface border border-border px-4 py-3 rounded-2xl text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">
-                                    {comment.data?.content}
+                                    {comment.content}
                                 </div>
                             </div>
                         </div>
