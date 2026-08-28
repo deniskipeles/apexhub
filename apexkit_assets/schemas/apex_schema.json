@@ -1,4 +1,5 @@
 {
+  "apexkit_version": "0.1.0",
   "collections": [
     {
       "id": 1,
@@ -31,7 +32,7 @@
             "vectorize": false
           },
           "category": {
-            "auto": true,
+            "auto": false,
             "default": "getting started",
             "dimension": null,
             "max": null,
@@ -59,7 +60,7 @@
             "vectorize": false
           },
           "content": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -81,7 +82,7 @@
             "vectorize": true
           },
           "title": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -121,7 +122,7 @@
         "field_history": {},
         "fields": {
           "color": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -143,7 +144,7 @@
             "vectorize": false
           },
           "description": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -165,7 +166,7 @@
             "vectorize": true
           },
           "icon": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -187,7 +188,7 @@
             "vectorize": false
           },
           "order": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -209,7 +210,7 @@
             "vectorize": false
           },
           "title": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -249,7 +250,7 @@
         "field_history": {},
         "fields": {
           "icon": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -271,7 +272,7 @@
             "vectorize": false
           },
           "icon_string": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -293,7 +294,7 @@
             "vectorize": false
           },
           "order": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -315,7 +316,7 @@
             "vectorize": false
           },
           "title": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -355,7 +356,7 @@
         "field_history": {},
         "fields": {
           "body": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -399,7 +400,7 @@
             "vectorize": false
           },
           "headline": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -421,7 +422,7 @@
             "vectorize": false
           },
           "is_featured": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -461,7 +462,7 @@
         "field_history": {},
         "fields": {
           "description": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -483,7 +484,7 @@
             "vectorize": true
           },
           "headline": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -505,7 +506,7 @@
             "vectorize": false
           },
           "progress": {
-            "auto": true,
+            "auto": false,
             "default": "0",
             "dimension": null,
             "max": null,
@@ -527,7 +528,7 @@
             "vectorize": false
           },
           "quarter": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -549,7 +550,7 @@
             "vectorize": false
           },
           "status": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -593,7 +594,7 @@
         "field_history": {},
         "fields": {
           "body": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -615,7 +616,7 @@
             "vectorize": true
           },
           "is_latest": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -659,7 +660,7 @@
             "vectorize": false
           },
           "version": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -721,7 +722,7 @@
             "vectorize": false
           },
           "body": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -743,7 +744,7 @@
             "vectorize": true
           },
           "cover_image": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -765,7 +766,7 @@
             "vectorize": false
           },
           "headline": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -787,7 +788,7 @@
             "vectorize": false
           },
           "read_time": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -809,7 +810,7 @@
             "vectorize": false
           },
           "subheadline": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -831,7 +832,7 @@
             "vectorize": false
           },
           "tags": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -871,7 +872,7 @@
         "field_history": {},
         "fields": {
           "content": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -937,7 +938,7 @@
             "vectorize": false
           },
           "tags": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -959,7 +960,7 @@
             "vectorize": false
           },
           "title": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -981,7 +982,7 @@
             "vectorize": false
           },
           "upvotes": {
-            "auto": true,
+            "auto": false,
             "default": "0",
             "dimension": null,
             "max": null,
@@ -1012,12 +1013,16 @@
         "relations": {
           "author_id": {
             "cascade_on_target_delete": false,
+            "dimension": null,
+            "ose_indexed": false,
             "position": 3,
             "relation_type": "many",
             "required": true,
+            "sql_indexed": true,
             "target_collection": "profiles",
             "target_index": "d81e0fd5-6da7-4410-8d1e-cb16ffaef732",
-            "uid": "4595eccc"
+            "uid": "4595eccc",
+            "vectorize": false
           }
         }
       }
@@ -1031,7 +1036,7 @@
         "field_history": {},
         "fields": {
           "available_slots": {
-            "auto": true,
+            "auto": false,
             "default": "0",
             "dimension": null,
             "max": null,
@@ -1053,7 +1058,7 @@
             "vectorize": false
           },
           "description": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -1075,7 +1080,7 @@
             "vectorize": true
           },
           "provider_name": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -1097,7 +1102,7 @@
             "vectorize": false
           },
           "region": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -1119,7 +1124,7 @@
             "vectorize": false
           },
           "specs": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -1141,7 +1146,7 @@
             "vectorize": false
           },
           "status": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -1176,12 +1181,16 @@
         "relations": {
           "author_id": {
             "cascade_on_target_delete": true,
+            "dimension": null,
+            "ose_indexed": false,
             "position": 6,
             "relation_type": "many",
             "required": true,
+            "sql_indexed": true,
             "target_collection": "profiles",
             "target_index": "d81e0fd5-6da7-4410-8d1e-cb16ffaef732",
-            "uid": "cf8dfe04"
+            "uid": "cf8dfe04",
+            "vectorize": false
           }
         }
       }
@@ -1195,7 +1204,7 @@
         "field_history": {},
         "fields": {
           "description": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -1217,7 +1226,7 @@
             "vectorize": true
           },
           "issue_title": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -1239,7 +1248,7 @@
             "vectorize": false
           },
           "sandbox_id": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -1261,7 +1270,7 @@
             "vectorize": false
           },
           "sandbox_url": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -1283,7 +1292,7 @@
             "vectorize": false
           },
           "status": {
-            "auto": true,
+            "auto": false,
             "default": "open",
             "dimension": null,
             "max": null,
@@ -1317,12 +1326,16 @@
         "relations": {
           "author_id": {
             "cascade_on_target_delete": false,
+            "dimension": null,
+            "ose_indexed": false,
             "position": 4,
             "relation_type": "many",
             "required": true,
+            "sql_indexed": true,
             "target_collection": "profiles",
             "target_index": "d81e0fd5-6da7-4410-8d1e-cb16ffaef732",
-            "uid": "2a228db7"
+            "uid": "2a228db7",
+            "vectorize": false
           }
         }
       }
@@ -1336,7 +1349,7 @@
         "field_history": {},
         "fields": {
           "content": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -1384,7 +1397,7 @@
             "vectorize": false
           },
           "title": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -1440,12 +1453,16 @@
         "relations": {
           "author_id": {
             "cascade_on_target_delete": false,
+            "dimension": null,
+            "ose_indexed": false,
             "position": 2,
             "relation_type": "many",
             "required": true,
+            "sql_indexed": true,
             "target_collection": "profiles",
             "target_index": "d81e0fd5-6da7-4410-8d1e-cb16ffaef732",
-            "uid": "b5be1767"
+            "uid": "b5be1767",
+            "vectorize": false
           }
         }
       }
@@ -1499,7 +1516,7 @@
         "field_history": {},
         "fields": {
           "content": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -1530,21 +1547,29 @@
         "relations": {
           "author_id": {
             "cascade_on_target_delete": false,
+            "dimension": null,
+            "ose_indexed": false,
             "position": 2,
             "relation_type": "many",
             "required": true,
+            "sql_indexed": true,
             "target_collection": "profiles",
             "target_index": "d81e0fd5-6da7-4410-8d1e-cb16ffaef732",
-            "uid": "c83b3f69"
+            "uid": "c83b3f69",
+            "vectorize": false
           },
           "thread_id": {
             "cascade_on_target_delete": true,
+            "dimension": null,
+            "ose_indexed": false,
             "position": 1,
             "relation_type": "many",
             "required": true,
+            "sql_indexed": true,
             "target_collection": "community_threads",
             "target_index": "b0569cc4-c749-4ef6-8fa4-ffefa54f6cc3",
-            "uid": "68933057"
+            "uid": "68933057",
+            "vectorize": false
           }
         }
       }
@@ -1821,7 +1846,7 @@
             "vectorize": false
           },
           "title": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -1904,12 +1929,16 @@
         "relations": {
           "author_id": {
             "cascade_on_target_delete": false,
+            "dimension": null,
+            "ose_indexed": false,
             "position": 5,
             "relation_type": "many",
             "required": true,
+            "sql_indexed": true,
             "target_collection": "profiles",
             "target_index": "d81e0fd5-6da7-4410-8d1e-cb16ffaef732",
-            "uid": "b90dea9"
+            "uid": "b90dea9",
+            "vectorize": false
           }
         }
       }
@@ -1922,28 +1951,6 @@
         "composite_unique": [],
         "field_history": {},
         "fields": {
-          "author_id": {
-            "auto": true,
-            "default": null,
-            "dimension": null,
-            "max": null,
-            "max_length": null,
-            "max_size": null,
-            "mime_types": null,
-            "min": null,
-            "min_length": null,
-            "options": null,
-            "ose_indexed": false,
-            "pattern": null,
-            "position": 2,
-            "relation_to": null,
-            "required": true,
-            "sql_indexed": true,
-            "type": "owner",
-            "uid": "7de37acc",
-            "unique": null,
-            "vectorize": false
-          },
           "content": {
             "auto": false,
             "default": null,
@@ -1974,14 +1981,31 @@
           "update": "owner:author_id || admin"
         },
         "relations": {
-          "optimization_id": {
+          "author_id": {
             "cascade_on_target_delete": false,
+            "dimension": null,
+            "ose_indexed": false,
+            "position": 2,
+            "relation_type": "many",
+            "required": true,
+            "sql_indexed": true,
+            "target_collection": "profiles",
+            "target_index": "d81e0fd5-6da7-4410-8d1e-cb16ffaef732",
+            "uid": "7de37acc",
+            "vectorize": false
+          },
+          "optimization_id": {
+            "cascade_on_target_delete": true,
+            "dimension": null,
+            "ose_indexed": false,
             "position": 1,
             "relation_type": "many",
             "required": true,
+            "sql_indexed": true,
             "target_collection": "optimizations",
             "target_index": "be9e6c0c-3fa4-4b2d-990a-e132fca2eb4f",
-            "uid": "b2dff843"
+            "uid": "b2dff843",
+            "vectorize": false
           }
         }
       }
@@ -2015,34 +2039,12 @@
             ],
             "ose_indexed": true,
             "pattern": null,
-            "position": 1,
+            "position": 2,
             "relation_to": null,
             "required": true,
             "sql_indexed": true,
             "type": "select",
             "uid": "929712b",
-            "unique": null,
-            "vectorize": false
-          },
-          "voter_id": {
-            "auto": true,
-            "default": null,
-            "dimension": null,
-            "max": null,
-            "max_length": null,
-            "max_size": null,
-            "mime_types": null,
-            "min": null,
-            "min_length": null,
-            "options": null,
-            "ose_indexed": false,
-            "pattern": null,
-            "position": 0,
-            "relation_to": null,
-            "required": true,
-            "sql_indexed": true,
-            "type": "owner",
-            "uid": "76241008",
             "unique": null,
             "vectorize": false
           }
@@ -2056,12 +2058,29 @@
         "relations": {
           "optimization_id": {
             "cascade_on_target_delete": true,
-            "position": 2,
+            "dimension": null,
+            "ose_indexed": false,
+            "position": 1,
             "relation_type": "many",
             "required": true,
+            "sql_indexed": true,
             "target_collection": "optimizations",
             "target_index": "be9e6c0c-3fa4-4b2d-990a-e132fca2eb4f",
-            "uid": "b9a1fe3d"
+            "uid": "b9a1fe3d",
+            "vectorize": false
+          },
+          "voter_id": {
+            "cascade_on_target_delete": true,
+            "dimension": null,
+            "ose_indexed": false,
+            "position": 0,
+            "relation_type": "many",
+            "required": true,
+            "sql_indexed": true,
+            "target_collection": "profiles",
+            "target_index": "d81e0fd5-6da7-4410-8d1e-cb16ffaef732",
+            "uid": "76241008",
+            "vectorize": false
           }
         }
       }
@@ -2185,7 +2204,7 @@
             "vectorize": false
           },
           "title": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -2265,28 +2284,6 @@
             "sql_indexed": true,
             "type": "url",
             "uid": "97353dec",
-            "unique": null,
-            "vectorize": false
-          },
-          "author_id": {
-            "auto": true,
-            "default": null,
-            "dimension": null,
-            "max": null,
-            "max_length": null,
-            "max_size": null,
-            "mime_types": null,
-            "min": null,
-            "min_length": null,
-            "options": null,
-            "ose_indexed": false,
-            "pattern": null,
-            "position": 7,
-            "relation_to": null,
-            "required": true,
-            "sql_indexed": true,
-            "type": "owner",
-            "uid": "39905dcf",
             "unique": null,
             "vectorize": false
           },
@@ -2401,7 +2398,7 @@
             "vectorize": false
           },
           "title": {
-            "auto": true,
+            "auto": false,
             "default": null,
             "dimension": null,
             "max": null,
@@ -2451,7 +2448,21 @@
           "read": "public",
           "update": "admin || owner:author_id"
         },
-        "relations": {}
+        "relations": {
+          "author_id": {
+            "cascade_on_target_delete": false,
+            "dimension": null,
+            "ose_indexed": false,
+            "position": 7,
+            "relation_type": "many",
+            "required": true,
+            "sql_indexed": true,
+            "target_collection": "profiles",
+            "target_index": "d81e0fd5-6da7-4410-8d1e-cb16ffaef732",
+            "uid": "39905dcf",
+            "vectorize": false
+          }
+        }
       }
     },
     {
@@ -2475,34 +2486,12 @@
             "options": null,
             "ose_indexed": true,
             "pattern": null,
-            "position": 2,
+            "position": 1,
             "relation_to": null,
             "required": true,
             "sql_indexed": true,
             "type": "string",
             "uid": "e77c96a6",
-            "unique": null,
-            "vectorize": false
-          },
-          "owner_id": {
-            "auto": true,
-            "default": null,
-            "dimension": null,
-            "max": null,
-            "max_length": null,
-            "max_size": null,
-            "mime_types": null,
-            "min": null,
-            "min_length": null,
-            "options": null,
-            "ose_indexed": false,
-            "pattern": null,
-            "position": 0,
-            "relation_to": null,
-            "required": true,
-            "sql_indexed": false,
-            "type": "owner",
-            "uid": "452bfde",
             "unique": null,
             "vectorize": false
           },
@@ -2519,7 +2508,7 @@
             "options": null,
             "ose_indexed": true,
             "pattern": null,
-            "position": 1,
+            "position": 0,
             "relation_to": null,
             "required": true,
             "sql_indexed": true,
@@ -2541,7 +2530,7 @@
             "options": null,
             "ose_indexed": true,
             "pattern": null,
-            "position": 3,
+            "position": 2,
             "relation_to": null,
             "required": false,
             "sql_indexed": true,
@@ -2557,7 +2546,21 @@
           "read": "public",
           "update": "admin"
         },
-        "relations": {}
+        "relations": {
+          "owner_id": {
+            "cascade_on_target_delete": false,
+            "dimension": null,
+            "ose_indexed": false,
+            "position": 3,
+            "relation_type": "one",
+            "required": true,
+            "sql_indexed": true,
+            "target_collection": "profiles",
+            "target_index": "d81e0fd5-6da7-4410-8d1e-cb16ffaef732",
+            "uid": "452bfde",
+            "vectorize": false
+          }
+        }
       }
     },
     {
@@ -2623,6 +2626,7 @@
       }
     }
   ],
-  "exported_at": "2026-08-27T10:12:57.695648848+00:00",
-  "strategy": "skip"
+  "exported_at": "2026-08-28T07:18:57.358855421+00:00",
+  "strategy": "skip",
+  "version": "0.1.0"
 }

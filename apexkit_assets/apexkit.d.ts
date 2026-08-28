@@ -5,83 +5,83 @@
 
 export interface Collections {
   "docs": {
-    added_by: number | string;
-    content: string;
     title: string;
+    added_by: number | string;
     category: "getting started" | "integrations" | "core concepts" | "community guides" | "others";
+    content: string;
   };
   "why_apexkit": {
     icon?: string;
     order?: number;
-    color: string;
     title: string;
+    color: string;
     description: string;
   };
   "use_cases": {
-    title: string;
-    order?: number;
-    icon: string;
     icon_string?: string;
+    icon: string;
+    order?: number;
+    title: string;
   };
   "news": {
-    is_featured?: boolean;
     body: string;
-    date: string;
+    is_featured?: boolean;
     headline: string;
+    date: string;
   };
   "roadmap": {
-    headline: string;
-    description: string;
-    quarter?: string;
-    progress?: number;
     status?: "planned" | "in-progress" | "done";
+    progress?: number;
+    description: string;
+    headline: string;
+    quarter?: string;
   };
   "changelog": {
     body: string;
-    release_date?: string;
     version?: string;
+    release_date?: string;
     is_latest?: boolean;
   };
   "blog": {
-    body: string;
-    author_id: number | string;
     headline: string;
+    author_id: number | string;
     subheadline: string;
     read_time?: string;
     tags?: Record<string, any> | any[];
     cover_image?: string;
+    body: string;
   };
   "optimizations": {
-    downvotes: number;
-    tags?: Record<string, any> | any[];
     title: string;
-    content: string;
     upvotes: number;
+    content: string;
     slug: string;
+    tags?: Record<string, any> | any[];
+    downvotes: number;
     author_id: (number | string)[];
   };
   "tenancy_offers": {
     region: string;
+    specs: string;
     status: "available" | "full" | "waitlist";
+    description: string;
     provider_name: string;
     available_slots: number;
-    description: string;
-    specs: string;
     author_id: (number | string)[];
   };
   "sandbox_requests": {
-    status: "open" | "closed";
-    sandbox_id: string;
-    sandbox_url?: string;
     description?: string;
+    sandbox_url?: string;
+    sandbox_id: string;
+    status: "open" | "closed";
     issue_title: string;
     author_id: (number | string)[];
   };
   "community_threads": {
-    status?: "open" | "closed" | "in-progress";
-    content: string;
     title: string;
+    status?: "open" | "closed" | "in-progress";
     type: "discussion" | "issue";
+    content: string;
     author_id: (number | string)[];
   };
   "hub_content": {
@@ -89,63 +89,63 @@ export interface Collections {
   };
   "thread_comments": {
     content: string;
-    thread_id: (number | string)[];
     author_id: (number | string)[];
+    thread_id: (number | string)[];
   };
   "profiles": {
-    last_name?: string;
     user_id: number | string;
-    bio?: string;
-    first_name?: string;
-    github_url?: string;
-    username?: string;
     avatar?: string;
+    github_url?: string;
+    bio?: string;
+    username?: string;
+    first_name?: string;
+    last_name?: string;
   };
   "ecosystem_items": {
-    install_command?: string;
-    type: "starter" | "showcase" | "script" | "ai_action" | "schema" | "template" | "site";
-    title: string;
+    file: string;
+    url?: string;
     description: string;
     tags?: Record<string, any> | any[];
-    url?: string;
-    file: string;
+    title: string;
+    install_command?: string;
+    type: "starter" | "showcase" | "script" | "ai_action" | "schema" | "template" | "site";
     author_id: (number | string)[];
   };
   "optimizations_conversations": {
     content: string;
-    author_id: number | string;
+    author_id: (number | string)[];
     optimization_id: (number | string)[];
   };
   "optimizations_votes": {
-    voter_id: number | string;
     type: "up" | "down";
     optimization_id: (number | string)[];
+    voter_id: (number | string)[];
   };
   "careers": {
-    title: string;
-    type: string;
-    department: string;
     location: string;
-    description: string;
     salary?: string;
+    title: string;
+    description: string;
+    department: string;
     author_id: number | string;
+    type: string;
   };
   "jobs": {
-    apply_url: string;
     description: string;
-    location: string;
-    author_id: number | string;
-    type: string;
-    department?: string;
-    salary: string;
+    apply_url: string;
     company: string;
+    location: string;
+    department?: string;
     title: string;
+    type: string;
+    salary: string;
+    author_id: (number | string)[];
   };
   "tenant_registry": {
+    tenant_id: string;
     app_name: string;
     usage_or_description?: string;
     owner_id: number | string;
-    tenant_id: string;
   };
   "posts": {
     content?: string;
@@ -197,8 +197,8 @@ export interface CollectionExpands {
     [reverse_relation: string]: any;
   };
   "thread_comments": {
-    thread_id?: Array<{ id: number | string; data: Collections["community_threads"]; created: string; updated: string; expand?: any }>;
     author_id?: Array<{ id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any }>;
+    thread_id?: Array<{ id: number | string; data: Collections["community_threads"]; created: string; updated: string; expand?: any }>;
     [reverse_relation: string]: any;
   };
   "profiles": {
@@ -209,20 +209,24 @@ export interface CollectionExpands {
     [reverse_relation: string]: any;
   };
   "optimizations_conversations": {
+    author_id?: Array<{ id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any }>;
     optimization_id?: Array<{ id: number | string; data: Collections["optimizations"]; created: string; updated: string; expand?: any }>;
     [reverse_relation: string]: any;
   };
   "optimizations_votes": {
     optimization_id?: Array<{ id: number | string; data: Collections["optimizations"]; created: string; updated: string; expand?: any }>;
+    voter_id?: Array<{ id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any }>;
     [reverse_relation: string]: any;
   };
   "careers": {
     [reverse_relation: string]: any;
   };
   "jobs": {
+    author_id?: Array<{ id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any }>;
     [reverse_relation: string]: any;
   };
   "tenant_registry": {
+    owner_id?: { id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any };
     [reverse_relation: string]: any;
   };
   "posts": {

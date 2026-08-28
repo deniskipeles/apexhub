@@ -1,6 +1,6 @@
 /** @type {import("../apexkit").FileMetadata} */
 export const __fileMetadata__ = {
-  "id": 41,
+  "id": 12,
   "name": "update-tenant-limits",
   "extension": "js",
   "target_collection": null,

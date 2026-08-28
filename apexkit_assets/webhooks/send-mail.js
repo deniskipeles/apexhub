@@ -1,6 +1,6 @@
 /** @type {import("../apexkit").FileMetadata} */
 export const __fileMetadata__ = {
-  "id": 26,
+  "id": 11,
   "name": "send-mail",
   "extension": "js",
   "target_collection": null,
