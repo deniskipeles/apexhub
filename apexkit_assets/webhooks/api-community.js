@@ -1,6 +1,6 @@
 /** @type {import("../apexkit").FileMetadata} */
 export const __fileMetadata__ = {
-  "id": 2,
+  "id": 3,
   "name": "api-community",
   "extension": "js",
   "target_collection": null,
@@ -305,6 +305,7 @@ app.get("/ecosystem/tenancy", async (c) => {
             description: item.data?.description,
             available_slots: item.data?.available_slots,
             status: item.data?.status,
+            request_access_link: item.data?.request_access_link || null,
             author_username: profile.username,
             author_avatar: profile.avatar,
             created: item.created
@@ -325,6 +326,7 @@ app.post("/ecosystem/tenancy", authMiddleware, async (c) => {
         description: body.description,
         available_slots: Number(body.available_slots) || 0,
         status: body.status || 'available',
+        request_access_link: body.request_access_link || null,
         provider_id: profileId
     });
     
@@ -343,6 +345,7 @@ app.post("/ecosystem/tenancy", authMiddleware, async (c) => {
         description: item.data?.description,
         available_slots: item.data?.available_slots,
         status: item.data?.status,
+        request_access_link: item.data?.request_access_link || null,
         author_username: profile.username,
         author_avatar: profile.avatar,
         created: item.created

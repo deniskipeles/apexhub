@@ -103,6 +103,8 @@ export const useApexStore = create<ApexStoreState>((set) => ({
   navigate: (path: string) => {
     if (typeof window !== 'undefined') {
       window.history.pushState({}, '', path);
+      // Reset scroll position to top on new page navigation
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     }
     set(parsePath(path));
   },

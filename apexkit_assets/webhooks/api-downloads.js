@@ -1,6 +1,6 @@
 /** @type {import("../apexkit").FileMetadata} */
 export const __fileMetadata__ = {
-  "id": 3,
+  "id": 4,
   "name": "api-downloads",
   "extension": "js",
   "target_collection": null,
@@ -16,38 +16,82 @@ import { Hono } from "https://esm.sh/hono";
 const app = new Hono();
 const OWNER = "deniskipeles";
 const REPO = "apexkit";
+const CACHE_TTL_SECONDS = 600; // Cache release metadata for 10 minutes
+
+/**
+ * Helper to fetch and cache GitHub release metadata
+ */
+async function getLatestRelease() {
+    const cacheKey = `gh_release_latest_${OWNER}_${REPO}`;
+    
+    // 1. Check in-memory $cache first
+    const cached = await $cache.get(cacheKey);
+    if (cached) {
+        try {
+            return { ok: true, data: JSON.parse(cached), fromCache: true };
+        } catch (e) {}
+    }
+
+    // 2. Resolve GITHUB_TOKEN from DB secrets or .env
+    const token = await $env.get("GITHUB_TOKEN");
+    const headers = {
+        "User-Agent": "ApexKit-Hub",
+        "Accept": "application/vnd.github.v3+json"
+    };
+    if (token && token.trim()) {
+        headers["Authorization"] = `Bearer ${token.trim()}`;
+    }
+
+    const metadataUrl = `https://api.github.com/repos/${OWNER}/${REPO}/releases/latest`;
+    const releaseRes = await fetch(metadataUrl, { headers });
+
+    if (!releaseRes.ok) {
+        const errBody = await releaseRes.text().catch(() => "");
+        let errMsg = `GitHub API error: ${releaseRes.status}`;
+        
+        if (releaseRes.status === 403) {
+            errMsg = "GitHub API rate limit exceeded (60 req/hr on shared IP). Add 'GITHUB_TOKEN' to your ApexKit config settings or .env file.";
+        }
+        return { ok: false, status: releaseRes.status, error: errMsg, raw: errBody };
+    }
+
+    const releaseData = await releaseRes.json();
+    
+    // 3. Store in $cache
+    await $cache.set(cacheKey, JSON.stringify(releaseData), CACHE_TTL_SECONDS);
+
+    return { ok: true, data: releaseData, fromCache: false };
+}
 
 app.get("/info", async (c) => {
     try {
         const token = await $env.get("GITHUB_TOKEN");
-        const headers = { "User-Agent": "ApexKit" };
-        if (token) headers["Authorization"] = `Bearer ${token}`;
+        const releaseResult = await getLatestRelease();
 
-        const metadataUrl = `https://api.github.com/repos/${OWNER}/${REPO}/releases/latest`;
-        const releaseRes = await fetch(metadataUrl, { headers });
-
-        if (!releaseRes.ok) {
-            return c.json({ error: `GitHub API error: ${releaseRes.status}` }, 502);
+        if (!releaseResult.ok) {
+            return c.json({ error: releaseResult.error, status: releaseResult.status }, 502);
         }
 
-        const release = await releaseRes.json();
+        const release = releaseResult.data;
         
-        // 1. Parse Checksums
-        const checksumAsset = (release.assets || []).find(a => a.name.toLowerCase().includes("checksum"));
+        // Parse Checksums
+        const checksumAsset = (release.assets || []).find(a => 
+            a.name.toLowerCase().includes("checksum") || a.name.toLowerCase().endsWith(".sha256")
+        );
         let checksumContent = "";
         
         if (checksumAsset) {
             let downloadUrl = checksumAsset.browser_download_url;
             
-            // If we have a token (Private Repo), resolve the secure S3 redirect URL manually
-            if (token) {
+            // Handle private release asset redirect if token exists
+            if (token && token.trim()) {
                 try {
                     const rawRes = await $__native_fetch(checksumAsset.url, {
                         method: "GET",
                         headers: {
                             "Accept": "application/octet-stream",
                             "User-Agent": "ApexKit",
-                            "Authorization": `Bearer ${token}`
+                            "Authorization": `Bearer ${token.trim()}`
                         },
                         redirect: "manual"
                     });
@@ -69,12 +113,13 @@ app.get("/info", async (c) => {
             checksumContent = release.body || "";
         }
 
-        // 2. Dynamically gather all build artifacts (excluding checksum files)
+        // Filter valid binary release artifacts
         const artifacts = (release.assets || [])
             .filter(a => !a.name.toLowerCase().includes("checksum") && !a.name.toLowerCase().endsWith(".sha256"))
             .map(a => ({
                 name: a.name,
-                size: a.size
+                size: a.size,
+                download_count: a.download_count
             }));
 
         return c.json({
@@ -87,7 +132,7 @@ app.get("/info", async (c) => {
         });
 
     } catch (err) {
-        return c.json({ error: err.message }, 500);
+        return c.json({ error: err.message || err.toString() }, 500);
     }
 });
 
@@ -98,40 +143,42 @@ app.post("/latest", async (c) => {
         const os = body.os || "linux";
 
         const token = await $env.get("GITHUB_TOKEN");
-        const headers = { "User-Agent": "ApexKit" };
-        if (token) headers["Authorization"] = `Bearer ${token}`;
+        const releaseResult = await getLatestRelease();
 
-        // 1. Fetch Release Metadata
-        const metadataUrl = `https://api.github.com/repos/${OWNER}/${REPO}/releases/latest`;
-        const releaseRes = await fetch(metadataUrl, { headers });
-        if (!releaseRes.ok) return c.json({ error: "GitHub API Error" }, 502);
-        
-        const release = await releaseRes.json();
+        if (!releaseResult.ok) {
+            return c.json({ error: releaseResult.error }, 502);
+        }
 
-        // 2. Locate Target Asset dynamically
+        const release = releaseResult.data;
+
+        // Locate Target Asset dynamically
         let asset;
         if (targetName) {
-            asset = (release.assets || []).find(a => a.name === targetName || a.name.toLowerCase().includes(targetName.toLowerCase()));
+            asset = (release.assets || []).find(a => 
+                a.name === targetName || a.name.toLowerCase().includes(targetName.toLowerCase())
+            );
         } else {
             let pattern = "linux";
             if (os === "windows") pattern = "windows";
             if (os === "macos" || os === "darwin") pattern = "darwin";
-            asset = (release.assets || []).find(a => a.name.toLowerCase().includes(pattern) && !a.name.toLowerCase().includes("checksum"));
+            asset = (release.assets || []).find(a => 
+                a.name.toLowerCase().includes(pattern) && !a.name.toLowerCase().includes("checksum")
+            );
         }
 
         if (!asset) return c.json({ error: "Asset not found in latest release" }, 404);
 
         let downloadUrl = asset.browser_download_url;
 
-        // 3. Resolve Download URL natively for Private Repos (Traps the 302 Location header)
-        if (token) {
+        // Resolve download redirect URL for private repo assets
+        if (token && token.trim()) {
             try {
                 const rawRes = await $__native_fetch(asset.url, {
                     method: "GET",
                     headers: {
                         "Accept": "application/octet-stream",
                         "User-Agent": "ApexKit",
-                        "Authorization": `Bearer ${token}`
+                        "Authorization": `Bearer ${token.trim()}`
                     },
                     redirect: "manual"
                 });
@@ -151,7 +198,7 @@ app.post("/latest", async (c) => {
         });
 
     } catch (err) {
-        return c.json({ error: err.message }, 500);
+        return c.json({ error: err.message || err.toString() }, 500);
     }
 });
 

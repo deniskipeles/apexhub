@@ -1123,6 +1123,28 @@
             "unique": null,
             "vectorize": false
           },
+          "request_access_link": {
+            "auto": false,
+            "default": null,
+            "dimension": null,
+            "max": null,
+            "max_length": null,
+            "max_size": null,
+            "mime_types": null,
+            "min": null,
+            "min_length": null,
+            "options": null,
+            "ose_indexed": true,
+            "pattern": null,
+            "position": 7,
+            "relation_to": null,
+            "required": true,
+            "sql_indexed": true,
+            "type": "url",
+            "uid": "4a372042",
+            "unique": true,
+            "vectorize": false
+          },
           "specs": {
             "auto": false,
             "default": null,
@@ -1179,7 +1201,7 @@
           "update": "admin"
         },
         "relations": {
-          "author_id": {
+          "provider_id": {
             "cascade_on_target_delete": true,
             "dimension": null,
             "ose_indexed": false,
@@ -2626,7 +2648,7 @@
       }
     }
   ],
-  "exported_at": "2026-08-28T07:18:57.358855421+00:00",
+  "exported_at": "2026-09-02T11:02:16.602629187+00:00",
   "strategy": "skip",
   "version": "0.1.0"
 }

@@ -1,6 +1,6 @@
 /** @type {import("../apexkit").FileMetadata} */
 export const __fileMetadata__ = {
-  "id": 6,
+  "id": 7,
   "name": "get-user-profile-data",
   "extension": "js",
   "target_collection": null,

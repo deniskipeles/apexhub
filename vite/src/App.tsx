@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { useApexStore } from './store/useApexStore';
 import { ThemeProvider } from './components/ThemeContext';
 import { AuthProvider } from './components/AuthProvider';
@@ -40,7 +40,12 @@ function PageLoader() {
 }
 
 export default function App() {
-  const { currentRoute } = useApexStore();
+  const { currentRoute, currentPath } = useApexStore();
+
+  // Scroll to top whenever the route or path changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [currentRoute, currentPath]);
 
   const renderActiveView = () => {
     switch (currentRoute) {

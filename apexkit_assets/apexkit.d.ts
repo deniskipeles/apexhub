@@ -5,83 +5,84 @@
 
 export interface Collections {
   "docs": {
-    title: string;
-    added_by: number | string;
     category: "getting started" | "integrations" | "core concepts" | "community guides" | "others";
     content: string;
+    added_by: number | string;
+    title: string;
   };
   "why_apexkit": {
-    icon?: string;
+    color: string;
     order?: number;
     title: string;
-    color: string;
+    icon?: string;
     description: string;
   };
   "use_cases": {
     icon_string?: string;
+    title: string;
     icon: string;
     order?: number;
-    title: string;
   };
   "news": {
-    body: string;
-    is_featured?: boolean;
-    headline: string;
     date: string;
+    is_featured?: boolean;
+    body: string;
+    headline: string;
   };
   "roadmap": {
-    status?: "planned" | "in-progress" | "done";
-    progress?: number;
     description: string;
     headline: string;
+    status?: "planned" | "in-progress" | "done";
     quarter?: string;
+    progress?: number;
   };
   "changelog": {
-    body: string;
     version?: string;
-    release_date?: string;
+    body: string;
     is_latest?: boolean;
+    release_date?: string;
   };
   "blog": {
+    cover_image?: string;
+    tags?: Record<string, any> | any[];
+    body: string;
     headline: string;
-    author_id: number | string;
     subheadline: string;
     read_time?: string;
-    tags?: Record<string, any> | any[];
-    cover_image?: string;
-    body: string;
+    author_id: number | string;
   };
   "optimizations": {
+    slug: string;
+    downvotes: number;
+    content: string;
+    tags?: Record<string, any> | any[];
     title: string;
     upvotes: number;
-    content: string;
-    slug: string;
-    tags?: Record<string, any> | any[];
-    downvotes: number;
     author_id: (number | string)[];
   };
   "tenancy_offers": {
-    region: string;
-    specs: string;
     status: "available" | "full" | "waitlist";
-    description: string;
     provider_name: string;
     available_slots: number;
-    author_id: (number | string)[];
+    request_access_link: string;
+    region: string;
+    description: string;
+    specs: string;
+    provider_id: (number | string)[];
   };
   "sandbox_requests": {
-    description?: string;
-    sandbox_url?: string;
-    sandbox_id: string;
     status: "open" | "closed";
+    sandbox_id: string;
+    description?: string;
     issue_title: string;
+    sandbox_url?: string;
     author_id: (number | string)[];
   };
   "community_threads": {
-    title: string;
     status?: "open" | "closed" | "in-progress";
-    type: "discussion" | "issue";
     content: string;
+    title: string;
+    type: "discussion" | "issue";
     author_id: (number | string)[];
   };
   "hub_content": {
@@ -89,26 +90,26 @@ export interface Collections {
   };
   "thread_comments": {
     content: string;
-    author_id: (number | string)[];
     thread_id: (number | string)[];
+    author_id: (number | string)[];
   };
   "profiles": {
-    user_id: number | string;
+    username?: string;
+    bio?: string;
     avatar?: string;
     github_url?: string;
-    bio?: string;
-    username?: string;
-    first_name?: string;
     last_name?: string;
+    user_id: number | string;
+    first_name?: string;
   };
   "ecosystem_items": {
-    file: string;
-    url?: string;
-    description: string;
     tags?: Record<string, any> | any[];
-    title: string;
-    install_command?: string;
+    description: string;
     type: "starter" | "showcase" | "script" | "ai_action" | "schema" | "template" | "site";
+    install_command?: string;
+    file: string;
+    title: string;
+    url?: string;
     author_id: (number | string)[];
   };
   "optimizations_conversations": {
@@ -118,38 +119,38 @@ export interface Collections {
   };
   "optimizations_votes": {
     type: "up" | "down";
-    optimization_id: (number | string)[];
     voter_id: (number | string)[];
+    optimization_id: (number | string)[];
   };
   "careers": {
-    location: string;
+    author_id: number | string;
     salary?: string;
-    title: string;
     description: string;
     department: string;
-    author_id: number | string;
     type: string;
+    location: string;
+    title: string;
   };
   "jobs": {
-    description: string;
-    apply_url: string;
-    company: string;
     location: string;
-    department?: string;
-    title: string;
     type: string;
+    department?: string;
+    company: string;
     salary: string;
+    description: string;
+    title: string;
+    apply_url: string;
     author_id: (number | string)[];
   };
   "tenant_registry": {
-    tenant_id: string;
     app_name: string;
+    tenant_id: string;
     usage_or_description?: string;
     owner_id: number | string;
   };
   "posts": {
-    content?: string;
     title?: string;
+    content?: string;
   };
 }
 
@@ -182,7 +183,7 @@ export interface CollectionExpands {
     [reverse_relation: string]: any;
   };
   "tenancy_offers": {
-    author_id?: Array<{ id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any }>;
+    provider_id?: Array<{ id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any }>;
     [reverse_relation: string]: any;
   };
   "sandbox_requests": {
@@ -197,8 +198,8 @@ export interface CollectionExpands {
     [reverse_relation: string]: any;
   };
   "thread_comments": {
-    author_id?: Array<{ id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any }>;
     thread_id?: Array<{ id: number | string; data: Collections["community_threads"]; created: string; updated: string; expand?: any }>;
+    author_id?: Array<{ id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any }>;
     [reverse_relation: string]: any;
   };
   "profiles": {
@@ -214,8 +215,8 @@ export interface CollectionExpands {
     [reverse_relation: string]: any;
   };
   "optimizations_votes": {
-    optimization_id?: Array<{ id: number | string; data: Collections["optimizations"]; created: string; updated: string; expand?: any }>;
     voter_id?: Array<{ id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any }>;
+    optimization_id?: Array<{ id: number | string; data: Collections["optimizations"]; created: string; updated: string; expand?: any }>;
     [reverse_relation: string]: any;
   };
   "careers": {
@@ -375,13 +376,6 @@ export interface VoidHookEvent {
   timestamp: string;
 }
 
-export interface GraphqlConfig {
-  parent: "Query" | "Mutation" | "User" | "_AuthUser" | string;
-  name: string;
-  args?: Record<string, string>;
-  returnType: string;
-}
-
 declare global {
   const __fileMetadata__: FileMetadata;
 
@@ -476,24 +470,6 @@ declare global {
     };
   };
 
-  /** Root Multitenancy and Administrative Manager (Only available in Root context) */
-  const $root: {
-    db: typeof $db;
-    createTenant(id: string, config?: { name?: string; tier?: string; owner_id?: number }): Promise<boolean>;
-    updateTenant(id: string, updates: { name?: string; status?: string; tier?: string; max_storage_mb?: number; max_vectors?: number; max_ai_requests?: number }): Promise<boolean>;
-    deleteTenant(id: string): Promise<boolean>;
-    getTenantDiskUsage(id: string): Promise<number>;
-    listTenants(): Promise<any[]>;
-    createSandbox(id: string, config?: { name?: string; clone_strategy?: "none" | "schema" | "partial" | "full"; clone_record_limit?: number; collections?: string[]; scripts?: string[]; templates?: string[] }): Promise<boolean>;
-    updateSandbox(id: string, updates: { name?: string; status?: string; expires_at?: string }): Promise<boolean>;
-    deleteSandbox(id: string): Promise<boolean>;
-    getSandboxDiskUsage(id: string): Promise<number>;
-    createKey(name: string, config?: { tenant_id?: string; issuer?: string; env_type?: "sys" | "tnnt" | "sk" | "pk"; roles?: string[]; bypass_cors?: boolean }): Promise<{ key: string; info: any }>;
-    updateKey(id: number | string, updates: { name?: string; status?: string; roles?: string[]; bypass_cors?: boolean }): Promise<boolean>;
-    deleteKey(id: number | string): Promise<boolean>;
-    listKeys(): Promise<any[]>;
-  } | null;
-
   /** Universal HTTP Client */
   const $http: {
     get(url: string): Promise<string>;
@@ -525,20 +501,6 @@ declare global {
     stat(path: string): Promise<{ size: number; isDir: boolean; created?: number; modified?: number }>;
   };
 
-  /** Fast In-Memory Zip Creator & Extractor */
-  const $zip: {
-    create(files: Record<string, string | Uint8Array>): string;
-    extract(base64Zip: string): Record<string, string>;
-    inspect(base64Zip: string): { total_size: number; file_count: number; files: any[] };
-  };
-
-  /** Local AI Embeddings Engine */
-  const $ai: {
-    embed(text: string): Promise<number[]>;
-    meanVector(vectors: number[][]): number[];
-    cosineSimilarity(v1: number[], v2: number[]): number;
-  };
-
   /** In-Memory & Tenant-Isolated Fast Cache */
   const $cache: {
     get(key: string): Promise<string | null>;
@@ -547,49 +509,6 @@ declare global {
     del(key: string): Promise<void>;
     incr(key: string, delta?: number): Promise<number>;
     listKeys(): Promise<string[]>;
-  };
-
-  /** Background Queue Orchestration System */
-  const $queue: {
-    spawn<T = any>(
-      fnOrCode: ((pid: string, req: Request) => Promise<T> | T) | string,
-      options?: { timeoutMs?: number; args?: any }
-    ): Promise<{ pid: string; status: "queued" | "running" }>;
-    status(pid: string): Promise<{
-      pid: string;
-      status: "queued" | "running" | "completed" | "failed" | "timed_out" | "not_found";
-      runtime_ms: number;
-      error?: string;
-    }>;
-    result<T = any>(pid: string): Promise<{
-      pid: string;
-      status: "queued" | "running" | "completed" | "failed" | "timed_out" | "not_found";
-      runtime_ms: number;
-      result?: T;
-      error?: string;
-    }>;
-  };
-
-  /** Subprocess Runner (Root scope only) */
-  const $cmd: {
-    run(
-      program: string,
-      args?: string[],
-      options?: { cwd?: string; env?: Record<string, string>; timeout?: number }
-    ): Promise<{ stdout: string; stderr: string; status: number }>;
-    spawn(
-      program: string,
-      args?: string[],
-      options?: {
-        cwd?: string;
-        env?: Record<string, string>;
-        timeout?: number;
-        onProgress?: { regex?: string; channel?: string; event?: string };
-      }
-    ): Promise<{ pid: number; status: string }>;
-    status(pid: number): Promise<any>;
-    setLimit(program: string, limit: number): Promise<any>;
-    kill(pid: number): Promise<any>;
   };
 
   /** Outbound SMTP Email Dispatcher */
@@ -605,21 +524,6 @@ declare global {
   /** Script Inter-calling Engine */
   const $run: {
     script(name: string, payload: any): Promise<any>;
-  };
-
-  /** WebAssembly Raw Loader & WASI Runner */
-  const $wasm: {
-    call(
-      wasmBase64OrName: string,
-      funcName: string,
-      args: number[],
-      options?: { name?: string; memoryMb?: number; timeoutMs?: number }
-    ): Promise<number | number[]>;
-    runWasi(
-      wasmBase64OrName: string,
-      cliArgs?: string[],
-      options?: { name?: string; memoryMb?: number; timeoutMs?: number }
-    ): Promise<boolean>;
   };
 
   /** Cryptographic & String Utilities */
@@ -652,45 +556,5 @@ declare global {
     input: string | Request | URL,
     init?: { method?: string; headers?: any; body?: any; redirect?: "follow" | "manual" | "error" }
   ): Promise<Response>;
-
-  class Headers {
-    constructor(init?: Record<string, string> | [string, string][] | Headers);
-    get(name: string): string | null;
-    set(name: string, value: string): void;
-    has(name: string): boolean;
-    delete(name: string): void;
-    forEach(callback: (value: string, key: string) => void): void;
-  }
-
-  class Response {
-    constructor(
-      body?: any,
-      init?: { status?: number; statusText?: string; headers?: Record<string, string> | Headers }
-    );
-    readonly status: number;
-    readonly statusText: string;
-    readonly ok: boolean;
-    readonly headers: Headers;
-    readonly url: string;
-    json(): Promise<any>;
-    text(): Promise<string>;
-    arrayBuffer(): Promise<ArrayBuffer>;
-  }
-
-  class Request {
-    constructor(
-      input: string | { url: string; method?: string; headers?: any; bodyData?: any },
-      init?: { method?: string; headers?: any; body?: any }
-    );
-    readonly method: string;
-    readonly url: string;
-    readonly headers: Headers;
-    readonly auth: AuthContext | null;
-    readonly args: any;
-    json(): Promise<any>;
-    text(): Promise<string>;
-    arrayBuffer(): Promise<ArrayBuffer>;
-    clone(): Request;
-  }
 }
 export {};
