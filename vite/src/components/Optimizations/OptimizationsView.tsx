@@ -193,6 +193,7 @@ export function OptimizationsView() {
   };
 
   const getProfileMeta = (authorObj: any) => {
+    authorObj = Array.isArray(authorObj) ? authorObj[0] : authorObj;
     return {
         username: authorObj?.data?.username || 'Community Member',
         avatar: authorObj?.data?.avatar ? getFileUrl(authorObj.data.avatar) : null

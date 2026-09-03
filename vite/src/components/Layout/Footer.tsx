@@ -42,8 +42,8 @@ export function Footer() {
                     The vertical-scale backend for modern applications. Built for speed, safety, and simplicity.
                 </p>
                 <div className="flex gap-4">
-                    <SocialIcon href="https://github.com/apexkit" icon={<Github size={18} />} />
-                    <SocialIcon href="https://twitter.com/apexkit" icon={<Twitter size={18} />} />
+                    <SocialIcon href="https://github.com/deniskipeles/apexkit" icon={<Github size={18} />} />
+                    <SocialIcon href="https://twitter.com/KipelesKemboi" icon={<Twitter size={18} />} />
                     <SocialIcon href="https://linkedin.com/company/apexkit" icon={<Linkedin size={18} />} />
                 </div>
             </div>

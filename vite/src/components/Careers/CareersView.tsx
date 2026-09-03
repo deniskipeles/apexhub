@@ -230,7 +230,7 @@ export function CareersView() {
 
                             <div className="space-y-1">
                                 <label className="text-xs font-bold uppercase text-muted tracking-wider">Apply URL / Email</label>
-                                <input required className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none" value={form.apply_url} onChange={e => setForm({ ...form, apply_url: e.target.value })} placeholder="https://... or mailto:..." />
+                                <input required className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none" value={form.apply_url} onChange={e => setForm({ ...form, apply_url: e.target.value })} placeholder="https://... or mailto:..." type='url' />
                             </div>
 
                             <div className="space-y-1">

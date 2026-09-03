@@ -1,29 +1,55 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { apex } from '@/lib/apexkit';
+import { apex, getFileUrl } from '@/lib/apexkit';
 import { 
     LifeBuoy, Play, Loader2, Terminal, Bug, 
     HelpCircle, Code, Plus, ExternalLink, 
-    Monitor, RefreshCw, Box, Copy, Check, Layout, ArrowLeft 
+    Monitor, RefreshCw, Box, Copy, Check, Layout, ArrowLeft,
+    User, Calendar, Clock, Sparkles
 } from 'lucide-react';
 import { useRouter, useSearchParams } from '@/lib/navigation';
 
-interface SandboxRequest {
+interface AuthorProfile {
+    username: string;
+    avatar: string | null;
+}
+
+interface SandboxRegistryItem {
     id: string;
     sandbox_id: string;
     issue_title: string;
     description: string;
+    sandbox_url?: string;
     status: 'open' | 'closed';
     created: string;
-    expand?: {
-        created_by?: { email: string };
-    };
+    author: AuthorProfile;
+    expand?: any;
+}
+
+// Helper to reliably extract author info from the expanded profile
+function extractAuthor(expandObj: any): AuthorProfile {
+    if (!expandObj || !expandObj.author_id) {
+        return { username: 'Community Member', avatar: null };
+    }
+    let author = expandObj.author_id;
+    if (Array.isArray(author)) {
+        author = author[0];
+    }
+    if (!author) {
+        return { username: 'Community Member', avatar: null };
+    }
+    const username = author.data?.username || author.username || author.email?.split('@')[0] || 'Community Member';
+    const avatar = author.data?.avatar 
+        ? getFileUrl(author.data.avatar) 
+        : (author.avatar ? getFileUrl(author.avatar) : null);
+
+    return { username, avatar };
 }
 
 export function HelpView() {
     const router = useRouter();
     const searchParams = useSearchParams();
     
-    const [sessions, setSessions] = useState<SandboxRequest[]>([]);
+    const [sessions, setSessions] = useState<SandboxRegistryItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     
     const activeSessionId = searchParams.get('session');
@@ -34,25 +60,28 @@ export function HelpView() {
     const fetchSessions = useCallback(async () => {
         setIsLoading(true);
         try {
-            const res = await apex.collection('sandbox_requests').list({ 
+            // Read from sandbox_registry and expand author_id (profiles)
+            const res = await apex.collection('sandbox_registry').list({ 
                 sort: '-created', 
-                expand: 'created_by',
+                expand: 'author_id',
                 per_page: 50 
             });
             
-            const mappedSessions: SandboxRequest[] = (res.items || []).map((item: any) => ({
+            const mapped: SandboxRegistryItem[] = (res.items || []).map((item: any) => ({
                 id: item.id.toString(),
                 sandbox_id: item.data?.sandbox_id,
-                issue_title: item.data?.issue_title,
-                description: item.data?.description,
-                status: item.data?.status,
+                issue_title: item.data?.issue_title || 'Untitled Sandbox',
+                description: item.data?.description || '',
+                sandbox_url: item.data?.sandbox_url,
+                status: item.data?.status || 'open',
                 created: item.created,
+                author: extractAuthor(item.expand),
                 expand: item.expand
             }));
 
-            setSessions(mappedSessions);
+            setSessions(mapped);
         } catch (e) {
-            console.error(e);
+            console.error("Failed to load sandbox registry:", e);
         } finally {
             setIsLoading(false);
         }
@@ -72,7 +101,7 @@ export function HelpView() {
     return (
         <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden bg-background">
             
-            {/* SIDEBAR: Hidden on mobile when creating a new sandbox or viewing a session */}
+            {/* --- SIDEBAR LIST --- */}
             <div className={`
                 w-full md:w-80 lg:w-96 border-r border-border flex flex-col bg-surface/30 shrink-0
                 ${(isCreateMode || activeSession) ? 'hidden md:flex' : 'flex h-full'}
@@ -80,12 +109,13 @@ export function HelpView() {
                 <div className="p-4 border-b border-border flex flex-col gap-3 sm:gap-4">
                     <div className="flex items-center justify-between">
                         <h2 className="font-bold text-base sm:text-lg flex items-center gap-2 text-foreground">
-                            <LifeBuoy className="h-5 w-5 text-primary" /> Help Center
+                            <LifeBuoy className="h-5 w-5 text-primary" /> Sandbox Registry
                         </h2>
                         <button 
                             type="button"
                             onClick={fetchSessions} 
                             className="p-1.5 hover:bg-background rounded-md text-muted hover:text-foreground transition-colors cursor-pointer"
+                            title="Refresh sandboxes"
                         >
                             <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
                         </button>
@@ -103,9 +133,11 @@ export function HelpView() {
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
+                <div className="flex-1 overflow-y-auto p-2 space-y-1.5 custom-scrollbar">
                     {isLoading && sessions.length === 0 ? (
                         <div className="flex justify-center p-8"><Loader2 className="animate-spin text-muted" /></div>
+                    ) : sessions.length === 0 ? (
+                        <div className="p-8 text-center text-xs text-muted">No sandbox sessions found.</div>
                     ) : (
                         sessions.map(s => (
                             <button
@@ -118,20 +150,31 @@ export function HelpView() {
                                     : 'bg-transparent border-transparent hover:bg-background/50 hover:border-border'
                                 }`}
                             >
-                                <div className="flex justify-between items-start mb-1">
+                                <div className="flex justify-between items-start mb-1.5">
                                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border uppercase ${
                                         s.status === 'open' 
-                                        ? 'bg-green-500/10 text-green-500 border-green-500/20' 
+                                        ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
                                         : 'bg-zinc-500/10 text-zinc-500 border-zinc-500/20'
                                     }`}>
                                         {s.status}
                                     </span>
                                     <span className="text-[10px] text-muted font-mono">{new Date(s.created).toLocaleDateString()}</span>
                                 </div>
-                                <h4 className="font-semibold text-sm truncate mb-1 text-foreground">{s.issue_title}</h4>
-                                <div className="flex items-center gap-1.5 text-xs text-muted">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
-                                    <span className="font-mono truncate">{s.sandbox_id}</span>
+                                <h4 className="font-semibold text-sm truncate mb-2 text-foreground">{s.issue_title}</h4>
+                                
+                                {/* Author Information Tag */}
+                                <div className="flex items-center justify-between text-xs text-muted pt-1 border-t border-border/40">
+                                    <div className="flex items-center gap-1.5 truncate">
+                                        {s.author.avatar ? (
+                                            <img src={s.author.avatar} alt="" className="w-4 h-4 rounded-full object-cover border border-border" />
+                                        ) : (
+                                            <div className="w-4 h-4 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[9px] font-bold">
+                                                {s.author.username[0]?.toUpperCase()}
+                                            </div>
+                                        )}
+                                        <span className="truncate font-medium text-foreground/80">{s.author.username}</span>
+                                    </div>
+                                    <span className="font-mono text-[10px] text-muted truncate max-w-[90px]">{s.sandbox_id.substring(0, 8)}...</span>
                                 </div>
                             </button>
                         ))
@@ -139,7 +182,7 @@ export function HelpView() {
                 </div>
             </div>
 
-            {/* MAIN CONTENT AREA: On mobile, takes full screen when active */}
+            {/* --- MAIN CONTENT AREA --- */}
             <div className={`
                 flex-1 flex-col bg-background/50 backdrop-blur-sm relative overflow-hidden
                 ${(isCreateMode || activeSession) ? 'flex h-full' : 'hidden md:flex'}
@@ -171,15 +214,15 @@ function EmptyState({ onNew }: { onNew: () => void }) {
             <div className="w-20 h-20 sm:w-24 sm:h-24 bg-surface rounded-full flex items-center justify-center mb-6 border border-border shadow-inner">
                 <Box size={40} className="text-muted/30 sm:w-12 sm:h-12" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-2">No Session Selected</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-2">No Sandbox Selected</h1>
             <p className="text-xs sm:text-sm text-muted max-w-sm mb-8 leading-relaxed">
-                Select an active sandbox from the list to view details and live preview, or start a fresh environment.
+                Select an active sandbox to inspect its isolated SQLite database, test webhooks, or create a new session.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 w-full max-w-2xl">
                  {[
-                    { icon: Bug, label: "Reproduce Bug", desc: "Isolate issues cleanly." },
-                    { icon: HelpCircle, label: "Get Help", desc: "Show, don't just tell." },
-                    { icon: Code, label: "Share Code", desc: "Demo your pattern." },
+                    { icon: Bug, label: "Reproduce Bug", desc: "Isolate issues in a clean DB." },
+                    { icon: HelpCircle, label: "Ask Community", desc: "Share sandbox with author tag." },
+                    { icon: Code, label: "Test Webhooks", desc: "Live TypeScript prototyping." },
                  ].map((item, i) => (
                      <button type="button" key={i} onClick={onNew} className="p-4 rounded-2xl border border-border bg-surface/50 hover:bg-surface hover:border-primary/30 transition-all text-left group cursor-pointer">
                          <item.icon className="w-6 h-6 sm:w-8 sm:h-8 text-primary mb-2 sm:mb-3 group-hover:scale-110 transition-transform" />
@@ -206,9 +249,11 @@ function CreateSandboxView({ onSuccess, onBack }: { onSuccess: (id: string) => v
         setError(null);
 
         try {
-            // Calling unified api-scope-util router
+            // Unified api-scope-util endpoint provisions physical DB & registers in sandbox_registry
             const result = await apex.webhook('api-scope-util').post('/sandbox', {
-                name: `Help: ${issueTitle}`,
+                issue_title: issueTitle,
+                name: issueTitle,
+                description: description,
                 admin_email: customEmail.trim() || undefined,
                 admin_password: customPassword.trim() || undefined
             });
@@ -217,20 +262,11 @@ function CreateSandboxView({ onSuccess, onBack }: { onSuccess: (id: string) => v
                 throw new Error(result?.error || "Failed to provision sandbox session");
             }
 
-            const sandboxId = result.sandbox_id;
-            
-            await apex.collection('sandbox_requests').create({
-                issue_title: issueTitle,
-                description: description,
-                sandbox_id: sandboxId,
-                status: 'open'
-            });
-
-            onSuccess(sandboxId.toString());
+            onSuccess(result.sandbox_id.toString());
 
         } catch (e: any) {
             console.error("Provisioning error:", e);
-            setError(e.message || "Failed to provision sandbox. Quota may be exceeded.");
+            setError(e.message || "Failed to provision sandbox. Ensure you are signed in.");
         } finally {
             setLoading(false);
         }
@@ -240,7 +276,6 @@ function CreateSandboxView({ onSuccess, onBack }: { onSuccess: (id: string) => v
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-12 custom-scrollbar">
             <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
                 
-                {/* Mobile Back Button */}
                 <button 
                     type="button" 
                     onClick={onBack}
@@ -268,12 +303,12 @@ function CreateSandboxView({ onSuccess, onBack }: { onSuccess: (id: string) => v
                     
                     <div>
                         <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-2">
-                            Issue / Topic
+                            Session Title / Topic
                         </label>
                         <input 
                             required
                             className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none transition-all"
-                            placeholder="e.g. Relation expansion fails on null"
+                            placeholder="e.g. Test Vector Search & Custom Hono Webhook"
                             value={issueTitle}
                             onChange={e => setIssueTitle(e.target.value)}
                         />
@@ -281,40 +316,39 @@ function CreateSandboxView({ onSuccess, onBack }: { onSuccess: (id: string) => v
                     
                     <div>
                         <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-2">
-                            Details & Context
+                            Description & Steps
                         </label>
                         <textarea 
                             required
                             rows={4}
                             className="w-full bg-background border border-border rounded-xl p-4 text-sm text-foreground focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none resize-none font-sans"
-                            placeholder="Describe steps to reproduce, query inputs, or expected behavior..."
+                            placeholder="Describe what you want to prototype or test in this sandbox..."
                             value={description}
                             onChange={e => setDescription(e.target.value)}
                         />
                     </div>
 
-                    {/* Custom Admin User Credentials */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                         <div>
                             <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-2">
-                                Custom Admin Email (Optional)
+                                Admin Email (Optional)
                             </label>
                             <input 
                                 type="email"
                                 className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none transition-all"
-                                placeholder="my-admin@company.com"
+                                placeholder="admin@sandbox.local"
                                 value={customEmail}
                                 onChange={e => setCustomEmail(e.target.value)}
                             />
                         </div>
                         <div>
                             <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-2">
-                                Custom Admin Password (Optional)
+                                Admin Password (Optional)
                             </label>
                             <input 
                                 type="password"
                                 className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:ring-2 focus:ring-primary/40 focus:border-primary outline-none transition-all"
-                                placeholder="customSecret123!"
+                                placeholder="secretPassword123"
                                 value={customPassword}
                                 onChange={e => setCustomPassword(e.target.value)}
                             />
@@ -331,7 +365,7 @@ function CreateSandboxView({ onSuccess, onBack }: { onSuccess: (id: string) => v
                             <span>Provision Sandbox</span>
                         </button>
                         <p className="text-center text-[11px] text-muted mt-3">
-                            Max storage limit: 50MB per session. Ephemeral sandboxes auto-expire in 24 hours.
+                            Max storage limit: 50MB per session. Auto-saved in <code className="font-mono text-primary">sandbox_registry</code>.
                         </p>
                     </div>
                 </form>
@@ -340,11 +374,14 @@ function CreateSandboxView({ onSuccess, onBack }: { onSuccess: (id: string) => v
     );
 }
 
-function SandboxDetailView({ session, onBack }: { session: SandboxRequest; onBack: () => void }) {
+function SandboxDetailView({ session, onBack }: { session: SandboxRegistryItem; onBack: () => void }) {
     const [view, setView] = useState<'preview' | 'info'>('preview');
     const [copied, setCopied] = useState(false);
 
-    const targetUrl = `${apex.baseUrl}/_dashboard/sandbox/${session.sandbox_id}/dashboard`;
+    // Path-based Sandbox URL
+    const sandboxPath = `/sandbox/${session.sandbox_id}`;
+    const targetUrl = `${apex.baseUrl}${sandboxPath}/_dashboard`;
+    const dashboardUrl = `${apex.baseUrl}${sandboxPath}/_dashboard`;
 
     const handleCopy = () => {
         navigator.clipboard.writeText(targetUrl);
@@ -370,10 +407,10 @@ function SandboxDetailView({ session, onBack }: { session: SandboxRequest; onBac
                             {session.issue_title}
                         </h2>
                         <div className="flex items-center gap-2 text-[11px] text-muted">
-                            <span className="font-mono truncate">{session.sandbox_id}</span>
+                            <span className="font-mono text-primary font-semibold">{sandboxPath}</span>
                             <span className="w-1 h-1 bg-border rounded-full"></span>
-                            <span className="text-green-500 flex items-center gap-1 font-bold">
-                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> Live
+                            <span className="text-emerald-500 flex items-center gap-1 font-bold">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Active
                             </span>
                         </div>
                     </div>
@@ -388,7 +425,7 @@ function SandboxDetailView({ session, onBack }: { session: SandboxRequest; onBac
                                 view === 'preview' ? 'bg-background shadow text-primary' : 'text-muted hover:text-foreground'
                             }`}
                         >
-                            <Monitor size={13} /> <span className="hidden sm:inline">Preview</span>
+                            <Monitor size={13} /> <span className="hidden sm:inline">Path Preview</span>
                         </button>
                         <button 
                             type="button"
@@ -397,7 +434,7 @@ function SandboxDetailView({ session, onBack }: { session: SandboxRequest; onBac
                                 view === 'info' ? 'bg-background shadow text-primary' : 'text-muted hover:text-foreground'
                             }`}
                         >
-                            <Layout size={13} /> <span className="hidden sm:inline">Details</span>
+                            <Layout size={13} /> <span className="hidden sm:inline">Session Info</span>
                         </button>
                     </div>
 
@@ -405,17 +442,17 @@ function SandboxDetailView({ session, onBack }: { session: SandboxRequest; onBac
                         type="button" 
                         onClick={handleCopy} 
                         className="p-2 hover:bg-surface rounded-lg text-muted hover:text-foreground transition-colors cursor-pointer" 
-                        title="Copy Sandbox URL"
+                        title="Copy Sandbox Path URL"
                     >
-                        {copied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
+                        {copied ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
                     </button>
                     <a 
-                        href={targetUrl} 
+                        href={dashboardUrl} 
                         target="_blank" 
                         rel="noreferrer" 
                         className="px-3 py-1.5 bg-primary text-white font-bold text-xs rounded-lg hover:bg-primary-hover flex items-center gap-1.5 transition-all shadow-sm"
                     >
-                        <span className="hidden sm:inline">Open Full</span> <ExternalLink size={13} />
+                        <span>Dashboard</span> <ExternalLink size={13} />
                     </a>
                 </div>
             </div>
@@ -430,7 +467,7 @@ function SandboxDetailView({ session, onBack }: { session: SandboxRequest; onBac
                                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/20"></div>
                                  <div className="w-2.5 h-2.5 rounded-full bg-green-500/20"></div>
                              </div>
-                             <div className="ml-4 bg-black/40 px-3 py-0.5 rounded text-[10px] font-mono text-zinc-500 flex-1 truncate text-center">
+                             <div className="ml-4 bg-black/40 px-3 py-0.5 rounded text-[10px] font-mono text-zinc-400 flex-1 truncate text-center">
                                  {targetUrl}
                              </div>
                         </div>
@@ -443,18 +480,43 @@ function SandboxDetailView({ session, onBack }: { session: SandboxRequest; onBac
                 ) : (
                     <div className="p-6 sm:p-8 max-w-3xl mx-auto text-zinc-300 overflow-y-auto max-h-full custom-scrollbar">
                         <div className="space-y-6">
+                            
+                            {/* Author Information Card */}
+                            <div className="bg-surface/20 border border-border/40 rounded-2xl p-6">
+                                <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                                    <User size={14} className="text-primary" /> Session Author
+                                </h3>
+                                <div className="flex items-center gap-4">
+                                    {session.author.avatar ? (
+                                        <img 
+                                            src={session.author.avatar} 
+                                            alt={session.author.username} 
+                                            className="w-12 h-12 rounded-2xl object-cover border border-border"
+                                        />
+                                    ) : (
+                                        <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold text-lg border border-primary/20">
+                                            {session.author.username[0]?.toUpperCase()}
+                                        </div>
+                                    )}
+                                    <div>
+                                        <h4 className="text-base font-bold text-white">{session.author.username}</h4>
+                                        <p className="text-xs text-muted">Author Profile</p>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="bg-surface/10 border border-border/20 rounded-2xl p-6">
-                                <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-3">Description</h3>
-                                <p className="whitespace-pre-wrap leading-relaxed text-sm text-zinc-300">{session.description}</p>
+                                <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-3">Topic / Context</h3>
+                                <p className="whitespace-pre-wrap leading-relaxed text-sm text-zinc-300 font-sans">{session.description || 'No description provided.'}</p>
                             </div>
                             
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="bg-surface/10 border border-border/20 rounded-xl p-4">
-                                    <div className="text-xs text-muted mb-1">Created By</div>
-                                    <div className="text-sm font-bold text-white">{session.expand?.created_by?.email || 'Unknown'}</div>
+                                    <div className="text-xs text-muted mb-1 flex items-center gap-1.5"><Terminal size={12} /> Path Endpoint</div>
+                                    <div className="text-sm font-bold font-mono text-primary truncate">{sandboxPath}</div>
                                 </div>
                                 <div className="bg-surface/10 border border-border/20 rounded-xl p-4">
-                                    <div className="text-xs text-muted mb-1">Created At</div>
+                                    <div className="text-xs text-muted mb-1 flex items-center gap-1.5"><Calendar size={12} /> Created At</div>
                                     <div className="text-sm font-bold text-white">{new Date(session.created).toLocaleString()}</div>
                                 </div>
                             </div>

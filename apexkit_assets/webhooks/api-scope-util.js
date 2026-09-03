@@ -47,9 +47,26 @@ app.post("/sandbox", async (c) => {
         return c.json({ error: "Unauthorized: Missing or invalid authentication token" }, 401);
     }
 
-    // Quota Enforcement: 50MB across user's sandboxes
-    const mySandboxesRes = await $db.records.list("sandbox_requests", {
-        filter: JSON.stringify({ created_by: user.id })
+    // 1. Resolve Profile ID for the user
+    let profileId = null;
+    const profilesRes = await $db.records.list("profiles", {
+        filter: JSON.stringify({ user_id: user.id }),
+        limit: 1
+    }).catch(() => ({ items: [], total: 0 }));
+
+    if (profilesRes.total === 0) {
+        const createdProfile = await $db.records.create("profiles", {
+            user_id: user.id,
+            username: (user.email || "user").split('@')[0]
+        });
+        profileId = createdProfile.id || createdProfile;
+    } else {
+        profileId = profilesRes.items[0].id;
+    }
+
+    // 2. Quota Enforcement: 50MB across user's sandboxes using `sandbox_registry`
+    const mySandboxesRes = await $db.records.list("sandbox_registry", {
+        filter: JSON.stringify({ author_id: profileId })
     }).catch(() => ({ items: [] }));
 
     const mySandboxes = mySandboxesRes.items || [];
@@ -62,7 +79,9 @@ app.post("/sandbox", async (c) => {
             try {
                 const size = await $root.getSandboxDiskUsage(sbId);
                 totalUsageBytes += (size || 0);
-            } catch (e) {}
+            } catch (e) {
+                return c.json({e})
+            }
         }
     }
 
@@ -75,39 +94,40 @@ app.post("/sandbox", async (c) => {
 
     const body = await c.req.json().catch(() => ({}));
     const sandboxId = $util.uuid();
+    const issueTitle = body.issue_title || body.name || `Sandbox ${sandboxId.substring(0, 6)}`;
+    const description = body.description || "";
 
-    console.log(`[ScopeUtil] Provisioning EMPTY sandbox [${sandboxId}] for user ${user.id}...`);
+    console.log(`[ScopeUtil] Provisioning EMPTY sandbox [${sandboxId}] for profile ${profileId}...`);
 
     try {
         await $root.createSandbox(sandboxId, {
-            name: body.name || `Sandbox ${sandboxId.substring(0, 6)}`,
+            name: issueTitle,
             owner_id: user.id,
             clone_strategy: "none",
             expires_at: new Date(Date.now() + 86400000).toISOString()
         });
 
-        // 10-second sync window for Master-Replica clusters
         console.log(`[ScopeUtil] Waiting for Master sync on sandbox [${sandboxId}]...`);
-        $util.sleep(10000);
+        $util.sleep(4000);
     } catch (err) {
         console.log(`[ScopeUtil] Sandbox creation delay/warning: ${err.toString()}`);
-        $util.sleep(10000);
+        $util.sleep(4000);
         try {
-            const appUrl = $env.APP_URL || "http://127.0.0.1:5000";
+            const appUrl = $env.BASE_URL || "http://127.0.0.1:5000";
             await $http.get(`${appUrl}/sandbox/${sandboxId}/app-name`);
         } catch (e) {}
     }
 
-    // Bootstrap Admin Users inside Sandbox
+    // 3. Bootstrap Admin Users inside Sandbox
     const sandboxContext = `sandbox:${sandboxId}`;
     try {
+        const customEmail = body.admin_email || body.email;
         await $root.db.users.create(sandboxContext, "sandbox-admin@apexkit.io", "password", "admin");
 
-        if (user.email && user.email !== "sandbox-admin@apexkit.io") {
+        if (user.email && user.email !== "sandbox-admin@apexkit.io" && customEmail !== user.email) {
             await $root.db.users.create(sandboxContext, user.email, "password", "admin");
         }
 
-        const customEmail = body.admin_email || body.email;
         const customPassword = body.admin_password || body.password;
         if (customEmail && customPassword) {
             await $root.db.users.create(sandboxContext, customEmail, customPassword, "admin");
@@ -116,9 +136,24 @@ app.post("/sandbox", async (c) => {
         console.log(`[ScopeUtil] Admin user bootstrap warning: ${err.toString()}`);
     }
 
+    // 4. Path-based sandbox URLs
+    const appUrl = $env.BASE_URL || "http://127.0.0.1:5000";
+    const sandboxPathUrl = `${appUrl.replace(/\/$/, "")}/sandbox/${sandboxId}/_dashboard`;
+
+    // 5. Register in `sandbox_registry` collection linked to `author_id` (profiles)
+    await $db.records.create("sandbox_registry", {
+        issue_title: issueTitle,
+        description: description,
+        sandbox_id: sandboxId,
+        sandbox_url: sandboxPathUrl,
+        status: "open",
+        author_id: profileId
+    });
+
     return c.json({
         success: true,
         sandbox_id: sandboxId,
+        sandbox_url: sandboxPathUrl,
         quota_usage_mb: (totalUsageBytes / 1024 / 1024).toFixed(2)
     });
 });
@@ -176,12 +211,12 @@ app.post("/tenant", async (c) => {
         });
         
         console.log(`[ScopeUtil] Waiting for Master sync on tenant [${tenantId}]...`);
-        $util.sleep(10000);
+        $util.sleep(4000);
     } catch (err) {
         console.log(`[ScopeUtil] Tenant creation replica delay: ${err.toString()}`);
-        $util.sleep(10000);
+        $util.sleep(4000);
         try {
-            const appUrl = $env.APP_URL || "http://127.0.0.1:5000";
+            const appUrl = $env.BASE_URL || "http://127.0.0.1:5000";
             await $http.get(`${appUrl}/tenant/${tenantId}/app-name`);
         } catch (e) {}
     }
@@ -210,8 +245,8 @@ app.post("/tenant", async (c) => {
     }
 
     // Dispatch Credentials Email
-    const appUrl = $env.APP_URL || "https://api.apexkit.io";
-    const dashboardUrl = `${appUrl}/_dashboard/tenant/${tenantId}`;
+    const appUrl = $env.BASE_URL || "https://api.apexkit.io";
+    const dashboardUrl = `${appUrl}/tenant/${tenantId}/_dashboard`;
 
     const emailHtml = `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">

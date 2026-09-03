@@ -146,7 +146,7 @@ export function RequestOfficialTenancyView() {
 
                 <div className="flex gap-4">
                     <a 
-                        href={successData.links?.dashboard || `/_dashboard/tenant/${successData.tenant_id}`} 
+                        href={successData.links?.dashboard || `/tenant/${successData.tenant_id}/_dashboard`} 
                         target="_blank"
                         rel="noreferrer"
                         className="px-6 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-hover transition-all flex items-center gap-2 shadow-lg shadow-primary/20 cursor-pointer"

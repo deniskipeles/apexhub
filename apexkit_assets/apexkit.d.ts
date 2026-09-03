@@ -5,9 +5,10 @@
 
 export interface Collections {
   "docs": {
+    slug?: string;
+    added_by: number | string;
     category: "getting started" | "integrations" | "core concepts" | "community guides" | "others";
     content: string;
-    added_by: number | string;
     title: string;
   };
   "why_apexkit": {
@@ -24,65 +25,65 @@ export interface Collections {
     order?: number;
   };
   "news": {
-    date: string;
-    is_featured?: boolean;
-    body: string;
     headline: string;
+    date: string;
+    body: string;
+    is_featured?: boolean;
   };
   "roadmap": {
     description: string;
-    headline: string;
     status?: "planned" | "in-progress" | "done";
     quarter?: string;
     progress?: number;
+    headline: string;
   };
   "changelog": {
-    version?: string;
     body: string;
+    version?: string;
     is_latest?: boolean;
     release_date?: string;
   };
   "blog": {
+    body: string;
     cover_image?: string;
     tags?: Record<string, any> | any[];
-    body: string;
-    headline: string;
-    subheadline: string;
     read_time?: string;
     author_id: number | string;
+    headline: string;
+    subheadline: string;
   };
   "optimizations": {
     slug: string;
-    downvotes: number;
-    content: string;
-    tags?: Record<string, any> | any[];
     title: string;
+    tags?: Record<string, any> | any[];
     upvotes: number;
+    content: string;
+    downvotes: number;
     author_id: (number | string)[];
   };
   "tenancy_offers": {
-    status: "available" | "full" | "waitlist";
     provider_name: string;
-    available_slots: number;
-    request_access_link: string;
-    region: string;
-    description: string;
     specs: string;
+    status: "available" | "full" | "waitlist";
+    region: string;
+    request_access_link: string;
+    description: string;
+    available_slots: number;
     provider_id: (number | string)[];
   };
-  "sandbox_requests": {
-    status: "open" | "closed";
-    sandbox_id: string;
-    description?: string;
+  "sandbox_registry": {
     issue_title: string;
     sandbox_url?: string;
+    description?: string;
+    sandbox_id: string;
+    status: "open" | "closed";
     author_id: (number | string)[];
   };
   "community_threads": {
-    status?: "open" | "closed" | "in-progress";
-    content: string;
     title: string;
     type: "discussion" | "issue";
+    content: string;
+    status?: "open" | "closed" | "in-progress";
     author_id: (number | string)[];
   };
   "hub_content": {
@@ -94,22 +95,22 @@ export interface Collections {
     author_id: (number | string)[];
   };
   "profiles": {
-    username?: string;
-    bio?: string;
-    avatar?: string;
-    github_url?: string;
-    last_name?: string;
     user_id: number | string;
+    last_name?: string;
+    avatar?: string;
     first_name?: string;
+    username?: string;
+    github_url?: string;
+    bio?: string;
   };
   "ecosystem_items": {
+    title: string;
+    type: "starter" | "showcase" | "script" | "ai_action" | "schema" | "template" | "site";
+    file: string;
+    url?: string;
+    install_command?: string;
     tags?: Record<string, any> | any[];
     description: string;
-    type: "starter" | "showcase" | "script" | "ai_action" | "schema" | "template" | "site";
-    install_command?: string;
-    file: string;
-    title: string;
-    url?: string;
     author_id: (number | string)[];
   };
   "optimizations_conversations": {
@@ -123,23 +124,23 @@ export interface Collections {
     optimization_id: (number | string)[];
   };
   "careers": {
-    author_id: number | string;
-    salary?: string;
-    description: string;
     department: string;
-    type: string;
+    salary?: string;
     location: string;
+    type: string;
     title: string;
+    description: string;
+    author_id: number | string;
   };
   "jobs": {
     location: string;
-    type: string;
-    department?: string;
     company: string;
-    salary: string;
+    department?: string;
+    type: string;
     description: string;
-    title: string;
     apply_url: string;
+    salary: string;
+    title: string;
     author_id: (number | string)[];
   };
   "tenant_registry": {
@@ -149,12 +150,12 @@ export interface Collections {
     owner_id: number | string;
   };
   "posts": {
-    title?: string;
     content?: string;
+    title?: string;
   };
 }
 
-export type CollectionName = "docs" | "why_apexkit" | "use_cases" | "news" | "roadmap" | "changelog" | "blog" | "optimizations" | "tenancy_offers" | "sandbox_requests" | "community_threads" | "hub_content" | "thread_comments" | "profiles" | "ecosystem_items" | "optimizations_conversations" | "optimizations_votes" | "careers" | "jobs" | "tenant_registry" | "posts";
+export type CollectionName = "docs" | "why_apexkit" | "use_cases" | "news" | "roadmap" | "changelog" | "blog" | "optimizations" | "tenancy_offers" | "sandbox_registry" | "community_threads" | "hub_content" | "thread_comments" | "profiles" | "ecosystem_items" | "optimizations_conversations" | "optimizations_votes" | "careers" | "jobs" | "tenant_registry" | "posts";
 
 export interface CollectionExpands {
   "docs": {
@@ -186,7 +187,7 @@ export interface CollectionExpands {
     provider_id?: Array<{ id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any }>;
     [reverse_relation: string]: any;
   };
-  "sandbox_requests": {
+  "sandbox_registry": {
     author_id?: Array<{ id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any }>;
     [reverse_relation: string]: any;
   };

@@ -56,7 +56,7 @@ const getAuthUser = (c) => {
                     scope: claims.scope
                 };
             }
-        } catch (e) {}
+        } catch (e) { }
     }
     return null;
 };
@@ -65,21 +65,21 @@ const getAuthUser = (c) => {
 const authMiddleware = async (c, next) => {
     const auth = getAuthUser(c);
     if (!auth || !auth.id) return c.json({ error: "Unauthorized" }, 401);
-    
-    const profiles = await $db.records.list("profiles", { 
-        filter: JSON.stringify({ user_id: auth.id }), limit: 1 
+
+    const profiles = await $db.records.list("profiles", {
+        filter: JSON.stringify({ user_id: auth.id }), limit: 1
     }).catch(() => ({ items: [], total: 0 }));
-    
+
     if (profiles.total === 0) {
-        const created = await $db.records.create("profiles", { 
-            user_id: auth.id, 
+        const created = await $db.records.create("profiles", {
+            user_id: auth.id,
             username: (auth.email || "user").split('@')[0]
         });
         c.set('profile_id', created.id || created);
     } else {
         c.set('profile_id', profiles.items[0].id);
     }
-    
+
     c.set('user', auth);
     await next();
 };
@@ -115,7 +115,7 @@ app.get("/ecosystem/items", async (c) => {
         let tags = [];
         if (Array.isArray(item.data?.tags)) tags = item.data.tags;
         else if (typeof item.data?.tags === 'string') {
-            try { tags = JSON.parse(item.data.tags); } catch (e) {}
+            try { tags = JSON.parse(item.data.tags); } catch (e) { }
         }
 
         const profile = extractProfileData(item.expand, "author_id", "Community");
@@ -142,7 +142,7 @@ app.get("/ecosystem/items", async (c) => {
 app.post("/ecosystem/items", authMiddleware, async (c) => {
     const profileId = c.get('profile_id');
     const body = await c.req.json();
-    
+
     const created = await $db.records.create("ecosystem_items", {
         title: body.title,
         type: body.type,
@@ -163,7 +163,7 @@ app.get("/ecosystem/threads", async (c) => {
     const res = await $db.records.list("community_threads", {
         filter: JSON.stringify({ type }), sort: "-created", expand: "author_id", per_page: 100
     }).catch(() => ({ items: [] }));
-    
+
     const items = (res.items || []).map(item => {
         const profile = extractProfileData(item.expand, "author_id");
         return {
@@ -177,14 +177,14 @@ app.get("/ecosystem/threads", async (c) => {
             created: item.created
         };
     });
-    
+
     return c.json({ success: true, items });
 });
 
 app.post("/ecosystem/threads", authMiddleware, async (c) => {
     const profileId = c.get('profile_id');
     const body = await c.req.json();
-    
+
     const created = await $db.records.create("community_threads", {
         title: body.title,
         content: body.content,
@@ -195,28 +195,30 @@ app.post("/ecosystem/threads", authMiddleware, async (c) => {
 
     const threadId = created.id || created;
     const item = await $db.records.get("community_threads", threadId, "author_id");
-    
+
     if (!item) return c.json({ error: "Failed to retrieve created thread" }, 500);
 
     const profile = extractProfileData(item.expand, "author_id");
 
-    return c.json({ success: true, item: {
-        id: item.id,
-        title: item.data?.title,
-        content: item.data?.content,
-        status: item.data?.status || 'open',
-        type: item.data?.type,
-        author_username: profile.username,
-        author_avatar: profile.avatar,
-        created: item.created
-    }});
+    return c.json({
+        success: true, item: {
+            id: item.id,
+            title: item.data?.title,
+            content: item.data?.content,
+            status: item.data?.status || 'open',
+            type: item.data?.type,
+            author_username: profile.username,
+            author_avatar: profile.avatar,
+            created: item.created
+        }
+    });
 });
 
 app.get("/ecosystem/threads/:id", async (c) => {
     const id = c.req.param("id");
     const thread = await $db.records.get("community_threads", id, "author_id").catch(() => null);
     if (!thread) return c.json({ error: "Not found" }, 404);
-    
+
     const profile = extractProfileData(thread.expand, "author_id");
 
     return c.json({
@@ -240,7 +242,7 @@ app.get("/ecosystem/threads/:id/comments", async (c) => {
         filter: JSON.stringify({ thread_id: id }),
         sort: "created", expand: "author_id", per_page: 100
     }).catch(() => ({ items: [] }));
-    
+
     const items = (res.items || []).map(item => {
         const profile = extractProfileData(item.expand, "author_id");
         return {
@@ -251,7 +253,7 @@ app.get("/ecosystem/threads/:id/comments", async (c) => {
             created: item.created
         };
     });
-    
+
     return c.json({ success: true, items });
 });
 
@@ -259,16 +261,16 @@ app.post("/ecosystem/threads/:id/comments", authMiddleware, async (c) => {
     const profileId = c.get('profile_id');
     const id = c.req.param("id");
     const body = await c.req.json();
-    
+
     const created = await $db.records.create("thread_comments", {
         thread_id: id,
         content: body.content,
         author_id: profileId
     });
-    
+
     const commentId = created.id || created;
     const item = await $db.records.get("thread_comments", commentId, "author_id");
-    
+
     if (!item) return c.json({ error: "Failed to retrieve created comment" }, 500);
 
     const profile = extractProfileData(item.expand, "author_id");
@@ -294,7 +296,7 @@ app.get("/ecosystem/tenancy", async (c) => {
     const res = await $db.records.list("tenancy_offers", {
         sort: "-created", expand: "provider_id", per_page: 50
     }).catch(() => ({ items: [] }));
-    
+
     const items = (res.items || []).map(item => {
         const profile = extractProfileData(item.expand, "provider_id", "Community Provider");
         return {
@@ -311,14 +313,14 @@ app.get("/ecosystem/tenancy", async (c) => {
             created: item.created
         };
     });
-    
+
     return c.json({ success: true, items });
 });
 
 app.post("/ecosystem/tenancy", authMiddleware, async (c) => {
     const profileId = c.get('profile_id');
     const body = await c.req.json();
-    
+
     const created = await $db.records.create("tenancy_offers", {
         provider_name: body.provider_name,
         region: body.region,
@@ -329,27 +331,29 @@ app.post("/ecosystem/tenancy", authMiddleware, async (c) => {
         request_access_link: body.request_access_link || null,
         provider_id: profileId
     });
-    
+
     const offerId = created.id || created;
     const item = await $db.records.get("tenancy_offers", offerId, "provider_id");
-    
+
     if (!item) return c.json({ error: "Failed to retrieve created offer" }, 500);
 
     const profile = extractProfileData(item.expand, "provider_id", "Community Provider");
 
-    return c.json({ success: true, item: {
-        id: item.id,
-        provider_name: item.data?.provider_name,
-        region: item.data?.region,
-        specs: item.data?.specs,
-        description: item.data?.description,
-        available_slots: item.data?.available_slots,
-        status: item.data?.status,
-        request_access_link: item.data?.request_access_link || null,
-        author_username: profile.username,
-        author_avatar: profile.avatar,
-        created: item.created
-    }});
+    return c.json({
+        success: true, item: {
+            id: item.id,
+            provider_name: item.data?.provider_name,
+            region: item.data?.region,
+            specs: item.data?.specs,
+            description: item.data?.description,
+            available_slots: item.data?.available_slots,
+            status: item.data?.status,
+            request_access_link: item.data?.request_access_link || null,
+            author_username: profile.username,
+            author_avatar: profile.avatar,
+            created: item.created
+        }
+    });
 });
 
 // ----------------------------------------------------
@@ -360,7 +364,7 @@ app.get("/optimizations", async (c) => {
     const tag = c.req.query("tag") || null;
     const q = c.req.query("q") || null;
     const user = c.req.raw?.auth;
-    
+
     let profileId = null;
     if (user && user.id) {
         const profiles = await $db.records.list("profiles", { filter: JSON.stringify({ user_id: user.id }), limit: 1 });
@@ -414,15 +418,22 @@ app.get("/optimizations", async (c) => {
 app.get("/optimizations/:id", async (c) => {
     const id = c.req.param("id");
     const user = c.req.raw?.auth;
-    
+
     let profileId = null;
     if (user && user.id) {
         const profiles = await $db.records.list("profiles", { filter: JSON.stringify({ user_id: user.id }), limit: 1 });
         if (profiles.total > 0) profileId = profiles.items[0].id;
     }
 
-    const opt = await $db.records.get("optimizations", id, "author_id").catch(() => null);
-    if (!opt) return c.json({ error: "Optimization strategy not found" }, 404);
+    const opt_item = await $db.records.get("optimizations", id, "author_id").catch(() => null);
+    if (!opt_item) return c.json({ error: "Optimization strategy not found" }, 404);
+    const opt_profile = extractProfileData(opt_item.expand, "author_id");
+    const opt = {
+        ...opt_item, data: {
+            ...opt_item.data, author_username: opt_profile.username,
+            author_avatar: opt_profile.avatar,
+        }
+    }
 
     const commentsRes = await $db.records.list("optimizations_conversations", {
         filter: JSON.stringify({ optimization_id: id }),
@@ -465,7 +476,7 @@ app.get("/optimizations/:id", async (c) => {
 app.post("/optimizations", authMiddleware, async (c) => {
     const profileId = c.get('profile_id');
     const body = await c.req.json();
-    
+
     if (!body.title || !body.content) return c.json({ error: "Missing title or content" }, 400);
 
     const slug = $util.slugify(body.title) + "-" + $util.randomHex(3);
@@ -493,10 +504,10 @@ app.post("/optimizations/:id/comments", authMiddleware, async (c) => {
         content: body.content,
         author_id: profileId
     });
-    
+
     const commentId = created.id || created;
     const item = await $db.records.get("optimizations_conversations", commentId, "author_id");
-    
+
     if (!item) return c.json({ error: "Failed to retrieve created comment" }, 500);
 
     const profile = extractProfileData(item.expand, "author_id");
@@ -517,7 +528,7 @@ app.post("/optimizations/:id/comments", authMiddleware, async (c) => {
 app.post("/optimizations/vote", authMiddleware, async (c) => {
     const profileId = c.get('profile_id');
     const { optimization_id, type } = await c.req.json();
-    
+
     if (!['up', 'down'].includes(type)) return c.json({ error: "Invalid vote type" }, 400);
 
     const voteData = await $db.records.list("optimizations_votes", {

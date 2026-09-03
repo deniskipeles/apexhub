@@ -43,16 +43,19 @@ export function DocsSidebar({ groups }: { groups: Record<string, any[]> }) {
                        
                        {isOpen && (
                            <ul className="space-y-0.5 border-l border-border ml-2 pl-2 animate-in slide-in-from-left-1 duration-200">
-                               {items.map((doc: any) => (
-                                   <li key={doc.id}>
-                                       <Link 
-                                           href={`/docs/${doc.id}`} 
-                                           className="block px-3 py-1.5 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface truncate transition-colors"
-                                       >
-                                           {doc.data?.title}
-                                       </Link>
-                                   </li>
-                               ))}
+                               {items.map((doc: any) => {
+                                   const docSlug = doc.data?.slug || doc.id;
+                                   return (
+                                       <li key={doc.id}>
+                                           <Link 
+                                               href={`/docs/${docSlug}`} 
+                                               className="block px-3 py-1.5 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface truncate transition-colors"
+                                           >
+                                               {doc.data?.title}
+                                           </Link>
+                                       </li>
+                                   );
+                               })}
                            </ul>
                        )}
                    </div>

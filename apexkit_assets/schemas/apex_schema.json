@@ -20,7 +20,7 @@
             "min": null,
             "min_length": null,
             "options": null,
-            "ose_indexed": true,
+            "ose_indexed": false,
             "pattern": null,
             "position": 2,
             "relation_to": null,
@@ -80,6 +80,28 @@
             "uid": "156f1460",
             "unique": null,
             "vectorize": true
+          },
+          "slug": {
+            "auto": false,
+            "default": null,
+            "dimension": null,
+            "max": null,
+            "max_length": null,
+            "max_size": null,
+            "mime_types": null,
+            "min": null,
+            "min_length": null,
+            "options": null,
+            "ose_indexed": true,
+            "pattern": null,
+            "position": 4,
+            "relation_to": null,
+            "required": false,
+            "sql_indexed": true,
+            "type": "string",
+            "uid": "176fb28c",
+            "unique": true,
+            "vectorize": false
           },
           "title": {
             "auto": false,
@@ -1220,7 +1242,7 @@
     {
       "id": 10,
       "index": "67bb3505-fc82-4f14-b0de-b5ee1f4b907b",
-      "name": "sandbox_requests",
+      "name": "sandbox_registry",
       "schema": {
         "composite_unique": [],
         "field_history": {},
@@ -2648,7 +2670,7 @@
       }
     }
   ],
-  "exported_at": "2026-09-02T11:02:16.602629187+00:00",
+  "exported_at": "2026-09-03T10:43:28.998993916+00:00",
   "strategy": "skip",
   "version": "0.1.0"
 }

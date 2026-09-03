@@ -12,24 +12,6 @@ import {
     Plus, BookOpen, ChevronRight, FileText, Share2, Calendar, Sparkles, ArrowRight, Loader2, ArrowLeft, CheckCircle2 
 } from 'lucide-react';
 
-async function getRelatedDocs(id: string) {
-    try {
-        const vectors = await apex.collection('docs').getVector(id);
-        if (!vectors || vectors.length === 0) return [];
-        const target = vectors[0];
-        const results = await apex.collection('docs').searchVectorWithVector(
-            target.field_name, 
-            target.vector, 
-            { per_page: 5 }
-        );
-        return results
-            .items.filter((r: any) => r.id.toString() !== id.toString())
-            .slice(0, 3);
-    } catch {
-        return [];
-    }
-}
-
 export function DocsView() {
     const { currentRoute, routeParams } = useApexStore();
     const searchParams = useSearchParams();
@@ -45,7 +27,7 @@ export function DocsView() {
     const [singleDoc, setSingleDoc] = useState<any>(null);
     const [relatedDocs, setRelatedDocs] = useState<any[]>([]);
 
-    // State for New Doc Form
+    // Form state
     const [newTitle, setNewTitle] = useState("");
     const [newContent, setNewContent] = useState("");
     const [newCategory, setNewCategory] = useState("general");
@@ -53,7 +35,6 @@ export function DocsView() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formError, setFormError] = useState("");
 
-    // Load data based on route/query
     useEffect(() => {
         setLoading(true);
 
@@ -73,17 +54,18 @@ export function DocsView() {
         }
 
         if (currentRoute === 'doc-detail') {
-            const id = routeParams.id;
+            const idOrSlug = routeParams.id;
+            
             Promise.all([
                 apex.collection('docs').list({ sort: 'title', per_page: 200 }).catch(() => ({ items: [] })),
-                apex.collection('docs').get(id, { expand: 'added_by' }).catch(() => null)
-            ]).then(async ([listRes, docRes]) => {
-                if (docRes) {
-                    setSingleDoc(docRes);
-                    const related = await getRelatedDocs(id);
-                    setRelatedDocs(related);
+                apex.webhook('api-docs').get(`/${idOrSlug}`).catch(() => null)
+            ]).then(([listRes, detailRes]) => {
+                if (detailRes && detailRes.success && detailRes.doc) {
+                    setSingleDoc(detailRes.doc);
+                    setRelatedDocs(detailRes.related || []);
                 } else {
                     setSingleDoc(null);
+                    setRelatedDocs([]);
                 }
 
                 const grps: Record<string, any[]> = {};
@@ -97,7 +79,6 @@ export function DocsView() {
             return;
         }
 
-        // Search mode or Directory mode
         if (query) {
             if (type === 'instant') {
                 apex.collection('docs').searchRecordsInstantlyWithOSE(query)
@@ -107,7 +88,12 @@ export function DocsView() {
                         setSearchResults({
                             items: (res || []).slice(start, end).map((r: any) => ({
                                 id: r.id,
-                                data: { title: r.snippet?.title || r.title || 'Untitled', content: r.snippet?.content || r.content || '', category: 'search-result' }
+                                data: { 
+                                    title: r.snippet?.title || r.title || 'Untitled', 
+                                    slug: r.snippet?.slug || r.slug,
+                                    content: r.snippet?.content || r.content || '', 
+                                    category: 'search-result' 
+                                }
                             })),
                             total: (res || []).length
                         });
@@ -157,7 +143,8 @@ export function DocsView() {
                 content: newContent,
                 category: newCategory,
             });
-            router.push(`/docs/${res.id}`);
+            const target = res.data?.slug || res.id;
+            router.push(`/docs/${target}`);
         } catch (err: any) {
             console.error(err);
             setFormError(err.message || "Failed to create guide. Please try again.");
@@ -169,7 +156,6 @@ export function DocsView() {
         return <div className="flex justify-center items-center min-h-[50vh]"><Loader2 className="animate-spin text-muted h-8 w-8" /></div>;
     }
 
-    // New Guide Form View
     if (currentRoute === 'doc-new') {
         return (
             <div className="min-h-screen p-6 md:p-12 max-w-3xl mx-auto">
@@ -247,7 +233,6 @@ export function DocsView() {
         );
     }
 
-    // Single Document View
     if (currentRoute === 'doc-detail') {
         if (!singleDoc) return <div className="p-12 text-center text-muted">Doc Not Found</div>;
         const authorName = singleDoc.expand?.added_by?.email?.split('@')[0] || 'ApexTeam';
@@ -288,23 +273,26 @@ export function DocsView() {
                                 <Sparkles className="h-4 w-4 text-primary" /> Related Guides
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {relatedDocs.map((item: any) => (
-                                    <Link 
-                                        key={item.id} 
-                                        href={`/docs/${item.id}`}
-                                        className="group p-4 rounded-xl border border-border bg-surface/30 hover:bg-surface hover:border-primary/30 transition-all flex flex-col h-full"
-                                    >
-                                        <span className="text-xs font-bold text-muted uppercase tracking-wider mb-2">
-                                            {item.data?.category || 'Guide'}
-                                        </span>
-                                        <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors mb-2 line-clamp-2">
-                                            {item.data?.title}
-                                        </h4>
-                                        <div className="mt-auto flex items-center text-xs text-muted font-medium pt-2">
-                                            Read more <ArrowRight className="ml-1 h-3 w-3 group-hover:translate-x-1 transition-transform" />
-                                        </div>
-                                    </Link>
-                                ))}
+                                {relatedDocs.map((item: any) => {
+                                    const docTarget = item.data?.slug || item.id;
+                                    return (
+                                        <Link 
+                                            key={item.id} 
+                                            href={`/docs/${docTarget}`}
+                                            className="group p-4 rounded-xl border border-border bg-surface/30 hover:bg-surface hover:border-primary/30 transition-all flex flex-col h-full"
+                                        >
+                                            <span className="text-xs font-bold text-muted uppercase tracking-wider mb-2">
+                                                {item.data?.category || 'Guide'}
+                                            </span>
+                                            <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors mb-2 line-clamp-2">
+                                                {item.data?.title}
+                                            </h4>
+                                            <div className="mt-auto flex items-center text-xs text-muted font-medium pt-2">
+                                                Read more <ArrowRight className="ml-1 h-3 w-3 group-hover:translate-x-1 transition-transform" />
+                                            </div>
+                                        </Link>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
@@ -319,7 +307,6 @@ export function DocsView() {
         );
     }
 
-    // Main Directory & Search View
     const isSearchMode = query.length > 0;
     const sortedCategories = Object.keys(groups).sort();
 
@@ -350,25 +337,28 @@ export function DocsView() {
                     </h2>
                     
                     <div className="space-y-4">
-                        {searchResults.items.map((doc: any) => (
-                            <Link key={doc.id} href={`/docs/${doc.id}`} className="block group">
-                                <div className="bg-surface/30 border border-border rounded-xl p-6 hover:bg-surface/50 hover:border-primary/30 transition-all">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-                                            {doc.data?.title}
-                                        </h3>
-                                        <ChevronRight className="text-muted opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:translate-x-1" size={18} />
+                        {searchResults.items.map((doc: any) => {
+                            const docTarget = doc.data?.slug || doc.id;
+                            return (
+                                <Link key={doc.id} href={`/docs/${docTarget}`} className="block group">
+                                    <div className="bg-surface/30 border border-border rounded-xl p-6 hover:bg-surface/50 hover:border-primary/30 transition-all">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                                                {doc.data?.title}
+                                            </h3>
+                                            <ChevronRight className="text-muted opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:translate-x-1" size={18} />
+                                        </div>
+                                        <p className="text-muted text-sm line-clamp-2 leading-relaxed">
+                                            {String(doc.data?.content || '').replace(/<[^>]*>?/gm, '')}
+                                        </p>
+                                        <div className="flex items-center gap-2 mt-4 text-xs text-muted/60 font-mono">
+                                            <span>Slug: {doc.data?.slug || doc.id}</span>
+                                            {doc._score && <span>• Score: {(doc._score * 10).toFixed(1)}</span>}
+                                        </div>
                                     </div>
-                                    <p className="text-muted text-sm line-clamp-2 leading-relaxed">
-                                        {String(doc.data?.content || '').replace(/<[^>]*>?/gm, '')}
-                                    </p>
-                                    <div className="flex items-center gap-2 mt-4 text-xs text-muted/60 font-mono">
-                                        <span>ID: {doc.id}</span>
-                                        {doc._score && <span>• Score: {(doc._score * 10).toFixed(1)}</span>}
-                                    </div>
-                                </div>
-                            </Link>
-                        ))}
+                                </Link>
+                            );
+                        })}
                         {searchResults.items.length === 0 && (
                             <div className="text-center py-20 text-muted italic border border-dashed border-border rounded-xl">
                                 No results found. Try a different query.
@@ -404,20 +394,23 @@ export function DocsView() {
                                 </div>
                                 
                                 <ul className="space-y-1 mb-6 flex-1 relative z-10">
-                                    {displayItems.map((doc: any) => (
-                                        <li key={doc.id}>
-                                            <Link 
-                                                href={`/docs/${doc.id}`}
-                                                className="flex items-center justify-between py-2 px-3 -mx-3 rounded-lg text-sm text-muted hover:text-foreground hover:bg-background/80 transition-colors group/link"
-                                            >
-                                                <span className="flex items-center gap-2 truncate">
-                                                    <FileText size={14} className="opacity-50" />
-                                                    <span className="truncate">{doc.data?.title}</span>
-                                                </span>
-                                                <ChevronRight size={14} className="opacity-0 -translate-x-2 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-all text-primary" />
-                                            </Link>
-                                        </li>
-                                    ))}
+                                    {displayItems.map((doc: any) => {
+                                        const docTarget = doc.data?.slug || doc.id;
+                                        return (
+                                            <li key={doc.id}>
+                                                <Link 
+                                                    href={`/docs/${docTarget}`}
+                                                    className="flex items-center justify-between py-2 px-3 -mx-3 rounded-lg text-sm text-muted hover:text-foreground hover:bg-background/80 transition-colors group/link"
+                                                >
+                                                    <span className="flex items-center gap-2 truncate">
+                                                        <FileText size={14} className="opacity-50" />
+                                                        <span className="truncate">{doc.data?.title}</span>
+                                                    </span>
+                                                    <ChevronRight size={14} className="opacity-0 -translate-x-2 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-all text-primary" />
+                                                </Link>
+                                            </li>
+                                        );
+                                    })}
                                 </ul>
 
                                 {hasMore && (
