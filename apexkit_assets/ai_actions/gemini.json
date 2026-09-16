@@ -1,0 +1,16 @@
+{
+  "action": {
+    "id": 4,
+    "slug": "gemini",
+    "name": "Gemini ",
+    "model": "gemini-2.5-flash-lite",
+    "system_prompt": "You are an assistant ",
+    "template": "User Request: {{input}}",
+    "config": {
+      "grounding": true,
+      "provider": "gemini",
+      "streaming": false,
+      "url_context": true
+    }
+  }
+}

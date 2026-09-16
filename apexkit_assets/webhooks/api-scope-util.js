@@ -1,6 +1,6 @@
 /** @type {import("../apexkit").FileMetadata} */
 export const __fileMetadata__ = {
-  "id": 5,
+  "id": 57,
   "name": "api-scope-util",
   "extension": "js",
   "target_collection": null,

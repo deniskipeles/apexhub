@@ -886,7 +886,7 @@
       }
     },
     {
-      "id": 8,
+      "id": 10,
       "index": "be9e6c0c-3fa4-4b2d-990a-e132fca2eb4f",
       "name": "optimizations",
       "schema": {
@@ -1050,7 +1050,7 @@
       }
     },
     {
-      "id": 9,
+      "id": 11,
       "index": "06643e75-3774-4a7a-b9fb-e123e608242a",
       "name": "tenancy_offers",
       "schema": {
@@ -1240,279 +1240,7 @@
       }
     },
     {
-      "id": 10,
-      "index": "67bb3505-fc82-4f14-b0de-b5ee1f4b907b",
-      "name": "sandbox_registry",
-      "schema": {
-        "composite_unique": [],
-        "field_history": {},
-        "fields": {
-          "description": {
-            "auto": false,
-            "default": null,
-            "dimension": null,
-            "max": null,
-            "max_length": null,
-            "max_size": null,
-            "mime_types": null,
-            "min": null,
-            "min_length": null,
-            "options": null,
-            "ose_indexed": true,
-            "pattern": null,
-            "position": 1,
-            "relation_to": null,
-            "required": false,
-            "sql_indexed": false,
-            "type": "text",
-            "uid": "7aa5e87e",
-            "unique": null,
-            "vectorize": true
-          },
-          "issue_title": {
-            "auto": false,
-            "default": null,
-            "dimension": null,
-            "max": null,
-            "max_length": null,
-            "max_size": null,
-            "mime_types": null,
-            "min": null,
-            "min_length": null,
-            "options": null,
-            "ose_indexed": true,
-            "pattern": null,
-            "position": 0,
-            "relation_to": null,
-            "required": true,
-            "sql_indexed": false,
-            "type": "string",
-            "uid": "71b025ab",
-            "unique": null,
-            "vectorize": false
-          },
-          "sandbox_id": {
-            "auto": false,
-            "default": null,
-            "dimension": null,
-            "max": null,
-            "max_length": null,
-            "max_size": null,
-            "mime_types": null,
-            "min": null,
-            "min_length": null,
-            "options": null,
-            "ose_indexed": true,
-            "pattern": null,
-            "position": 2,
-            "relation_to": null,
-            "required": true,
-            "sql_indexed": false,
-            "type": "string",
-            "uid": "2eb7ab2d",
-            "unique": null,
-            "vectorize": false
-          },
-          "sandbox_url": {
-            "auto": false,
-            "default": null,
-            "dimension": null,
-            "max": null,
-            "max_length": null,
-            "max_size": null,
-            "mime_types": null,
-            "min": null,
-            "min_length": null,
-            "options": null,
-            "ose_indexed": true,
-            "pattern": null,
-            "position": 5,
-            "relation_to": null,
-            "required": false,
-            "sql_indexed": false,
-            "type": "url",
-            "uid": "356d458",
-            "unique": null,
-            "vectorize": false
-          },
-          "status": {
-            "auto": false,
-            "default": "open",
-            "dimension": null,
-            "max": null,
-            "max_length": null,
-            "max_size": null,
-            "mime_types": null,
-            "min": null,
-            "min_length": null,
-            "options": [
-              "open",
-              "closed"
-            ],
-            "ose_indexed": true,
-            "pattern": null,
-            "position": 3,
-            "relation_to": null,
-            "required": true,
-            "sql_indexed": false,
-            "type": "select",
-            "uid": "fbe1d708",
-            "unique": null,
-            "vectorize": false
-          }
-        },
-        "policies": {
-          "create": "admin",
-          "delete": "admin",
-          "read": "public",
-          "update": "admin"
-        },
-        "relations": {
-          "author_id": {
-            "cascade_on_target_delete": false,
-            "dimension": null,
-            "ose_indexed": false,
-            "position": 4,
-            "relation_type": "many",
-            "required": true,
-            "sql_indexed": true,
-            "target_collection": "profiles",
-            "target_index": "d81e0fd5-6da7-4410-8d1e-cb16ffaef732",
-            "uid": "2a228db7",
-            "vectorize": false
-          }
-        }
-      }
-    },
-    {
-      "id": 11,
-      "index": "b0569cc4-c749-4ef6-8fa4-ffefa54f6cc3",
-      "name": "community_threads",
-      "schema": {
-        "composite_unique": [],
-        "field_history": {},
-        "fields": {
-          "content": {
-            "auto": false,
-            "default": null,
-            "dimension": null,
-            "max": null,
-            "max_length": null,
-            "max_size": null,
-            "mime_types": null,
-            "min": null,
-            "min_length": null,
-            "options": null,
-            "ose_indexed": true,
-            "pattern": null,
-            "position": 1,
-            "relation_to": null,
-            "required": true,
-            "sql_indexed": false,
-            "type": "text",
-            "uid": "bcd2933a",
-            "unique": null,
-            "vectorize": true
-          },
-          "status": {
-            "auto": false,
-            "default": "open",
-            "dimension": null,
-            "max": null,
-            "max_length": null,
-            "max_size": null,
-            "mime_types": null,
-            "min": null,
-            "min_length": null,
-            "options": [
-              "open",
-              "closed",
-              "in-progress"
-            ],
-            "ose_indexed": true,
-            "pattern": null,
-            "position": 4,
-            "relation_to": null,
-            "required": false,
-            "sql_indexed": true,
-            "type": "select",
-            "uid": "38be2a96",
-            "unique": null,
-            "vectorize": false
-          },
-          "title": {
-            "auto": false,
-            "default": null,
-            "dimension": null,
-            "max": null,
-            "max_length": null,
-            "max_size": null,
-            "mime_types": null,
-            "min": null,
-            "min_length": null,
-            "options": null,
-            "ose_indexed": true,
-            "pattern": null,
-            "position": 0,
-            "relation_to": null,
-            "required": true,
-            "sql_indexed": false,
-            "type": "string",
-            "uid": "31e2c71",
-            "unique": null,
-            "vectorize": false
-          },
-          "type": {
-            "auto": false,
-            "default": null,
-            "dimension": null,
-            "max": null,
-            "max_length": null,
-            "max_size": null,
-            "mime_types": null,
-            "min": null,
-            "min_length": null,
-            "options": [
-              "discussion",
-              "issue"
-            ],
-            "ose_indexed": true,
-            "pattern": null,
-            "position": 3,
-            "relation_to": null,
-            "required": true,
-            "sql_indexed": true,
-            "type": "select",
-            "uid": "4e3c1e07",
-            "unique": null,
-            "vectorize": false
-          }
-        },
-        "policies": {
-          "create": "admin",
-          "delete": "admin",
-          "read": "public",
-          "update": "admin"
-        },
-        "relations": {
-          "author_id": {
-            "cascade_on_target_delete": false,
-            "dimension": null,
-            "ose_indexed": false,
-            "position": 2,
-            "relation_type": "many",
-            "required": true,
-            "sql_indexed": true,
-            "target_collection": "profiles",
-            "target_index": "d81e0fd5-6da7-4410-8d1e-cb16ffaef732",
-            "uid": "b5be1767",
-            "vectorize": false
-          }
-        }
-      }
-    },
-    {
-      "id": 12,
+      "id": 15,
       "index": "e03beaec-ce5d-4039-93dc-2c06bdfada32",
       "name": "hub_content",
       "schema": {
@@ -1552,74 +1280,7 @@
       }
     },
     {
-      "id": 13,
-      "index": "400d8994-bf2c-4290-86ef-0d82c40830cc",
-      "name": "thread_comments",
-      "schema": {
-        "composite_unique": [],
-        "field_history": {},
-        "fields": {
-          "content": {
-            "auto": false,
-            "default": null,
-            "dimension": null,
-            "max": null,
-            "max_length": null,
-            "max_size": null,
-            "mime_types": null,
-            "min": null,
-            "min_length": null,
-            "options": null,
-            "ose_indexed": true,
-            "pattern": null,
-            "position": 0,
-            "relation_to": null,
-            "required": true,
-            "sql_indexed": false,
-            "type": "text",
-            "uid": "804f0be7",
-            "unique": null,
-            "vectorize": true
-          }
-        },
-        "policies": {
-          "create": "auth",
-          "delete": "admin",
-          "read": "public",
-          "update": "owner:author_id"
-        },
-        "relations": {
-          "author_id": {
-            "cascade_on_target_delete": false,
-            "dimension": null,
-            "ose_indexed": false,
-            "position": 2,
-            "relation_type": "many",
-            "required": true,
-            "sql_indexed": true,
-            "target_collection": "profiles",
-            "target_index": "d81e0fd5-6da7-4410-8d1e-cb16ffaef732",
-            "uid": "c83b3f69",
-            "vectorize": false
-          },
-          "thread_id": {
-            "cascade_on_target_delete": true,
-            "dimension": null,
-            "ose_indexed": false,
-            "position": 1,
-            "relation_type": "many",
-            "required": true,
-            "sql_indexed": true,
-            "target_collection": "community_threads",
-            "target_index": "b0569cc4-c749-4ef6-8fa4-ffefa54f6cc3",
-            "uid": "68933057",
-            "vectorize": false
-          }
-        }
-      }
-    },
-    {
-      "id": 14,
+      "id": 18,
       "index": "d81e0fd5-6da7-4410-8d1e-cb16ffaef732",
       "name": "profiles",
       "schema": {
@@ -1791,7 +1452,7 @@
       }
     },
     {
-      "id": 15,
+      "id": 19,
       "index": "d39d891f-c863-408e-9257-3dfd5ca04862",
       "name": "ecosystem_items",
       "schema": {
@@ -1988,7 +1649,7 @@
       }
     },
     {
-      "id": 16,
+      "id": 20,
       "index": "65092398-63ac-4ca3-82e6-14c2a31f403b",
       "name": "optimizations_conversations",
       "schema": {
@@ -2055,7 +1716,7 @@
       }
     },
     {
-      "id": 17,
+      "id": 21,
       "index": "fb10e53b-3d1d-4625-aecb-8fbefcd039e5",
       "name": "optimizations_votes",
       "schema": {
@@ -2130,7 +1791,7 @@
       }
     },
     {
-      "id": 18,
+      "id": 22,
       "index": "31a19fdf-b3cc-4efd-a7fb-d4001a1532c9",
       "name": "careers",
       "schema": {
@@ -2302,7 +1963,7 @@
       }
     },
     {
-      "id": 19,
+      "id": 23,
       "index": "5dc5df9e-490f-4d49-9a9f-e32d331dc4e1",
       "name": "jobs",
       "schema": {
@@ -2510,7 +2171,7 @@
       }
     },
     {
-      "id": 20,
+      "id": 24,
       "index": "13c135b5-adb4-49e6-a8a4-e0dbc130afef",
       "name": "tenant_registry",
       "schema": {
@@ -2608,7 +2269,7 @@
       }
     },
     {
-      "id": 21,
+      "id": 25,
       "index": "e8b18e7e-699b-48f9-9a1c-121aa78162a5",
       "name": "posts",
       "schema": {
@@ -2668,9 +2329,348 @@
         },
         "relations": {}
       }
+    },
+    {
+      "id": 29,
+      "index": "67bb3505-fc82-4f14-b0de-b5ee1f4b907b",
+      "name": "sandbox_registry",
+      "schema": {
+        "composite_unique": [],
+        "field_history": {},
+        "fields": {
+          "description": {
+            "auto": false,
+            "default": null,
+            "dimension": null,
+            "max": null,
+            "max_length": null,
+            "max_size": null,
+            "mime_types": null,
+            "min": null,
+            "min_length": null,
+            "options": null,
+            "ose_indexed": true,
+            "pattern": null,
+            "position": 1,
+            "relation_to": null,
+            "required": false,
+            "sql_indexed": false,
+            "type": "text",
+            "uid": "7aa5e87e",
+            "unique": null,
+            "vectorize": true
+          },
+          "issue_title": {
+            "auto": false,
+            "default": null,
+            "dimension": null,
+            "max": null,
+            "max_length": null,
+            "max_size": null,
+            "mime_types": null,
+            "min": null,
+            "min_length": null,
+            "options": null,
+            "ose_indexed": true,
+            "pattern": null,
+            "position": 0,
+            "relation_to": null,
+            "required": true,
+            "sql_indexed": false,
+            "type": "string",
+            "uid": "71b025ab",
+            "unique": null,
+            "vectorize": false
+          },
+          "sandbox_id": {
+            "auto": false,
+            "default": null,
+            "dimension": null,
+            "max": null,
+            "max_length": null,
+            "max_size": null,
+            "mime_types": null,
+            "min": null,
+            "min_length": null,
+            "options": null,
+            "ose_indexed": true,
+            "pattern": null,
+            "position": 2,
+            "relation_to": null,
+            "required": true,
+            "sql_indexed": false,
+            "type": "string",
+            "uid": "2eb7ab2d",
+            "unique": null,
+            "vectorize": false
+          },
+          "sandbox_url": {
+            "auto": false,
+            "default": null,
+            "dimension": null,
+            "max": null,
+            "max_length": null,
+            "max_size": null,
+            "mime_types": null,
+            "min": null,
+            "min_length": null,
+            "options": null,
+            "ose_indexed": true,
+            "pattern": null,
+            "position": 5,
+            "relation_to": null,
+            "required": false,
+            "sql_indexed": false,
+            "type": "url",
+            "uid": "356d458",
+            "unique": null,
+            "vectorize": false
+          },
+          "status": {
+            "auto": false,
+            "default": "open",
+            "dimension": null,
+            "max": null,
+            "max_length": null,
+            "max_size": null,
+            "mime_types": null,
+            "min": null,
+            "min_length": null,
+            "options": [
+              "open",
+              "closed"
+            ],
+            "ose_indexed": true,
+            "pattern": null,
+            "position": 3,
+            "relation_to": null,
+            "required": true,
+            "sql_indexed": false,
+            "type": "select",
+            "uid": "fbe1d708",
+            "unique": null,
+            "vectorize": false
+          }
+        },
+        "policies": {
+          "create": "admin",
+          "delete": "admin",
+          "read": "public",
+          "update": "admin"
+        },
+        "relations": {
+          "author_id": {
+            "cascade_on_target_delete": false,
+            "dimension": null,
+            "ose_indexed": false,
+            "position": 4,
+            "relation_type": "many",
+            "required": true,
+            "sql_indexed": true,
+            "target_collection": "profiles",
+            "target_index": "d81e0fd5-6da7-4410-8d1e-cb16ffaef732",
+            "uid": "2a228db7",
+            "vectorize": false
+          }
+        }
+      }
+    },
+    {
+      "id": 30,
+      "index": "b0569cc4-c749-4ef6-8fa4-ffefa54f6cc3",
+      "name": "community_threads",
+      "schema": {
+        "composite_unique": [],
+        "field_history": {},
+        "fields": {
+          "content": {
+            "auto": false,
+            "default": null,
+            "dimension": null,
+            "max": null,
+            "max_length": null,
+            "max_size": null,
+            "mime_types": null,
+            "min": null,
+            "min_length": null,
+            "options": null,
+            "ose_indexed": true,
+            "pattern": null,
+            "position": 1,
+            "relation_to": null,
+            "required": true,
+            "sql_indexed": false,
+            "type": "text",
+            "uid": "bcd2933a",
+            "unique": null,
+            "vectorize": true
+          },
+          "status": {
+            "auto": false,
+            "default": "open",
+            "dimension": null,
+            "max": null,
+            "max_length": null,
+            "max_size": null,
+            "mime_types": null,
+            "min": null,
+            "min_length": null,
+            "options": [
+              "open",
+              "closed",
+              "in-progress"
+            ],
+            "ose_indexed": true,
+            "pattern": null,
+            "position": 4,
+            "relation_to": null,
+            "required": false,
+            "sql_indexed": true,
+            "type": "select",
+            "uid": "38be2a96",
+            "unique": null,
+            "vectorize": false
+          },
+          "title": {
+            "auto": false,
+            "default": null,
+            "dimension": null,
+            "max": null,
+            "max_length": null,
+            "max_size": null,
+            "mime_types": null,
+            "min": null,
+            "min_length": null,
+            "options": null,
+            "ose_indexed": true,
+            "pattern": null,
+            "position": 0,
+            "relation_to": null,
+            "required": true,
+            "sql_indexed": false,
+            "type": "string",
+            "uid": "31e2c71",
+            "unique": null,
+            "vectorize": false
+          },
+          "type": {
+            "auto": false,
+            "default": null,
+            "dimension": null,
+            "max": null,
+            "max_length": null,
+            "max_size": null,
+            "mime_types": null,
+            "min": null,
+            "min_length": null,
+            "options": [
+              "discussion",
+              "issue"
+            ],
+            "ose_indexed": true,
+            "pattern": null,
+            "position": 3,
+            "relation_to": null,
+            "required": true,
+            "sql_indexed": true,
+            "type": "select",
+            "uid": "4e3c1e07",
+            "unique": null,
+            "vectorize": false
+          }
+        },
+        "policies": {
+          "create": "admin",
+          "delete": "admin",
+          "read": "public",
+          "update": "admin"
+        },
+        "relations": {
+          "author_id": {
+            "cascade_on_target_delete": false,
+            "dimension": null,
+            "ose_indexed": false,
+            "position": 2,
+            "relation_type": "many",
+            "required": true,
+            "sql_indexed": true,
+            "target_collection": "profiles",
+            "target_index": "d81e0fd5-6da7-4410-8d1e-cb16ffaef732",
+            "uid": "b5be1767",
+            "vectorize": false
+          }
+        }
+      }
+    },
+    {
+      "id": 31,
+      "index": "400d8994-bf2c-4290-86ef-0d82c40830cc",
+      "name": "thread_comments",
+      "schema": {
+        "composite_unique": [],
+        "field_history": {},
+        "fields": {
+          "content": {
+            "auto": false,
+            "default": null,
+            "dimension": null,
+            "max": null,
+            "max_length": null,
+            "max_size": null,
+            "mime_types": null,
+            "min": null,
+            "min_length": null,
+            "options": null,
+            "ose_indexed": true,
+            "pattern": null,
+            "position": 0,
+            "relation_to": null,
+            "required": true,
+            "sql_indexed": false,
+            "type": "text",
+            "uid": "804f0be7",
+            "unique": null,
+            "vectorize": true
+          }
+        },
+        "policies": {
+          "create": "auth",
+          "delete": "admin",
+          "read": "public",
+          "update": "owner:author_id"
+        },
+        "relations": {
+          "author_id": {
+            "cascade_on_target_delete": false,
+            "dimension": null,
+            "ose_indexed": false,
+            "position": 2,
+            "relation_type": "many",
+            "required": true,
+            "sql_indexed": true,
+            "target_collection": "profiles",
+            "target_index": "d81e0fd5-6da7-4410-8d1e-cb16ffaef732",
+            "uid": "c83b3f69",
+            "vectorize": false
+          },
+          "thread_id": {
+            "cascade_on_target_delete": true,
+            "dimension": null,
+            "ose_indexed": false,
+            "position": 1,
+            "relation_type": "many",
+            "required": true,
+            "sql_indexed": true,
+            "target_collection": "community_threads",
+            "target_index": "b0569cc4-c749-4ef6-8fa4-ffefa54f6cc3",
+            "uid": "68933057",
+            "vectorize": false
+          }
+        }
+      }
     }
   ],
-  "exported_at": "2026-09-03T10:43:28.998993916+00:00",
+  "exported_at": "2026-09-16T09:41:45.893677461+00:00",
   "strategy": "skip",
   "version": "0.1.0"
 }

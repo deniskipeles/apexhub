@@ -1,0 +1,54 @@
+<!--
+__fileMetadata__ = {
+  "name": "dashboard",
+  "extension": "html",
+  "type": "template",
+  "path": "./templates/",
+  "active": true
+}
+-->
+<script>
+  // ---@@ssr
+export default async function(req) {
+    const payload = await req.json();
+    
+    // 1. Protect the route! If no valid token was sent, reject the request.
+    // The App Shell's error handler will catch this 401 and redirect to login.
+    if (!payload.auth) {
+        return new Response({ error: "Unauthorized" }, { status: 401 });
+    }
+    
+    // 2. Fetch data specific to this user
+    const myTasks = await $db.records.list('posts', { 
+        filter: { owner_id: payload.auth.id } 
+    });
+    
+    return { 
+        user: payload.auth,
+        tasks: myTasks.items
+    };
+}
+// ---@@ssr
+</script>
+
+<div>
+  <h1>Welcome back, {{ user | debug }}!</h1>
+
+  <button onclick="logout()">Logout</button>
+
+  <h3>Your Tasks:</h3>
+  <ul>
+    {% for task in tasks %}
+    <li>{{ task.id }}. {{ task.data.title }}</li>
+    {% else %}
+    <li>No tasks found.</li>
+    {% endfor %}
+  </ul>
+</div>
+
+<script>
+  function logout() {
+        localStorage.removeItem('apex_token');
+        window.location.href = '/render/login';
+    }
+</script>

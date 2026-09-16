@@ -1,0 +1,48 @@
+<!--
+__fileMetadata__ = {
+  "name": "app",
+  "extension": "html",
+  "type": "template",
+  "path": "./templates/",
+  "active": true
+}
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>My App</title>
+  <!-- Load HTMX -->
+  <script src="/static/js/htmx.js"></script>
+</head>
+
+<body>
+
+  <!-- 
+      This div automatically fetches your protected dashboard template 
+      as soon as the page loads. 
+    -->
+  <div id="main-content" hx-get="/render/dashboard" hx-trigger="load">
+    Loading dashboard...
+  </div>
+
+  <script>
+    // 1. Global HTMX Config: Attach the token to ALL HTMX requests
+        document.body.addEventListener('htmx:configRequest', function(evt) {
+            const token = localStorage.getItem('apex_token');
+            if (token) {
+                evt.detail.headers['Authorization'] = 'Bearer ' + token;
+            }
+        });
+
+        // 2. Global Error Handler: If the token expires, redirect to login
+        document.body.addEventListener('htmx:responseError', function(evt) {
+            if (evt.detail.xhr.status === 401 || evt.detail.xhr.status === 403) {
+                localStorage.removeItem('apex_token');
+                window.location.href = '/render/login';
+            }
+        });
+  </script>
+</body>
+
+</html>

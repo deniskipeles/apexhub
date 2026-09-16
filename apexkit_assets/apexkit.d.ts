@@ -6,159 +6,160 @@
 export interface Collections {
   "docs": {
     slug?: string;
-    added_by: number | string;
-    category: "getting started" | "integrations" | "core concepts" | "community guides" | "others";
     content: string;
     title: string;
+    category: "getting started" | "integrations" | "core concepts" | "community guides" | "others";
+    added_by: number | string;
   };
   "why_apexkit": {
-    color: string;
     order?: number;
-    title: string;
     icon?: string;
+    title: string;
     description: string;
+    color: string;
   };
   "use_cases": {
+    order?: number;
     icon_string?: string;
     title: string;
     icon: string;
-    order?: number;
   };
   "news": {
+    is_featured?: boolean;
+    body: string;
     headline: string;
     date: string;
-    body: string;
-    is_featured?: boolean;
   };
   "roadmap": {
-    description: string;
-    status?: "planned" | "in-progress" | "done";
-    quarter?: string;
     progress?: number;
+    quarter?: string;
+    status?: "planned" | "in-progress" | "done";
+    description: string;
     headline: string;
   };
   "changelog": {
-    body: string;
     version?: string;
     is_latest?: boolean;
     release_date?: string;
+    body: string;
   };
   "blog": {
-    body: string;
-    cover_image?: string;
-    tags?: Record<string, any> | any[];
-    read_time?: string;
     author_id: number | string;
+    cover_image?: string;
     headline: string;
+    body: string;
+    read_time?: string;
+    tags?: Record<string, any> | any[];
     subheadline: string;
   };
   "optimizations": {
-    slug: string;
-    title: string;
     tags?: Record<string, any> | any[];
     upvotes: number;
     content: string;
+    slug: string;
+    title: string;
     downvotes: number;
-    author_id: (number | string)[];
+    author_id: number | string;
   };
   "tenancy_offers": {
-    provider_name: string;
     specs: string;
     status: "available" | "full" | "waitlist";
-    region: string;
-    request_access_link: string;
     description: string;
     available_slots: number;
-    provider_id: (number | string)[];
-  };
-  "sandbox_registry": {
-    issue_title: string;
-    sandbox_url?: string;
-    description?: string;
-    sandbox_id: string;
-    status: "open" | "closed";
-    author_id: (number | string)[];
-  };
-  "community_threads": {
-    title: string;
-    type: "discussion" | "issue";
-    content: string;
-    status?: "open" | "closed" | "in-progress";
-    author_id: (number | string)[];
+    region: string;
+    provider_name: string;
+    request_access_link: string;
+    provider_id: number | string;
   };
   "hub_content": {
     title?: string;
   };
-  "thread_comments": {
-    content: string;
-    thread_id: (number | string)[];
-    author_id: (number | string)[];
-  };
   "profiles": {
-    user_id: number | string;
+    username?: string;
     last_name?: string;
     avatar?: string;
-    first_name?: string;
-    username?: string;
-    github_url?: string;
     bio?: string;
+    first_name?: string;
+    github_url?: string;
+    user_id: number | string;
   };
   "ecosystem_items": {
-    title: string;
-    type: "starter" | "showcase" | "script" | "ai_action" | "schema" | "template" | "site";
-    file: string;
-    url?: string;
     install_command?: string;
-    tags?: Record<string, any> | any[];
     description: string;
-    author_id: (number | string)[];
+    title: string;
+    file: string;
+    tags?: Record<string, any> | any[];
+    type: "starter" | "showcase" | "script" | "ai_action" | "schema" | "template" | "site";
+    url?: string;
+    author_id: number | string;
   };
   "optimizations_conversations": {
     content: string;
-    author_id: (number | string)[];
-    optimization_id: (number | string)[];
+    optimization_id: number | string;
+    author_id: number | string;
   };
   "optimizations_votes": {
     type: "up" | "down";
-    voter_id: (number | string)[];
-    optimization_id: (number | string)[];
+    optimization_id: number | string;
+    voter_id: number | string;
   };
   "careers": {
-    department: string;
+    author_id: number | string;
     salary?: string;
     location: string;
     type: string;
-    title: string;
     description: string;
-    author_id: number | string;
+    department: string;
+    title: string;
   };
   "jobs": {
+    type: string;
+    title: string;
+    salary: string;
+    apply_url: string;
+    department?: string;
+    description: string;
     location: string;
     company: string;
-    department?: string;
-    type: string;
-    description: string;
-    apply_url: string;
-    salary: string;
-    title: string;
-    author_id: (number | string)[];
+    author_id: number | string;
   };
   "tenant_registry": {
+    usage_or_description?: string;
     app_name: string;
     tenant_id: string;
-    usage_or_description?: string;
     owner_id: number | string;
   };
   "posts": {
     content?: string;
     title?: string;
   };
+  "sandbox_registry": {
+    sandbox_id: string;
+    sandbox_url?: string;
+    issue_title: string;
+    status: "open" | "closed";
+    description?: string;
+    author_id: number | string;
+  };
+  "community_threads": {
+    content: string;
+    title: string;
+    status?: "open" | "closed" | "in-progress";
+    type: "discussion" | "issue";
+    author_id: number | string;
+  };
+  "thread_comments": {
+    content: string;
+    author_id: number | string;
+    thread_id: number | string;
+  };
 }
 
-export type CollectionName = "docs" | "why_apexkit" | "use_cases" | "news" | "roadmap" | "changelog" | "blog" | "optimizations" | "tenancy_offers" | "sandbox_registry" | "community_threads" | "hub_content" | "thread_comments" | "profiles" | "ecosystem_items" | "optimizations_conversations" | "optimizations_votes" | "careers" | "jobs" | "tenant_registry" | "posts";
+export type CollectionName = "docs" | "why_apexkit" | "use_cases" | "news" | "roadmap" | "changelog" | "blog" | "optimizations" | "tenancy_offers" | "hub_content" | "profiles" | "ecosystem_items" | "optimizations_conversations" | "optimizations_votes" | "careers" | "jobs" | "tenant_registry" | "posts" | "sandbox_registry" | "community_threads" | "thread_comments";
 
 export interface CollectionExpands {
   "docs": {
+    added_by?: { id: number | string; email: string; role: string; metadata?: Record<string, any> };
     [reverse_relation: string]: any;
   };
   "why_apexkit": {
@@ -177,54 +178,56 @@ export interface CollectionExpands {
     [reverse_relation: string]: any;
   };
   "blog": {
+    author_id?: { id: number | string; email: string; role: string; metadata?: Record<string, any> };
     [reverse_relation: string]: any;
   };
   "optimizations": {
-    author_id?: Array<{ id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any }>;
+    author_id?: { id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any };
+    optimizations_conversations?: Array<{ id: number | string; data: Collections["optimizations_conversations"]; created: string; updated: string; expand?: any }>;
+    optimizations_votes?: Array<{ id: number | string; data: Collections["optimizations_votes"]; created: string; updated: string; expand?: any }>;
     [reverse_relation: string]: any;
   };
   "tenancy_offers": {
-    provider_id?: Array<{ id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any }>;
-    [reverse_relation: string]: any;
-  };
-  "sandbox_registry": {
-    author_id?: Array<{ id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any }>;
-    [reverse_relation: string]: any;
-  };
-  "community_threads": {
-    author_id?: Array<{ id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any }>;
+    provider_id?: { id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any };
     [reverse_relation: string]: any;
   };
   "hub_content": {
     [reverse_relation: string]: any;
   };
-  "thread_comments": {
-    thread_id?: Array<{ id: number | string; data: Collections["community_threads"]; created: string; updated: string; expand?: any }>;
-    author_id?: Array<{ id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any }>;
-    [reverse_relation: string]: any;
-  };
   "profiles": {
+    user_id?: { id: number | string; email: string; role: string; metadata?: Record<string, any> };
+    optimizations?: Array<{ id: number | string; data: Collections["optimizations"]; created: string; updated: string; expand?: any }>;
+    tenancy_offers?: Array<{ id: number | string; data: Collections["tenancy_offers"]; created: string; updated: string; expand?: any }>;
+    ecosystem_items?: Array<{ id: number | string; data: Collections["ecosystem_items"]; created: string; updated: string; expand?: any }>;
+    optimizations_conversations?: Array<{ id: number | string; data: Collections["optimizations_conversations"]; created: string; updated: string; expand?: any }>;
+    optimizations_votes?: Array<{ id: number | string; data: Collections["optimizations_votes"]; created: string; updated: string; expand?: any }>;
+    jobs?: Array<{ id: number | string; data: Collections["jobs"]; created: string; updated: string; expand?: any }>;
+    tenant_registry?: { id: number | string; data: Collections["tenant_registry"]; created: string; updated: string; expand?: any };
+    sandbox_registry?: Array<{ id: number | string; data: Collections["sandbox_registry"]; created: string; updated: string; expand?: any }>;
+    community_threads?: Array<{ id: number | string; data: Collections["community_threads"]; created: string; updated: string; expand?: any }>;
+    thread_comments?: Array<{ id: number | string; data: Collections["thread_comments"]; created: string; updated: string; expand?: any }>;
     [reverse_relation: string]: any;
   };
   "ecosystem_items": {
-    author_id?: Array<{ id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any }>;
+    author_id?: { id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any };
     [reverse_relation: string]: any;
   };
   "optimizations_conversations": {
-    author_id?: Array<{ id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any }>;
-    optimization_id?: Array<{ id: number | string; data: Collections["optimizations"]; created: string; updated: string; expand?: any }>;
+    optimization_id?: { id: number | string; data: Collections["optimizations"]; created: string; updated: string; expand?: any };
+    author_id?: { id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any };
     [reverse_relation: string]: any;
   };
   "optimizations_votes": {
-    voter_id?: Array<{ id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any }>;
-    optimization_id?: Array<{ id: number | string; data: Collections["optimizations"]; created: string; updated: string; expand?: any }>;
+    optimization_id?: { id: number | string; data: Collections["optimizations"]; created: string; updated: string; expand?: any };
+    voter_id?: { id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any };
     [reverse_relation: string]: any;
   };
   "careers": {
+    author_id?: { id: number | string; email: string; role: string; metadata?: Record<string, any> };
     [reverse_relation: string]: any;
   };
   "jobs": {
-    author_id?: Array<{ id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any }>;
+    author_id?: { id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any };
     [reverse_relation: string]: any;
   };
   "tenant_registry": {
@@ -232,6 +235,20 @@ export interface CollectionExpands {
     [reverse_relation: string]: any;
   };
   "posts": {
+    [reverse_relation: string]: any;
+  };
+  "sandbox_registry": {
+    author_id?: { id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any };
+    [reverse_relation: string]: any;
+  };
+  "community_threads": {
+    author_id?: { id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any };
+    thread_comments?: Array<{ id: number | string; data: Collections["thread_comments"]; created: string; updated: string; expand?: any }>;
+    [reverse_relation: string]: any;
+  };
+  "thread_comments": {
+    author_id?: { id: number | string; data: Collections["profiles"]; created: string; updated: string; expand?: any };
+    thread_id?: { id: number | string; data: Collections["community_threads"]; created: string; updated: string; expand?: any };
     [reverse_relation: string]: any;
   };
 }
@@ -537,9 +554,57 @@ declare global {
     base64EncodeBuffer(buffer: ArrayBuffer | Uint8Array): string;
     base64Decode(text: string): string;
     base64DecodeBuffer(text: string): ArrayBuffer;
+    textEncode(text: string): ArrayBuffer;
+    textDecode(data: ArrayBuffer | Uint8Array): string;
+    hexEncode(data: string | ArrayBuffer | Uint8Array): string;
+    hexDecode(hex: string): ArrayBuffer;
     sleep(ms: number): Promise<void>;
     randomHex(len?: number): string;
   };
+
+  /** Standard Web APIs */
+  const crypto: {
+    randomUUID(): string;
+    getRandomValues<T extends Int8Array | Int16Array | Int32Array | Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray | Float32Array | Float64Array | DataView | null>(array: T): T;
+    subtle: {
+      digest(algorithm: string | any, data: ArrayBuffer | Uint8Array): Promise<ArrayBuffer>;
+      importKey(format: string, keyData: any, algo: any, extractable: boolean, usages: string[]): Promise<any>;
+      sign(algorithm: string | any, key: any, data: ArrayBuffer | Uint8Array): Promise<ArrayBuffer>;
+      verify(algorithm: string | any, key: any, signature: ArrayBuffer | Uint8Array, data: ArrayBuffer | Uint8Array): Promise<boolean>;
+    }
+  };
+
+  class Blob {
+    constructor(sources?: any[], options?: any);
+    arrayBuffer(): Promise<ArrayBuffer>;
+    text(): Promise<string>;
+    readonly size: number;
+    readonly type: string;
+  }
+
+  class ReadableStream {
+    constructor(underlyingSource?: any);
+    getReader(): any;
+    cancel(): Promise<void>;
+    readonly locked: boolean;
+  }
+
+  const btoa: (data: string) => string;
+  const atob: (data: string) => string;
+
+  class TextEncoder {
+    constructor(encoding?: string);
+    encode(input?: string): Uint8Array;
+    encodeInto(source: string, destination: Uint8Array): { read: number; written: number };
+  }
+
+  class TextDecoder {
+    constructor(label?: string, options?: { fatal?: boolean; ignoreBOM?: boolean });
+    decode(input?: ArrayBuffer | Uint8Array, options?: { stream?: boolean }): string;
+  }
+
+  function setTimeout(callback: Function, ms: number): string;
+  function clearTimeout(id: string): void;
 
   /** Environment & Configuration Secrets Accessor */
   const $env: {

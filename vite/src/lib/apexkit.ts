@@ -1,9 +1,16 @@
 import { ApexKit } from "@apexkit/sdk"; 
 import { APEX_HUB_TOKEN } from './constants';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://apexkit.onrender.com';
+const apiUrl = (typeof process !== 'undefined' && process.env?.VITE_API_URL) || 
+               (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) || 
+               'http://127.0.0.1:5000';
 
-export const apex = new ApexKit(API_URL);
+const tenantId = (typeof process !== 'undefined' && process.env?.VITE_TENANT_ID) || 
+                 (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_TENANT_ID) || 
+                 '';
+
+const baseClient = new ApexKit(apiUrl);
+export const apex = tenantId ? baseClient.tenant(tenantId) : baseClient;
 
 if (typeof window !== 'undefined') {
   const token = localStorage.getItem(APEX_HUB_TOKEN);
@@ -21,16 +28,8 @@ export const getFileUrl = (filename: string) => {
   try {
     const res = apex.files.getFileUrl(filename);
     if (typeof res === 'string') return res;
-    return `${API_URL}/storage/files/${filename}`;
+    return `${apiUrl}/storage/files/${filename}`;
   } catch {
-    return `${API_URL}/storage/files/${filename}`;
-  }
-};
-
-export const MOCK_FALLBACK = {
-  hero: {
-    headline: "The Single-Node Speed King",
-    subheadline: "Build vertical-scale apps with Rust, SQLite, and In-Memory Vector Search.",
-    version: "v0.1.0"
+    return `${apiUrl}/storage/files/${filename}`;
   }
 };
