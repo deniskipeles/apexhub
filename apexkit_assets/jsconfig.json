@@ -3,7 +3,9 @@
     "target": "ES2022",
     "module": "ESNext",
     "ignoreDeprecations": "6.0",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
       "@/custom/*": [
@@ -11,6 +13,18 @@
       ],
       "@/esm/*": [
         "./modules/esm/*"
+      ],
+      "https://esm.sh/hono": [
+        "./.apexkit/types/https___esm.sh_hono/index.d.ts"
+      ],
+      "https://esm.sh/hono/*": [
+        "./.apexkit/types/https___esm.sh_hono/index.d.ts/*"
+      ],
+      "https://esm.sh/hono/jsx": [
+        "./.apexkit/types/https___esm.sh_hono_jsx/index.d.ts"
+      ],
+      "https://esm.sh/hono/jsx/*": [
+        "./.apexkit/types/https___esm.sh_hono_jsx/index.d.ts/*"
       ]
     },
     "allowJs": true,
@@ -19,7 +33,10 @@
   "include": [
     "**/*.js",
     "**/*.ts",
+    "**/*.jsx",
+    "**/*.tsx",
     "**/*.html",
-    "apexkit.d.ts"
+    "apexkit.d.ts",
+    ".apexkit/types/**/*.d.ts"
   ]
 }

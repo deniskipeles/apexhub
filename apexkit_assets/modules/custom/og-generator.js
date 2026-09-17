@@ -1,4 +1,4 @@
-/** @type {import("../apexkit").FileMetadata} */
+/** @type {import("../../apexkit").FileMetadata} */
 export const __fileMetadata__ = {
   "id": 110,
   "name": "og-generator",
@@ -8,7 +8,7 @@ export const __fileMetadata__ = {
   "path": "./modules/custom/",
   "trigger_type": "manual",
   "active": true,
-  "visibility": "public"
+  "visibility": "private"
 };
 
 const CACHE_SUBDIR = "og_cache";

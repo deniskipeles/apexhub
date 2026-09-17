@@ -1,4 +1,4 @@
-/** @type {import("../apexkit").FileMetadata} */
+/** @type {import("../../apexkit").FileMetadata} */
 export const __fileMetadata__ = {
   "id": 66,
   "name": "getUsers",
@@ -6,7 +6,7 @@ export const __fileMetadata__ = {
   "target_collection": null,
   "type": "custom:module",
   "path": "./modules/custom/",
-  "trigger_type": "manually",
+  "trigger_type": "manual",
   "active": true,
   "visibility": "private"
 };

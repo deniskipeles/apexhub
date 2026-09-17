@@ -5,92 +5,92 @@
 
 export interface Collections {
   "docs": {
-    slug?: string;
-    content: string;
-    title: string;
     category: "getting started" | "integrations" | "core concepts" | "community guides" | "others";
     added_by: number | string;
+    content: string;
+    slug?: string;
+    title: string;
   };
   "why_apexkit": {
-    order?: number;
     icon?: string;
+    order?: number;
     title: string;
-    description: string;
     color: string;
+    description: string;
   };
   "use_cases": {
-    order?: number;
     icon_string?: string;
+    order?: number;
     title: string;
     icon: string;
   };
   "news": {
-    is_featured?: boolean;
-    body: string;
-    headline: string;
     date: string;
+    headline: string;
+    body: string;
+    is_featured?: boolean;
   };
   "roadmap": {
-    progress?: number;
     quarter?: string;
+    progress?: number;
     status?: "planned" | "in-progress" | "done";
-    description: string;
     headline: string;
+    description: string;
   };
   "changelog": {
     version?: string;
-    is_latest?: boolean;
     release_date?: string;
+    is_latest?: boolean;
     body: string;
   };
   "blog": {
-    author_id: number | string;
-    cover_image?: string;
-    headline: string;
     body: string;
-    read_time?: string;
-    tags?: Record<string, any> | any[];
+    author_id: number | string;
     subheadline: string;
+    cover_image?: string;
+    tags?: Record<string, any> | any[];
+    headline: string;
+    read_time?: string;
   };
   "optimizations": {
     tags?: Record<string, any> | any[];
     upvotes: number;
-    content: string;
-    slug: string;
-    title: string;
     downvotes: number;
+    title: string;
+    slug: string;
+    content: string;
     author_id: number | string;
   };
   "tenancy_offers": {
-    specs: string;
-    status: "available" | "full" | "waitlist";
     description: string;
     available_slots: number;
     region: string;
-    provider_name: string;
+    status: "available" | "full" | "waitlist";
     request_access_link: string;
+    specs: string;
+    provider_name: string;
     provider_id: number | string;
   };
   "hub_content": {
     title?: string;
   };
   "profiles": {
-    username?: string;
-    last_name?: string;
     avatar?: string;
     bio?: string;
-    first_name?: string;
     github_url?: string;
+    username?: string;
+    last_name?: string;
     user_id: number | string;
+    first_name?: string;
   };
   "ecosystem_items": {
+    type: "starter" | "showcase" | "script" | "ai_action" | "schema" | "template" | "site";
     install_command?: string;
     description: string;
-    title: string;
-    file: string;
     tags?: Record<string, any> | any[];
-    type: "starter" | "showcase" | "script" | "ai_action" | "schema" | "template" | "site";
     url?: string;
+    file: string;
+    title: string;
     author_id: number | string;
   };
   "optimizations_conversations": {
@@ -104,48 +104,48 @@ export interface Collections {
     voter_id: number | string;
   };
   "careers": {
-    author_id: number | string;
-    salary?: string;
-    location: string;
-    type: string;
-    description: string;
-    department: string;
     title: string;
+    type: string;
+    salary?: string;
+    department: string;
+    location: string;
+    description: string;
+    author_id: number | string;
   };
   "jobs": {
+    company: string;
     type: string;
+    department?: string;
+    location: string;
+    description: string;
+    apply_url: string;
     title: string;
     salary: string;
-    apply_url: string;
-    department?: string;
-    description: string;
-    location: string;
-    company: string;
     author_id: number | string;
   };
   "tenant_registry": {
-    usage_or_description?: string;
     app_name: string;
     tenant_id: string;
+    usage_or_description?: string;
     owner_id: number | string;
   };
   "posts": {
-    content?: string;
     title?: string;
+    content?: string;
   };
   "sandbox_registry": {
-    sandbox_id: string;
     sandbox_url?: string;
-    issue_title: string;
-    status: "open" | "closed";
     description?: string;
+    issue_title: string;
+    sandbox_id: string;
+    status: "open" | "closed";
     author_id: number | string;
   };
   "community_threads": {
     content: string;
-    title: string;
     status?: "open" | "closed" | "in-progress";
     type: "discussion" | "issue";
+    title: string;
     author_id: number | string;
   };
   "thread_comments": {
@@ -358,6 +358,13 @@ export interface FileMetadata {
   visibility?: ScriptVisibility;
 }
 
+export type ApexKitDb = typeof $db;
+export type ApexKitHttp = typeof $http;
+export type ApexKitFiles = typeof $files;
+export type ApexKitFs = typeof $fs;
+export type ApexKitCache = typeof $cache;
+export type ApexKitEnv = typeof $env;
+
 export interface AuthContext {
   id: number | string;
   email: string;
@@ -395,6 +402,19 @@ export interface VoidHookEvent {
 }
 
 declare global {
+  namespace JSX {
+    interface Element extends Promise<string>, String {
+      [key: string]: any;
+      toString(): string;
+    }
+    interface IntrinsicElements {
+      [elemName: string]: any;
+    }
+    interface ElementChildrenAttribute {
+      children: {};
+    }
+  }
+
   const __fileMetadata__: FileMetadata;
 
   /** ApexKit Database Client */
@@ -623,4 +643,50 @@ declare global {
     init?: { method?: string; headers?: any; body?: any; redirect?: "follow" | "manual" | "error" }
   ): Promise<Response>;
 }
+
+// --- RUNTIME MODULE DEFINITIONS ---
+declare module "react/jsx-runtime" {
+  export const jsx: any;
+  export const jsxs: any;
+  export const Fragment: any;
+}
+
+declare module "react/jsx-dev-runtime" {
+  export const jsxDEV: any;
+  export const Fragment: any;
+}
+
+declare module "hono/jsx/jsx-runtime" {
+  export const jsx: any;
+  export const jsxs: any;
+  export const Fragment: any;
+}
+
+declare module "hono/jsx" {
+  export const jsx: any;
+  export const jsxs: any;
+  export const Fragment: any;
+  export type FC<T = any> = (props: T) => any;
+}
+
+// --- HONO CONTEXT OVERLOADS ---
+declare module "hono" {
+  interface Context {
+    html(html: string | Promise<string> | JSX.Element | any, status?: any, headers?: any): Response | Promise<Response>;
+  }
+}
+
+// --- REMOTE URL MODULE DECLARATIONS & FALLBACKS ---
+declare module "https://*" {
+  const content: any;
+  export default content;
+  export * from "https://*";
+}
+
+declare module "http://*" {
+  const content: any;
+  export default content;
+  export * from "http://*";
+}
+
 export {};

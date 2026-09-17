@@ -2,13 +2,13 @@
 export const __fileMetadata__ = {
   "id": 105,
   "name": "seo-crawler",
-  "extension": "js",
+  "extension": "tsx",
   "target_collection": null,
   "type": "webhook",
   "path": "./webhooks/",
   "trigger_type": "manual",
   "active": true,
-  "visibility": "public"
+  "visibility": "private"
 };
 
 /** @jsxImportSource https://esm.sh/hono/jsx */

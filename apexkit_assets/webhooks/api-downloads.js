@@ -8,7 +8,7 @@ export const __fileMetadata__ = {
   "path": "./webhooks/",
   "trigger_type": "manual",
   "active": true,
-  "visibility": "public"
+  "visibility": "private"
 };
 
 import { Hono } from "https://esm.sh/hono";

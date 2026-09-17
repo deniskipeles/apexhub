@@ -8,7 +8,7 @@ export const __fileMetadata__ = {
   "path": "./webhooks/",
   "trigger_type": "manual",
   "active": true,
-  "visibility": "public"
+  "visibility": "private"
 };
 
 /**
@@ -96,7 +96,7 @@ export default async function (req) {
       return new Response({
         error: "upstream_error",
         message: "Failed to dispatch email via Brevo's API.",
-        details: resData
+        details: resData,
       }, { status: response.status });
     }
 

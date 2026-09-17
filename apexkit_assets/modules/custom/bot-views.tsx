@@ -1,14 +1,14 @@
-/** @type {import("../apexkit").FileMetadata} */
+/** @type {import("../../apexkit").FileMetadata} */
 export const __fileMetadata__ = {
   "id": 108,
   "name": "bot-views",
-  "extension": "js",
+  "extension": "tsx",
   "target_collection": null,
   "type": "custom:module",
   "path": "./modules/custom/",
   "trigger_type": "manual",
   "active": true,
-  "visibility": "public"
+  "visibility": "private"
 };
 
 /** @jsxImportSource https://esm.sh/hono/jsx */

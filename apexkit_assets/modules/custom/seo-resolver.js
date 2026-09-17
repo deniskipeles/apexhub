@@ -1,4 +1,4 @@
-/** @type {import("../apexkit").FileMetadata} */
+/** @type {import("../../apexkit").FileMetadata} */
 export const __fileMetadata__ = {
   "id": 111,
   "name": "seo-resolver",
@@ -8,7 +8,7 @@ export const __fileMetadata__ = {
   "path": "./modules/custom/",
   "trigger_type": "manual",
   "active": true,
-  "visibility": "public"
+  "visibility": "private"
 };
 
 function cleanSnippet(text = "", maxLen = 160) {
